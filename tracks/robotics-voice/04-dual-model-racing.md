@@ -46,7 +46,7 @@ flowchart LR
 - 这是 [第 10 课 多智能体与 Racing](../../lessons/10-multi-agent-handoff/README.md) 的核心案例。
 - 守卫与伪工具调用 → [第 05 课](../../lessons/05-tool-calling/README.md)、[原则 01](../../principles/01-model-output-is-a-suggestion.md)。
 - 显式退出工具 → [第 06 课](../../lessons/06-agent-loop/README.md)。
-- 意图模型的微调 → [LLM 原理 track 第 06 篇](../llm-internals/06-finetuning-classification.md)。
+- 意图模型的微调 → [前置 F05 训练与对齐](../../prerequisites/llm-foundations/05-training-and-alignment/README.md)。
 
 ## 延伸阅读
 

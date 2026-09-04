@@ -3,9 +3,10 @@ status: draft
 updated: 2026-09-04
 ---
 
-# Bonus｜Agent 框架对比与选型
+# 00 Agent 框架全景与选型标准
 
 > 课程正文全部用普通 Python，是为了让你先看清机制。看清之后再选框架，你会知道自己在为什么付费、放弃什么。这份对比给的是判断标准和一张快照，不是排名。框架迭代很快，星数和特性以 2026-09-04 为准，动手前以官方文档为准。
+> 这是 [Framework Lab](./README.md) 的第一篇。Lab 从下面这张表里选了 LangGraph、OpenAI Agents SDK、Claude Agent SDK 三个，用同一个需求各实现一遍，原因见 Lab 总览。
 
 ## 先问自己：需要框架吗
 
@@ -83,4 +84,4 @@ updated: 2026-09-04
 
 ---
 
-[← 第 09 课](../README.md)
+[← Lab 总览](./README.md) · [第 09 课](../../lessons/09-workflow-vs-agent/README.md)

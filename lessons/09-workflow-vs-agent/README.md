@@ -8,7 +8,7 @@ estimated_time: 约 2.5 小时
 
 > 面对一个需求，先问"能不能不用 Agent"。Anthropic 跟几十个团队做过 Agent 之后的结论是：最成功的实现用的都是简单、可组合的模式，而不是复杂框架。这一课给出五种 workflow 模式和一张判断表，帮你在"写死流程"和"放开让模型决定"之间选一个正确的位置。
 
-> 附：[Agent 框架对比与选型](./bonus/agent-frameworks-compared.md)，学完本课再看。
+> 附：[Agent 框架对比与选型](../../project/framework-lab/00-landscape.md)，学完本课再看。
 
 ## 学习目标
 
@@ -83,7 +83,7 @@ flowchart LR
 
 - **可预测性 vs 灵活性。** workflow 的路径可以画出来、测出来、在出问题时定位到某一步。Agent 的路径每次不同，只能靠 trace 事后看。对合规要求高、失败代价大的场景，这一条就足够决定用 workflow。
 - **延迟 vs 准确率。** chaining 把一次调用拆成三次，延迟翻三倍，但每次调用的任务更简单、更准。parallelization 反过来用并发换时间。选哪个看用户等得起多久。
-- **框架 vs 直接调 API。** Anthropic 的建议是先直接用 API，很多模式几行代码就够；用框架就要理解它底层做了什么。本课五个文件加起来不到 400 行，这是"够不够"的一个参照。选框架前先看 [bonus 里的对比](./bonus/agent-frameworks-compared.md)。
+- **框架 vs 直接调 API。** Anthropic 的建议是先直接用 API，很多模式几行代码就够；用框架就要理解它底层做了什么。本课五个文件加起来不到 400 行，这是"够不够"的一个参照。选框架前先看 [bonus 里的对比](../../project/framework-lab/00-landscape.md)。
 
 ## 练习
 

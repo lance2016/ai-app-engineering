@@ -4,9 +4,9 @@ The model outputs one score per vocabulary entry. Temperature reshapes those
 scores before they become probabilities; top-p cuts off the unlikely tail.
 Sample the same distribution a thousand times and the effect is obvious.
 
-Run:  uv run python lessons/01-how-llms-work/code/02_sampling_temperature.py
-      TEMPERATURE=0.2 uv run python lessons/01-how-llms-work/code/02_sampling_temperature.py
-      TEMPERATURE=2.0 uv run python lessons/01-how-llms-work/code/02_sampling_temperature.py
+Run:  uv run python prerequisites/llm-foundations/04-context-window-and-sampling/code/01_sampling_temperature.py
+      TEMPERATURE=0.2 uv run python prerequisites/llm-foundations/04-context-window-and-sampling/code/01_sampling_temperature.py
+      TEMPERATURE=2.0 uv run python prerequisites/llm-foundations/04-context-window-and-sampling/code/01_sampling_temperature.py
 Expect: at low temperature almost every sample is the top token; at high
         temperature the tail tokens show up. Greedy (temperature 0) never varies.
 """

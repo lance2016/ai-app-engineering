@@ -86,7 +86,7 @@ flowchart LR
 - [12-factor-agents · factor 08 Own your control flow](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-08-own-your-control-flow.md)（访问日期 2026-09-04）：三种控制流形态的代码示例，"跳出循环等人"就出自这里。
 - [12-factor-agents · factor 10 Small, focused agents](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-10-small-focused-agents.md)（访问日期 2026-09-04）：为什么一个 Agent 管 3～10 步，以及"模型变强了这条还成立吗"的回答。
 - [ai-agents-for-beginners · 01 Intro to AI Agents](https://github.com/microsoft/ai-agents-for-beginners/blob/main/01-intro-to-ai-agents/README.md)（访问日期 2026-09-04）：Agent 的定义和组成部分，可以对照本课的循环图检查有没有漏掉的组件。
-- [Agent 框架对比与选型](../09-workflow-vs-agent/bonus/agent-frameworks-compared.md)：学完本课再看，判断框架时先问"循环由谁控制、怎么停"。
+- [Agent 框架对比与选型](../../project/framework-lab/00-landscape.md)：学完本课再看，判断框架时先问"循环由谁控制、怎么停"。
 
 ---
 

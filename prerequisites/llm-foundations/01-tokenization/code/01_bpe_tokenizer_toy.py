@@ -5,8 +5,8 @@ far more text with far more merges. The consequences you will feel in every
 lesson are visible already: tokens are not words, common strings compress
 well, rare strings and non-Latin scripts do not.
 
-Run:  uv run python lessons/01-how-llms-work/code/01_bpe_tokenizer_toy.py
-      SHOW_MERGES=1 uv run python lessons/01-how-llms-work/code/01_bpe_tokenizer_toy.py
+Run:  uv run python prerequisites/llm-foundations/01-tokenization/code/01_bpe_tokenizer_toy.py
+      SHOW_MERGES=1 uv run python prerequisites/llm-foundations/01-tokenization/code/01_bpe_tokenizer_toy.py
 Expect: the learned merges, then several strings with their token counts and
         the bytes-per-token ratio. English compresses, Chinese barely does.
 """

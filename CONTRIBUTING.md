@@ -8,8 +8,8 @@
 
 ## 不接受什么
 
-- 新增一级目录或在 `lessons/` 末尾追加编号。
-- 绑定特定云厂商或 Agent 框架的正文内容。
+- 新增一级目录，或在 `lessons/`、`prerequisites/` 末尾追加编号。
+- 绑定特定云厂商或 Agent 框架的课程正文。框架代码只接受进 `project/framework-lab/`。
 - 翻译搬运参考仓库的段落。
 - Dashboard、学习计划类文件。
 
@@ -17,7 +17,7 @@
 
 1. 一个 PR 只动一课或一条原则。
 2. 写完把 frontmatter 和 `README.md` 总表的状态改成一致。
-3. `code/` 下的文件在没有 API Key 时也要能跑通。
+3. `code/` 下的文件在没有 API Key 时也要能跑通。提交前跑 `uv run pytest`、`scripts/check_links.py`、`scripts/check_lesson_template.py`，CI 会跑同样的检查。
 4. 中文正文说人话，代码全英文。具体规范见 AGENTS.md 第 4 节。
 
 ## 提交信息

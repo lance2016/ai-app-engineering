@@ -6,8 +6,8 @@ different things: the model reproduces statistical patterns, it does not look
 anything up. Scale this to trillions of tokens and you get an LLM's strengths
 and its hallucinations from the same mechanism.
 
-Run:  uv run python lessons/01-how-llms-work/code/04_bigram_lm.py
-      SEED=7 uv run python lessons/01-how-llms-work/code/04_bigram_lm.py
+Run:  uv run python prerequisites/llm-foundations/00-what-an-llm-is/code/01_bigram_lm.py
+      SEED=7 uv run python prerequisites/llm-foundations/00-what-an-llm-is/code/01_bigram_lm.py
 Expect: five generated sentences. Some are true, some blend facts from
         different sentences. The model cannot tell which is which.
 """

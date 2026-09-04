@@ -12,7 +12,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 SAMPLES = sorted(
-    p for pattern in ("lessons/*/code/*.py", "prerequisites/python/*/code/*.py", "project/*/code/*.py") for p in ROOT.glob(pattern)
+    p for pattern in ("lessons/*/code/*.py", "prerequisites/*/*/code/*.py", "project/*/code/*.py") for p in ROOT.glob(pattern)
 )
 
 

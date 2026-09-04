@@ -13,6 +13,7 @@ depends_on: lessons/17, 18, 19, 20；16 作为回顾
 - **M5.1 评测**：`eval/` 目录放 Golden set（任务成功率、工具准确率、Recall@k 三类），`scripts/eval_run.py` 跑全部并出报告；CI 里作为门禁，任一指标跌破基线阈值则失败；LLM Judge 用于开放式回答，先用 20 条人工标注校准
 - **M5.2 可观测**：OpenTelemetry SDK，span 命名和属性遵循 GenAI 语义约定，`tenant_id`、`thread_id`、`model`、`prompt_version` 是必带属性；导出到 Arize Phoenix（Docker）；结构化 JSON 日志带 `trace_id`；四个故障实验（模型超时、工具报错、检索为空、预算耗尽）各自在 trace 里能一眼看出
 - **M5.3 可靠性与成本**：每租户令牌桶限流；模型调用超时加有上限的重试；供应商错误率超阈值时熔断并 Fallback 到备用 adapter；`cost_ledger` 表按租户按天记 token 和费用；预算耗尽时拒绝新运行并给出明确错误；故障演练脚本按顺序注入五种故障并核对系统行为
+- **M5.4 部署**：`Dockerfile` 多阶段构建；`docker-compose.prod.yml` 起服务加全部依赖；健康探针 `/healthz` 与就绪探针 `/readyz`（依赖不可用时就绪失败）；配置与密钥全部走环境变量，启动时校验必需项；CI 增加镜像构建与冒烟测试；发布检查单：提示词版本、Skill 版本、模型版本三者的回滚对象。素材是第 19 课"部署"一节
 
 目标目录：
 
@@ -30,6 +31,8 @@ scripts/
 ├── eval_run.py
 └── chaos.py        # --inject model_timeout|tool_error|empty_retrieval|budget|provider_down
 docker-compose.yml  # + phoenix
+Dockerfile
+docker-compose.prod.yml
 ```
 
 关键接口：
@@ -65,6 +68,8 @@ uv run python scripts/chaos.py --inject provider_down
 - [ ] 失败注入：`chaos.py --inject provider_down` 后请求仍然成功，trace 标记走了 Fallback，恢复后熔断器自动关闭
 - [ ] 某租户超出限流或预算时返回明确的 429 / 402 类错误，其他租户不受影响
 - [ ] `cost_ledger` 的日汇总和供应商账单在误差范围内对得上
+- [ ] `docker compose -f docker-compose.prod.yml up` 一键起服务，`/readyz` 在依赖就绪前返回 503、就绪后 200；停掉 Redis 后就绪探针在 10 秒内变红
+- [ ] CI 能构建镜像并对容器跑冒烟测试；缺少必需环境变量时容器启动即失败并说明缺哪个
 
 ## 依赖的课程
 

@@ -85,7 +85,7 @@ flowchart TB
 - [OpenAI Agents SDK · README](https://github.com/openai/openai-agents-python/blob/main/README.md)（访问日期 2026-09-04）：handoffs 和 agents-as-tools 两个概念的区分，文档里的 handoff input filter 就是本课 `01` 的历史策略。
 - [12-factor-agents · factor 10 Small, focused agents](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-10-small-focused-agents.md)（访问日期 2026-09-04）：拆小 Agent 的理由。
 - [langchain-academy · module-4 sub-graph、map-reduce](https://github.com/langchain-ai/langchain-academy/tree/main/module-4)（访问日期 2026-09-04）：子图有自己的 state schema、父图只看到它暴露的键，对应本课 `03` 的视图思想。
-- [Agent 框架对比与选型](../09-workflow-vs-agent/bonus/agent-frameworks-compared.md)：判断框架的六个问题里，"多 Agent 怎么交接"那一条现在你有了自己的答案。
+- [Agent 框架对比与选型](../../project/framework-lab/00-landscape.md)：判断框架的六个问题里，"多 Agent 怎么交接"那一条现在你有了自己的答案。
 
 ---
 

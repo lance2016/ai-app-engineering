@@ -16,10 +16,10 @@ estimated_time: 约 2.5 小时
 
 ## 前置
 
-- [01 LLM 工作原理与能力边界](../01-how-llms-work/README.md)：attention、上下文窗口、token
+- 前置 [F05 训练与对齐](../../prerequisites/llm-foundations/05-training-and-alignment/README.md) 和 [F06 KV Cache 与推理](../../prerequisites/llm-foundations/06-kv-cache-and-inference/README.md)：LoRA 为什么有效、prefill 与 decode、KV cache 公式、GQA、量化。本课直接用这些结论，不再解释
+- [01 从模型到应用](../01-how-llms-work/README.md)：硬约束过滤与成本模型
 - [17 评测](../17-evaluation/README.md)：没有评测集就无法判断微调有没有用
 - [19 可靠性、成本、部署与 LLMOps](../19-reliability-cost-llmops/README.md)：成本核算和部署链
-- [Track · LLM 原理补课](../../tracks/llm-internals/README.md)：想深入 LoRA 和量化的数学再去那里
 
 ## 心智模型
 
@@ -44,17 +44,13 @@ flowchart TD
 2. **微调解决的是行为。** 固定的输出格式、领域术语的使用、特定的判断倾向（比如客服话术的克制程度）、把一个大模型的能力压进一个小模型。这些是提示词写再长也不稳定、但几千条样本能教会的东西。
 3. **微调的前置条件是评测集。** 没有评测集，你无法知道微调后是好了还是坏了，也无法知道是不是提示词稍微改一下就够了。llm-course 把评测放在微调之前不是偶然。
 
-### LoRA 一段话
+### LoRA 在决策树里的位置
 
-全量微调要更新全部参数，70B 模型的梯度和优化器状态需要几百 GB 显存。LoRA 的观察是：微调带来的参数变化是低秩的。它冻结原始权重 W，在旁边加两个小矩阵 A（d×r）和 B（r×d），r 通常是 8 到 64，训练时只更新 A 和 B。前向计算变成 W·x + B·A·x。参数量从 d² 降到 2dr，显存需求随之降一到两个数量级，训练完可以把 B·A 合并回 W，推理零开销。代价是表达能力受 r 限制，适合"调行为"，不适合"学大量新知识"。这和上面的决策树是一致的。
+F05 讲了 LoRA 的机制：冻结原始权重，在旁边训练一对低秩矩阵，参数量降一到两个数量级，推理零开销。对本课的意义只有一条：它让"调行为"变得便宜到一张消费级显卡就能做，但表达能力受 rank 限制，不适合"学大量新知识"。这和上面的决策树一致，知识走 RAG，行为才微调。
 
-### 推理：延迟和显存从哪来
+### 推理：三个数字决定选型
 
-一次生成分两个阶段。**Prefill** 把整个提示一次算完，计算密集，耗时和提示长度成正比，决定首 token 延迟。**Decode** 每步生成一个 token，每步都要读一遍全部权重，访存密集，耗时和输出长度成正比，决定 token 之间的间隔。
-
-Decode 每步都要用到前面所有 token 的 key 和 value，重复计算太贵，所以缓存起来，这就是 **KV cache**。它的大小是 2 × 层数 × kv 头数 × 头维度 × 精度字节 × 序列长度 × 批大小。序列一长、批一大，它就超过权重本身。**GQA**（分组查询注意力）让多个查询头共用一组 kv 头，把 kv 头数从 32 降到 8 或 4，KV cache 直接缩到四分之一到八分之一。这是现在 8B 模型能服务 32k 上下文的原因。
-
-**量化**把权重从 fp16 的 2 字节压到 int8 的 1 字节或 int4 的 0.5 字节，显存减半再减半，访存带宽需求同比下降，decode 变快。代价是质量小幅下降，int8 几乎无损，int4 在多数任务上可接受，在数学和代码上更明显。注意量化的通常只是权重，KV cache 默认还是 fp16，除非推理引擎专门支持 KV cache 量化。
+F06 讲了机制，这里只留结论。**首 token 延迟**由 prefill 决定，和输入长度成正比。**每 token 间隔**由显存带宽决定，和批大小有关。**显存**等于权重加 KV cache，后者是 2 × 层数 × kv 头数 × 头维度 × 精度字节 × 序列长度 × 批大小，长上下文高并发时它会超过权重本身。GQA 把 kv 头数从 32 降到 8 或 4，KV cache 缩到四分之一到八分之一；量化把权重从 2 字节压到 1 或 0.5 字节，但默认不压 KV cache。所以看一个模型能不能在你的卡上服务长上下文，kv 头数比参数量更重要。本课 `01` 把这两项合在一个估算器里。
 
 ### vLLM 还是 llama.cpp
 
@@ -109,7 +105,7 @@ Decode 每步都要用到前面所有 token 的 key 和 value，重复计算太�
 ## 延伸阅读
 
 - [llm-course · The LLM Engineer](https://github.com/mlabonne/llm-course)（访问日期 2026-09-04）：README 里 Engineer 路线的 Inference optimization 和 Deploying LLMs 两节，本课推理部分的取舍框架来源，链接了 Flash Attention、MQA/GQA、speculative decoding 的原始资料。
-- [LLMs-from-scratch · ch05](https://github.com/rasbt/LLMs-from-scratch/blob/main/ch05/README.md)、[ch06](https://github.com/rasbt/LLMs-from-scratch/blob/main/ch06/README.md)、[ch07](https://github.com/rasbt/LLMs-from-scratch/blob/main/ch07/README.md)（访问日期 2026-09-04）：预训练、分类微调、指令微调的从零实现。想知道微调在代码层面是什么就读这三章，Track · LLM 原理补课按它的顺序组织。
+- [LLMs-from-scratch · ch05](https://github.com/rasbt/LLMs-from-scratch/blob/main/ch05/README.md)、[ch06](https://github.com/rasbt/LLMs-from-scratch/blob/main/ch06/README.md)、[ch07](https://github.com/rasbt/LLMs-from-scratch/blob/main/ch07/README.md)（访问日期 2026-09-04）：预训练、分类微调、指令微调的从零实现。想知道微调在代码层面是什么就读这三章，前置 F05 是它们的结论摘要。
 - [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685)（访问日期 2026-09-04）：原始论文，第 4 节的方法描述一页就够。
 - [vLLM 文档](https://docs.vllm.ai/en/latest/) 与 [llama.cpp](https://github.com/ggml-org/llama.cpp)（访问日期 2026-09-04）：两个推理引擎的入口。vLLM 首页的 PagedAttention 一段解释了它怎么管理 KV cache。
 - [ai-agents-for-beginners · 17 Creating Local AI Agents](https://github.com/microsoft/ai-agents-for-beginners/blob/main/17-creating-local-ai-agents/README.md)（访问日期 2026-09-04）：小模型在本地做 Agent 的场景和"云端加本地"的混合模式，绑定微软工具的部分可跳过。

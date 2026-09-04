@@ -61,7 +61,7 @@ gantt
 
 ## 和主线的关系
 
-- TTFT 与上下文长度、prompt caching → [第 08 课](../../lessons/08-context-engineering-for-agents/README.md)、[LLM 原理 track 第 08 篇](../llm-internals/08-inference-optimization.md)。
+- TTFT 与上下文长度、prompt caching → [第 08 课](../../lessons/08-context-engineering-for-agents/README.md)、[前置 F06 KV Cache 与推理](../../prerequisites/llm-foundations/06-kv-cache-and-inference/README.md)。
 - 分段测量 → [第 18 课 可观测性](../../lessons/18-observability/README.md)。
 - 延迟作为设计约束 → [原则 10](../../principles/10-cost-and-latency-are-design-constraints.md)。
 
