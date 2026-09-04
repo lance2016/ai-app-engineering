@@ -87,7 +87,7 @@ sequenceDiagram
 
 ## 对照真实项目
 
-主项目 [M0](../../project/m0-concurrency/README.md) 的并发实验用的就是本课的 `complete()` 和 `stream()`；[M1 API 骨架](../../project/m1-api-skeleton/README.md) 把 `04` 的成本账本变成每次请求的响应头和落库字段，把重试策略放进 adapter 层的配置。
+主项目 [M0](../../project/m0-concurrency/README.md) 的并发实验用的就是本课的 `complete()` 和 `stream()`。[M1 API 骨架](../../project/m1-api-skeleton/README.md) 把 `03` 的流式变成了一个 SSE 端点：[`aiapp/runtime/turn.py`](../../project/src/aiapp/runtime/turn.py) 的 `run_turn()` 消费 `stream()`，文本增量作为 `assistant_delta` 事件推给客户端，`run_finished` 事件里带本轮 usage；`tests/project/m1/test_threads.py` 断言增量拼起来等于最终消息。首块超时返回 504、供应商报错返回 502 的映射在 [`aiapp/api/errors.py`](../../project/src/aiapp/api/errors.py)。`04` 的重试和成本账本要到 M5 才进 adapter 层。
 
 作者的语音机器人项目有一条相关经验：早期结构化输出靠在提示词里反复强调"只输出 JSON"，线上仍有百分之几的返回带解释文字或围栏，每次都是客服反馈后手动补规则。后来改成本课的做法，schema 和校验用同一个 Pydantic 模型，失败原文回喂重试一次，格式类错误基本消失，剩下的都是真正的语义错误，这些才值得人看。另一条是流式：TTS 需要一边收文本一边合成，但设备动作命令必须等完整参数。两个消费者读同一条流，前者按句号切句，后者只看最后一块。
 

@@ -89,7 +89,7 @@
 - **代码全英文**：变量名、函数名、注释、docstring、日志。
 - **不绑框架。** 讲机制用普通 Python。框架代码只出现在 `project/framework-lab/`；课程正文里提框架只在「框架映射」小节的表里。
 - **模型可替换。** 任何示例都通过 `aiapp.get_adapter()` 调模型，默认 fake adapter。需要真实模型时用 `MODEL_PROVIDER=deepseek`：课程的真实模型示范默认 DeepSeek，因为国内可直接访问；它走 OpenAI 兼容协议，DashScope 和 OpenAI 是同一个 adapter 的不同预设。正文里不写死任何一家的 SDK 调用。
-- **新依赖要说明。** 某课需要新包时，`uv add` 之后在那课 README 的「安装」或「最小可运行例子」里写清为什么需要它。当前基础依赖只有 pydantic、openai、python-dotenv。框架依赖只进 `frameworks` 依赖组，钉版本并标日期。
+- **新依赖要说明。** 某课需要新包时，`uv add` 之后在那课 README 的「安装」或「最小可运行例子」里写清为什么需要它。当前基础依赖是 pydantic、openai、python-dotenv、fastapi、uvicorn、httpx。框架依赖只进 `frameworks` 依赖组，钉版本并标日期。
 - **`.py` 是唯一的代码源文件。** `code/` 下只放 `.py`，用 `# %%` 分隔符写成 cell 风格，VS Code / PyCharm 能逐格运行，`jupytext --to ipynb` 能转给想用 Jupyter 的读者；pytest 只跑 `.py`。notebook 只允许用于"看数据"的场景（分布、相似度、评测曲线、模型输出对比），放在该课 `notebooks/` 目录，提交前清空输出。不要把 Agent 循环、状态、副作用类的示例写成 notebook，它们的价值在于可测试、可 import、无隐藏状态。
 - **不放密钥、内部地址、账号。** 需要 key 的地方读环境变量并在 `00-setup` 说明。
 - **不夸大。** 没有跑过的代码不写「验证通过」；有争议的判断写「一种常见做法是」而不是「必须」。

@@ -7,9 +7,12 @@ name = "ai-app-engineering"
 version = "0.0.1"
 source = { editable = "." }
 dependencies = [
+    { name = "fastapi" },
+    { name = "httpx" },
     { name = "openai" },
     { name = "pydantic" },
     { name = "python-dotenv" },
+    { name = "uvicorn" },
 ]
 
 [package.dev-dependencies]
@@ -17,27 +20,22 @@ dev = [
     { name = "pytest" },
 ]
 prereq = [
-    { name = "fastapi" },
-    { name = "httpx" },
     { name = "sqlalchemy" },
-    { name = "uvicorn" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "fastapi", specifier = ">=0.141.1" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "openai", specifier = ">=3.8.0" },
     { name = "pydantic", specifier = ">=2.7" },
     { name = "python-dotenv", specifier = ">=1.2.3" },
+    { name = "uvicorn", specifier = ">=0.52.4" },
 ]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=8.0" }]
-prereq = [
-    { name = "fastapi", specifier = ">=0.141.1" },
-    { name = "httpx", specifier = ">=0.28.1" },
-    { name = "sqlalchemy", specifier = ">=2.0.52" },
-    { name = "uvicorn", specifier = ">=0.52.4" },
-]
+prereq = [{ name = "sqlalchemy", specifier = ">=2.0.52" }]
 
 [[package]]
 name = "annotated-doc"

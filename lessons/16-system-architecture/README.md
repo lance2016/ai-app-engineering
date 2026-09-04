@@ -105,7 +105,7 @@ ai-agents-for-beginners 第 16 课有一句话值得记住：模型大概只占�
 
 ## 对照真实项目
 
-这一课是主项目 [M1](../../project/m1-api-skeleton/README.md) 和 [M2](../../project/m2-state-and-storage/README.md) 的架构总结：M1 做了网关、鉴权和 SSE 端点，M2 做了线程持久化和 Redis 状态。学到这一课时回头看这两个里程碑，检查每一跳是不是都有对应的模块。[M5](../../project/m5-production/README.md) 会在这条链的每一跳加上 trace。
+这一课是主项目 [M1](../../project/m1-api-skeleton/README.md) 和 [M2](../../project/m2-state-and-storage/README.md) 的架构总结：M1 做了网关、鉴权和 SSE 端点，对应 [`aiapp/api/`](../../project/src/aiapp/api/) 的 `deps.get_tenant`、`errors.py` 和 `routes/threads.py`；M2 做线程持久化和 Redis 状态。学到这一课时回头看这两个里程碑，检查每一跳是不是都有对应的模块。[M5](../../project/m5-production/README.md) 会在这条链的每一跳加上 trace。
 
 语音机器人项目就是一个"两个进程通过 PostgreSQL、Redis 和实时音视频通道通信"的系统。一个真实的架构教训是早期把"当前处于哪个子 Agent"这个状态放在 Redis，进程重启后状态丢了但 PostgreSQL 里的对话历史还在，两边不一致导致机器人"忘了自己在玩游戏"。按本课的边界表，这个状态要么从历史推导，要么落 PostgreSQL，唯独不能只在 Redis。另一个和三种形态相关的经验：语音场景的模型输出是流式的，但设备端的动作指令必须等一个完整的工具调用才能下发，所以同一条响应里文本走流式、指令走"攒够再发"，两种形态在一个请求里并存。
 

@@ -79,7 +79,7 @@ flowchart LR
 
 ## 对照真实项目
 
-主项目 [M1 API 骨架](../../project/m1-api-skeleton/README.md) 把 `01` 的渲染函数变成一个带版本号的 prompt 模块，每次请求记录用的是哪个版本，`02` 的 golden set 进 `tests/` 成为 CI 的一部分。
+主项目 [M1 API 骨架](../../project/m1-api-skeleton/README.md) 把版本放进文件名：[`aiapp/prompts/`](../../project/src/aiapp/prompts/) 下是 `assistant.v1.md`、`assistant.v2.md`，`load_prompt()` 按 `AIAPP_PROMPT_VERSION` 加载，启动时找不到文件直接起不来，每次流式响应带 `X-Prompt-Version` 头。`tests/project/m1/test_threads.py` 里 `test_switching_prompt_version_changes_header_and_prompt` 验证切版本时头部和模型看到的 system prompt 一起变。`01` 的渲染函数（结构化的 prompt 输入）和 `02` 的 golden set 要到 M3 加工具、M5 加评测时才进项目。
 
 作者的语音机器人项目有两条相关经验。一是多个角色的人设 prompt 早期散在配置中心的几十个字段里，改一处要翻好几个页面，没人知道线上实际发出的完整文本长什么样。后来改成代码里的渲染函数加版本号，每次上线前先把渲染结果 diff 一遍，很多"模型突然变笨"的问题在 diff 里就看出是某个区段被误删了。二是把机器人不能承认自己是 AI 这类硬约束写在 prompt 里，线上仍然偶尔漏。最后的做法是 prompt 里保留约束，但输出后再过一道确定性检查，这就是第 20 课要讲的"守卫在代码不在提示词"。
 

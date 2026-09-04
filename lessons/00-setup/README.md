@@ -81,7 +81,7 @@ MODEL_PROVIDER=deepseek uv run python lessons/00-setup/code/02_real_model_tool_c
 | [`code/01_hello_fake_adapter.py`](./code/01_hello_fake_adapter.py) | 拿到 adapter，发一条消息，读响应和用量 |
 | [`code/02_real_model_tool_call.py`](./code/02_real_model_tool_call.py) | 同一个循环接真实模型，完成一次工具调用往返；没有 key 时提示后退出 |
 
-`aiapp` 包在 [`project/src/aiapp/`](../../project/src/aiapp/)，四个文件加起来两百多行，建议现在读一遍：
+`aiapp` 包在 [`project/src/aiapp/`](../../project/src/aiapp/)。这一课只需要读 `adapters/` 下的四个文件，加起来两百多行；`api/`、`runtime/`、`storage/` 是主项目 M1 起才用到的，先不用看：
 
 - `adapters/base.py`：消息、工具调用、工具描述、响应四个类型和 adapter 协议
 - `adapters/fake.py`：剧本式假模型，以及 `tool_call_response()` 这个造工具调用的小工具

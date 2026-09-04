@@ -56,6 +56,8 @@ class Thread:
         for e in reversed(self.events):
             if e.type == "run_finished":
                 return "finished"
+            if e.type == "run_failed":
+                return "failed"
             if e.type == "human_input_requested":
                 return "paused"
             if e.type == "human_input":
