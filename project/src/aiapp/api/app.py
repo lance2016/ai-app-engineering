@@ -12,7 +12,7 @@ from aiapp.adapters.base import ModelAdapter
 from aiapp.adapters.embeddings import get_embedding_adapter
 from aiapp.adapters.inject import apply_injection
 from aiapp.api.errors import install_error_handlers
-from aiapp.api.routes import health, knowledge, threads
+from aiapp.api.routes import health, knowledge, playground, threads
 from aiapp.ops import telemetry
 from aiapp.ops.cost import CostLedger, CostStore, InMemoryCostStore, PriceTable
 from aiapp.ops.logging import setup_logging
@@ -175,6 +175,7 @@ def create_app(
     app.include_router(health.router)
     app.include_router(threads.router)
     app.include_router(knowledge.router)
+    app.include_router(playground.router)
     log.info(
         "app ready model=%s prompt_version=%s inject=%s store=%s kv=%s tools=%s skills=%s",
         model.name, settings.prompt_version, settings.inject, type(store).__name__, type(kv).__name__,
