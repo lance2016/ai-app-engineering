@@ -15,7 +15,7 @@
 
 命名约定：`Part N` 是课程分组，`L0–L5` 是 ROADMAP 里的能力阶段，`P00–P12` / `A00–A06` / `F00–F07` 是前置模块，`M0–M6` 是项目里程碑。
 
-另有 `tracks/`（方向选修，不编号，目前两条：networking、robotics-voice）、`reference/`（术语、选型、资料）、`templates/`（写作模板）、`scripts/`（状态同步、链接与模板检查）、`tests/`（所有 `code/` 的 smoke test，将来按里程碑放验收测试）。
+另有 `tracks/`（方向选修，不编号，目前两条：networking、robotics-voice）、`reference/`（术语、选型、资料）、`templates/`（写作模板）、`scripts/`（状态同步、链接与模板检查）、`tests/`（所有 `code/` 的 smoke test，将来按里程碑放验收测试）。 README 顶部用到的 banner、路线图、架构图放在 `.github/assets/`，它不是内容目录，不受下面第 1 条限制。
 
 课程的历史来源是作者的 Obsidian 笔记（Codex 多轮对话生成的大纲），位于作者本机 `~/Documents/work/Codex 学习沉淀/`。它们只是大纲，没有代码。每课 README 底部的「写作素材」折叠块列出了对应的旧文件和参考仓库章节。
 
