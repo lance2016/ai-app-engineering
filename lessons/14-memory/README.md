@@ -81,7 +81,7 @@ flowchart LR
 
 ## 对照真实项目
 
-主项目 [M4.3](../../project/m4-rag-and-memory/README.md) 把 `01` 到 `03` 合成一个 `MemoryService`，存储从 JSON 换成 PostgreSQL 的一张表（和 pgvector 同库），检索换成向量加关键词混合。删除演练进 M4 的验收清单。
+主项目 [M4.3](../../project/m4-rag-and-memory/README.md) 把 `01` 到 `03` 合成 [`aiapp/knowledge/memory.py`](../../project/src/aiapp/knowledge/memory.py) 的 `MemoryService`：`extract_candidates()` 是 `01`，来源不指向本线程的用户消息就整批拒绝；`remember()` 是 `02` 的去重和同主题取代；`recall()` 和 `forget()` 是 `03`，遗忘是带原因的软删除，`history` 视图就是审计。存储在 PostgreSQL 的 `memory` 表，和 pgvector 同库。每轮请求前召回的记忆作为一段 `user` 消息注入上下文，`test_memories_are_extracted_recalled_next_turn_and_forgotten` 验证遗忘之后模型再也看不到它。
 
 语音机器人项目有一个和本课直接相关的教训：家庭场景下多个家庭成员共用一台设备，早期记忆只按设备存，结果孩子说的偏好出现在给家长的回答里。修法就是 `03` 里那一行按用户过滤，加上声纹或显式身份切换来确定"当前用户是谁"。另一个经验是记忆里写着的事实要标"用户明说"还是"模型推断"，推断出来的东西在回答里要用"我记得你好像……"这种可被纠正的语气，而不是当成事实陈述。
 

@@ -78,7 +78,7 @@ flowchart LR
 
 ## 对照真实项目
 
-主项目 [M4.1](../../project/m4-rag-and-memory/README.md) 用 `01` 和 `02` 的流程把文档灌进 pgvector，M4 的验收清单里有一项就是 `03` 的删除演练，要求删除某个源文档后向量表、BM25 索引、答案缓存全部无残留。
+主项目 [M4.1](../../project/m4-rag-and-memory/README.md) 的 [`aiapp/knowledge/ingest.py`](../../project/src/aiapp/knowledge/ingest.py) 是 `01`：按标题切段、内容哈希、质量检查；`Retriever.ingest()` 是 `02`：只给哈希变了的 chunk 重新算 embedding，`IngestReport` 报 `embedded / reused / removed`；`03` 的删除演练变成了 `DELETE /v1/documents/{id}` 响应里的 `residue` 计数，`test_delete_leaves_no_residue_anywhere` 断言全零。
 
 语音机器人项目的知识库是玩法和故事内容，一个真实教训是内容团队更新了某个故事文本，索引里的旧版本没被替换，机器人念的还是旧的。根因就是没有版本和哈希，更新流程是"追加"而不是"替换"。`02` 的 `stale_chunks()` 是后来加的巡检，每天跑一次，有陈旧数据就告警。
 

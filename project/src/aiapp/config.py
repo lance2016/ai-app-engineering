@@ -14,6 +14,9 @@ Env vars (all optional):
   AIAPP_MCP_COMMAND      command line of a stdio MCP server to register, e.g. "python -m aiapp.mcp.toy_notes_server --read-only"
   AIAPP_MAX_STEPS / AIAPP_MAX_TOKENS / AIAPP_MAX_SECONDS   per-run budget (default 10 / 50000 / 120)
   AIAPP_CONTEXT_BUDGET_TOKENS  token budget for the assembled context window (default 24000)
+  EMBEDDING_PROVIDER     fake (hashing, offline) | dashscope | openai   (default fake)
+  AIAPP_CHUNK_MAX_CHARS  chunk size for ingestion (default 600)
+  AIAPP_MEMORY_RECALL_K  memories injected per turn (default 5; 0 disables)
 """
 
 import os
@@ -56,6 +59,9 @@ class Settings:
     max_tokens: int = 50_000
     max_seconds: float = 120.0
     context_budget_tokens: int = 24_000
+    embedding_provider: str = "fake"
+    chunk_max_chars: int = 600
+    memory_recall_k: int = 5
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> "Settings":
@@ -76,4 +82,7 @@ class Settings:
             max_tokens=int(env.get("AIAPP_MAX_TOKENS", "50000")),
             max_seconds=float(env.get("AIAPP_MAX_SECONDS", "120")),
             context_budget_tokens=int(env.get("AIAPP_CONTEXT_BUDGET_TOKENS", "24000")),
+            embedding_provider=env.get("EMBEDDING_PROVIDER", "fake"),
+            chunk_max_chars=int(env.get("AIAPP_CHUNK_MAX_CHARS", "600")),
+            memory_recall_k=int(env.get("AIAPP_MEMORY_RECALL_K", "5")),
         )

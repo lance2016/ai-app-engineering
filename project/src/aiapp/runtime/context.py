@@ -31,6 +31,7 @@ def shape_tool_result(content: str, *, head: int = 1_500, tail: int = 500) -> st
 class ContextReport:
     system_tokens: int = 0
     catalog_tokens: int = 0
+    memory_tokens: int = 0
     history_tokens: int = 0
     dropped_messages: int = 0
     shaped_results: int = 0
@@ -44,13 +45,16 @@ class ContextBuilder:
     system_prompt: str
     budget_tokens: int = 24_000
     skill_catalog: str = ""
+    memory_block: str = ""  # what the runtime remembers about this user; volatile, so it goes after the cacheable prefix
     report: ContextReport = field(default_factory=ContextReport)
 
     def build(self, thread: Thread) -> list[Message]:
         system = self.system_prompt if not self.skill_catalog else f"{self.system_prompt}\n\n{self.skill_catalog}"
         fixed = [Message(role="system", content=system)]
-        report = ContextReport(system_tokens=estimate_tokens(self.system_prompt), catalog_tokens=estimate_tokens(self.skill_catalog))
-        spent = report.system_tokens + report.catalog_tokens
+        if self.memory_block:
+            fixed.append(Message(role="user", content=self.memory_block))
+        report = ContextReport(system_tokens=estimate_tokens(self.system_prompt), catalog_tokens=estimate_tokens(self.skill_catalog), memory_tokens=estimate_tokens(self.memory_block) if self.memory_block else 0)
+        spent = report.system_tokens + report.catalog_tokens + report.memory_tokens
         if spent > self.budget_tokens:
             raise ValueError(f"system prompt and catalog alone use {spent} tokens; budget is {self.budget_tokens}")
 
@@ -63,7 +67,7 @@ class ContextBuilder:
                 break
             kept = turn + kept
             spent += cost
-        report.history_tokens = spent - report.system_tokens - report.catalog_tokens
+        report.history_tokens = spent - report.system_tokens - report.catalog_tokens - report.memory_tokens
         report.dropped_messages = len(history) - len(kept)
         self.report = report
         return fixed + kept

@@ -34,7 +34,7 @@ def test_tool_calls_stream_as_events(monkeypatch) -> None:
     assert kinds == ["user_message", "run_started", "assistant_message", "tool_result", "assistant_message", "run_finished"]
     tool_result = dict(frames)["tool_result"]
     assert tool_result["name"] == "search_docs" and tool_result["route"] == "ok" and "doc_shipping" in tool_result["content"]
-    assert set(dict(frames)["run_started"]["allowlist"]) == {"search_docs", "read_doc", "delete_doc", "load_skill", "read_skill_reference"}
+    assert set(dict(frames)["run_started"]["allowlist"]) == {"search_docs", "read_doc", "delete_doc", "load_skill", "read_skill_reference", "search_knowledge"}
 
 
 def test_confirmation_round_trip_over_http() -> None:

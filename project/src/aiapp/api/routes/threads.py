@@ -17,10 +17,13 @@ from fastapi import APIRouter, Depends, Header, Request
 from fastapi.responses import StreamingResponse
 
 from aiapp.adapters.base import ModelAdapter
-from aiapp.api.deps import Tenant, get_kv, get_model, get_runner, get_settings, get_skills, get_store, get_system_prompt, get_tenant
+from aiapp.api.deps import Tenant, get_kv, get_memory, get_model, get_runner, get_settings, get_skills, get_store, get_system_prompt, get_tenant, get_user_id
 from aiapp.api.errors import Conflict, InvalidRequest, ModelTimeout, NotFound, ProviderError, request_id_of
 from aiapp.api.schemas import CreateThreadRequest, HumanInputRequest, MessageRequest, ThreadView
 from aiapp.config import Settings
+from aiapp.knowledge.citations import verify_citations
+from aiapp.knowledge.memory import MemoryService, render_memories
+from aiapp.tools.knowledge import CITATION_INSTRUCTIONS, SEARCH_KNOWLEDGE, sources_from_tool_result
 from aiapp.runtime import Budget, ContextBuilder, Delta, RunContext, SkillLoader, ToolRunner, run_agent
 from aiapp.storage.base import KeyValueStore, SeqConflict, ThreadNotFound, ThreadStore, flush
 from aiapp.thread import Event, Thread
@@ -104,6 +107,7 @@ async def _run_and_stream(
     user_content: str | None,
     idempotency_key: str | None,
     prelude: tuple[str, dict] | None = None,
+    memory_block: str = "",
 ) -> StreamingResponse:
     """Run the agent and stream its events. ``prelude`` is an event to record and stream before the run (the human's answer)."""
     thread_id, request_id = thread.thread_id, request_id_of(request)
@@ -130,7 +134,8 @@ async def _run_and_stream(
     prelude_event = thread.append(prelude[0], **prelude[1]) if prelude else None
     ctx = RunContext(tenant_id=tenant.id, thread_id=thread_id, allowlist=allowlist)
     budget = Budget(max_steps=settings.max_steps, max_tokens=settings.max_tokens, max_seconds=settings.max_seconds)
-    context = ContextBuilder(system_prompt, budget_tokens=settings.context_budget_tokens, skill_catalog=skills.catalog())
+    prompt = f"{system_prompt}\n\n{CITATION_INSTRUCTIONS}" if SEARCH_KNOWLEDGE in allowlist else system_prompt
+    context = ContextBuilder(prompt, budget_tokens=settings.context_budget_tokens, skill_catalog=skills.catalog(), memory_block=memory_block)
     run = run_agent(thread, model, runner, ctx=ctx, budget=budget, context=context, skills=skills, timeout_s=settings.model_timeout_s, user_content=user_content)
 
     async def checkpoint() -> None:
@@ -172,6 +177,10 @@ async def _run_and_stream(
                     yield sse_frame(item)
                     if isinstance(item, Event):
                         await checkpoint()  # every step is durable before the next one starts
+                check = _citations_event(thread, from_seq)
+                if check is not None:
+                    yield sse_frame(check)
+                    await checkpoint()
             completed = True
         except asyncio.CancelledError:
             log.warning("stream cancelled by client request_id=%s thread=%s", request_id, thread_id)
@@ -191,6 +200,27 @@ async def _run_and_stream(
     return _sse_response(events(), settings)
 
 
+def _citations_event(thread: Thread, from_seq: int) -> Event | None:
+    """After a finished run that used search_knowledge: verify the answer's citations against what was actually retrieved."""
+    run_events = thread.events[from_seq:]
+    if not run_events or run_events[-1].type != "run_finished":
+        return None
+    sources: dict[str, str] = {}
+    for e in run_events:
+        if e.type == "tool_result" and e.data.get("name") == SEARCH_KNOWLEDGE and not e.data.get("is_error"):
+            sources.update(sources_from_tool_result(e.data.get("content", "")))
+    if not sources:
+        return None
+    report = verify_citations(run_events[-1].data.get("answer", ""), sources)
+    return thread.append("citations_checked", **report.as_dict())
+
+
+async def _memory_block(memory: MemoryService, settings: Settings, tenant: Tenant, user_id: str, query: str | None) -> str:
+    if settings.memory_recall_k <= 0 or not query:
+        return ""
+    return render_memories(await memory.recall(tenant.id, user_id, query, k=settings.memory_recall_k))
+
+
 @router.post("/{thread_id}/messages")
 async def send_message(
     thread_id: str,
@@ -204,6 +234,8 @@ async def send_message(
     skills: Annotated[SkillLoader, Depends(get_skills)],
     settings: Annotated[Settings, Depends(get_settings)],
     system_prompt: Annotated[str, Depends(get_system_prompt)],
+    memory: Annotated[MemoryService, Depends(get_memory)],
+    user_id: Annotated[str, Depends(get_user_id)],
     idempotency_key: Annotated[str | None, Header()] = None,
 ) -> StreamingResponse:
     thread = await _load(store, thread_id, tenant)
@@ -213,6 +245,7 @@ async def send_message(
         request=request, thread=thread, tenant=tenant, store=store, kv=kv, model=model, runner=runner, skills=skills,
         settings=settings, system_prompt=system_prompt, allowlist=_allowlist(settings, runner, body.allowed_tools),
         user_content=body.content, idempotency_key=idempotency_key,
+        memory_block=await _memory_block(memory, settings, tenant, user_id, body.content),
     )
 
 

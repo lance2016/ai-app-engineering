@@ -8,6 +8,8 @@ from fastapi import Depends, Header, Request
 from aiapp.adapters.base import ModelAdapter
 from aiapp.api.errors import Unauthorized
 from aiapp.config import Settings
+from aiapp.knowledge.memory import MemoryService
+from aiapp.knowledge.retriever import Retriever
 from aiapp.runtime import SkillLoader, ToolRunner
 from aiapp.storage.base import KeyValueStore, ThreadStore
 
@@ -27,6 +29,14 @@ def get_store(request: Request) -> ThreadStore:
 
 def get_kv(request: Request) -> KeyValueStore:
     return request.app.state.kv
+
+
+def get_retriever(request: Request) -> Retriever:
+    return request.app.state.retriever
+
+
+def get_memory(request: Request) -> MemoryService:
+    return request.app.state.memory
 
 
 def get_runner(request: Request) -> ToolRunner:
@@ -56,3 +66,8 @@ def get_tenant(
     if tenant_id is None:
         raise Unauthorized("invalid token")
     return Tenant(id=tenant_id)
+
+
+def get_user_id(tenant: Annotated[Tenant, Depends(get_tenant)], x_user_id: Annotated[str | None, Header()] = None) -> str:
+    """The end user behind the request, for memory scoping. Defaults to the tenant itself (single-user tenants)."""
+    return (x_user_id or "").strip() or tenant.id

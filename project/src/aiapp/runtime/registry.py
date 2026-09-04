@@ -15,7 +15,7 @@ from pydantic import BaseModel, ValidationError
 
 from aiapp.adapters.base import ToolCall, ToolSpec
 
-Handler = Callable[[dict[str, Any]], str | Awaitable[str]]
+Handler = Callable[..., str | Awaitable[str]]  # (arguments) or (arguments, ctx=RunContext)
 
 JSON_TYPES: dict[str, type | tuple[type, ...]] = {
     "string": str,
@@ -53,8 +53,14 @@ class Tool:
                 raise ValueError(f"invalid arguments: {key} should be {expected}, got {type(value).__name__}")
         return arguments
 
-    async def execute(self, arguments: dict[str, Any]) -> str:
-        result = self.handler(arguments)
+    def wants_context(self) -> bool:
+        try:
+            return "ctx" in inspect.signature(self.handler).parameters
+        except (TypeError, ValueError):
+            return False
+
+    async def execute(self, arguments: dict[str, Any], ctx: Any = None) -> str:
+        result = self.handler(arguments, ctx=ctx) if self.wants_context() else self.handler(arguments)
         if inspect.isawaitable(result):
             result = await result
         return result if isinstance(result, str) else json.dumps(result, ensure_ascii=False)

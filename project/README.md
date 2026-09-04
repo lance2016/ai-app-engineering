@@ -26,7 +26,7 @@ flowchart LR
 | M1 | [API 骨架](./m1-api-skeleton/README.md) | FastAPI + Pydantic + pytest；健康检查、鉴权、SSE 流式、结构化错误、system prompt 版本化 | 实现 | complete |
 | M2 | [数据与状态](./m2-state-and-storage/README.md) | conversation / message / task 表、Alembic 迁移、Redis 状态、checkpoint 与 resume | 实现 | complete |
 | M3 | [Tool Workflow](./m3-tool-workflow/README.md) | 工具契约、确认与幂等、失败恢复、最小 trace；再接 MCP 和一个 Skill | 实现 | complete |
-| M4 | [Tiny-RAG 与 Memory](./m4-rag-and-memory/README.md) | 混合检索、引用、Recall@k、记忆提取与删除演练 | 实现 | draft |
+| M4 | [Tiny-RAG 与 Memory](./m4-rag-and-memory/README.md) | 混合检索、引用、Recall@k、记忆提取与删除演练 | 实现 | complete |
 | M5 | [生产化](./m5-production/README.md) | Golden set 回归、OpenTelemetry + Phoenix、限流、Fallback、成本统计、故障演练、容器化与部署 | 实现 | draft |
 | M6 | [综合设计](./m6-platform-design/README.md) | 多租户知识库 + 任务 Agent 平台的 RFC：容量、威胁模型、模型与推理选型、迁移与退出；Capstone 4 的设计阶段 | 设计 | draft |
 

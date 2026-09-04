@@ -18,6 +18,14 @@ class MessageRequest(BaseModel):
     allowed_tools: list[str] | None = Field(default=None, description="Narrow this request's tools; never widens the server allowlist")
 
 
+class IngestDocumentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    doc_id: str = Field(min_length=1, max_length=200, pattern=r"^[A-Za-z0-9_\-./]+$")
+    text: str = Field(min_length=1, max_length=2_000_000)
+    title: str | None = Field(default=None, max_length=200)
+    version: int = Field(default=1, ge=1)
+
+
 class HumanInputRequest(BaseModel):
     """Either answer a question (tool_call_id + content) or decide on a confirmation (confirm_tool_call_id + approved)."""
 

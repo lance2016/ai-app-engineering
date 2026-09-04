@@ -100,7 +100,7 @@ LIMIT 5;
 
 ## 对照真实项目
 
-主项目 [M4.1 索引与检索](../../project/m4-rag-and-memory/README.md) 把本课的 `VectorIndex` 换成 pgvector 表，`02` 的 `search()` 变成上面那条 SQL。M4.2 用 Recall@k 衡量切块策略，`03` 的实验是它的手工版。
+主项目 [M4.1](../../project/m4-rag-and-memory/README.md) 把本课的 `VectorIndex` 换成 [`aiapp/knowledge/postgres_store.py`](../../project/src/aiapp/knowledge/postgres_store.py) 的 pgvector 表，`02` 的 `search()` 变成 `search_vector()` 里的余弦距离排序。embedding 走 [`adapters/embeddings.py`](../../project/src/aiapp/adapters/embeddings.py) 的 `EmbeddingAdapter`，离线用 `HashingEmbedding`，`EMBEDDING_PROVIDER=dashscope` 换真实模型。每条向量记 `embedding_model`，搜索时只比同模型的向量，`test_vectors_from_another_model_are_never_compared` 就是下面那个事故的测试。`scripts/eval_recall.py` 是 `03` 实验的可重复版本。
 
 语音机器人项目里 embedding 用在两处：对话历史检索和长期记忆召回。一个教训是换了一次 embedding 模型后忘了重建旧记忆的向量，新旧向量混在一个表里，召回质量悄悄下降了几周才被发现。后来给每条向量记了模型版本字段，查询时只在同版本内比较。
 

@@ -93,7 +93,7 @@ flowchart LR
 
 ## 对照真实项目
 
-主项目 [M4.1 索引与检索](../../project/m4-rag-and-memory/README.md) 把 `ragkit.py` 的 BM25 换成 PostgreSQL 的全文检索，玩具向量换成真实 embedding 存进 pgvector，RRF 在 SQL 里做。[M4.2 引用与评测](../../project/m4-rag-and-memory/README.md) 把 `05` 变成一个可以在 CI 里跑的回归测试，把 `04` 的 `verify()` 接到生成之后。第 15 课的文档版本和删除演练建在同一张表上。
+主项目 [M4](../../project/m4-rag-and-memory/README.md) 的 [`aiapp/knowledge/`](../../project/src/aiapp/knowledge/) 就是这七步：`ingest.py` 是 `01` 的切块，多了 `start`/`end` 切片和内容哈希；`postgres_store.py` 用 `tsvector` 替代 `ragkit` 的 BM25、用 pgvector 替代玩具向量；`hybrid.py` 是 `rrf()`；`citations.py` 是 `04` 的 `verify()`，运行结束后由路由调用并把结果记成 `citations_checked` 事件；`scripts/eval_recall.py` 是 `05`，多了 miss 分类，基线表在 M4 README。`tests/project/m4/test_knowledge_store_contract.py` 里 Recall@5 ≥ 0.85 是 CI 门禁。
 
 ## 延伸阅读
 

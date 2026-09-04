@@ -122,7 +122,7 @@ class ToolRunner:
             for attempt in range(1, self.max_transient_retries + 2):
                 attempts = attempt
                 try:
-                    content = await tool.execute(arguments)
+                    content = await tool.execute(arguments, ctx)
                 except TransientToolError as exc:
                     log.warning("transient tool error thread=%s tool=%s attempt=%s: %s", ctx.thread_id, call.name, attempt, exc)
                     if attempt > self.max_transient_retries:

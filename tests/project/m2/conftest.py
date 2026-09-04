@@ -6,6 +6,7 @@ DATABASE_URL / REDIS_URL override the compose defaults; CI sets them explicitly.
 
 import asyncio
 import os
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -25,6 +26,12 @@ def anyio_backend() -> str:
     return "asyncio"
 
 
+def _in_fresh_loop(coro_factory):
+    """Run a coroutine on its own loop in a worker thread: these probes may be called while a test loop is already running."""
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        return pool.submit(lambda: asyncio.run(coro_factory())).result()
+
+
 def _postgres_reachable() -> bool:
     import asyncpg
 
@@ -33,7 +40,7 @@ def _postgres_reachable() -> bool:
         await conn.close()
 
     try:
-        asyncio.run(probe())
+        _in_fresh_loop(probe)
         return True
     except Exception:
         return False
@@ -50,7 +57,7 @@ def _redis_reachable() -> bool:
             await client.aclose()
 
     try:
-        asyncio.run(probe())
+        _in_fresh_loop(probe)
         return True
     except Exception:
         return False
@@ -61,7 +68,8 @@ def postgres_url() -> str:
     if not _postgres_reachable():
         pytest.skip(f"PostgreSQL not reachable at {DATABASE_URL}; run `docker compose up -d`")
     os.environ["DATABASE_URL"] = DATABASE_URL
-    command.upgrade(Config(str(ALEMBIC_INI)), "head")
+    with ThreadPoolExecutor(max_workers=1) as pool:  # alembic's env.py uses asyncio.run; keep it off the test loop
+        pool.submit(command.upgrade, Config(str(ALEMBIC_INI)), "head").result()
     return DATABASE_URL
 
 
