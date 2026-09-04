@@ -11,7 +11,7 @@
 
 ## 快速上手
 
-三种跑法，由浅到深。前两种不需要任何 API Key。
+四种跑法，由浅到深。前三种不需要任何 API Key。
 
 **1. 五分钟离线跑通**：只要 uv 和 Python 3.12，所有课程代码和主项目都用内置的 fake 模型。
 
@@ -23,7 +23,18 @@ uv run pytest tests/project/m1 -q                               # 主项目 M1 �
 uv run pytest -q                                                # 全部课程代码 + 项目测试，不需要数据库的部分
 ```
 
-**2. 起完整服务**：PostgreSQL、Redis 和看 trace 的 Phoenix 用 Docker 起，服务本身在本机跑，方便改代码。
+**2. 一条命令起 Playground**：只想点点看效果、不改代码，用这条。Docker 把 PostgreSQL、Redis、Phoenix 和服务本身一起起来，数据落在真实数据库里，重启不丢。
+
+```bash
+docker compose --profile full up -d --build --wait
+open http://localhost:8000/playground        # 新建对话、看事件流、批准工具、导入文档、查记忆
+open http://localhost:6006                   # Phoenix：看这次请求的 trace
+docker compose --profile full down           # 用完清理；加 -v 连数据卷一起删
+```
+
+默认用离线的 fake 模型，Token 用开发模式默认值 `dev-token`。要接真实模型，`cp .env.example .env` 填好 `DEEPSEEK_API_KEY` 后再执行第一条命令，`MODEL_PROVIDER=deepseek` 会从 `.env` 里读到。这个 profile 默认不随 `docker compose up` 启动，不会和下面第 3 种跑法抢 8000 端口。
+
+**3. 起依赖，本机跑代码**：要改 `project/src/` 就用这种，改完直接重启本机进程，不用重新 build 镜像。
 
 ```bash
 cp .env.example .env                       # MODEL_PROVIDER 默认 fake；要接真实模型就填 DEEPSEEK_API_KEY
@@ -33,19 +44,19 @@ export REDIS_URL=redis://localhost:6379/0
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:6006
 uv run alembic -c project/src/aiapp/storage/alembic.ini upgrade head
 uv run uvicorn aiapp.api.app:create_app --factory --port 8000
+```
 
-# 另开一个终端，和 Agent 对话
+打开 [http://localhost:8000/playground](http://localhost:8000/playground) 用页面对话，或者另开一个终端用 curl：
+
+```bash
 curl -s -X POST localhost:8000/v1/threads -H "Authorization: Bearer dev-token" -H "Content-Type: application/json" -d '{}'
 curl -N -X POST localhost:8000/v1/threads/<thread_id>/messages -H "Authorization: Bearer dev-token" \
      -H "Content-Type: application/json" -d '{"content": "hello"}'          # SSE 事件流
-open http://localhost:6006                                                  # Phoenix 里看这次请求的 trace
 ```
 
-不想敲 curl 就打开 [http://localhost:8000/playground](http://localhost:8000/playground)：一个服务自带的单页面，能新建对话、看 SSE 事件流、批准或拒绝工具执行、导入文档、搜索、查看和提取记忆。它调的就是上面这套接口，token 在页面上填。
+完整接口和每个里程碑的运行步骤见 [project/README.md](./project/README.md)。
 
-开发模式的默认 token 是 `dev-token`。完整接口和每个里程碑的运行步骤见 [project/README.md](./project/README.md)。
-
-**3. 一条命令起整套容器**：镜像里没有密钥，token 从环境变量来，生产模式拒绝默认 token 和内存存储。
+**4. 一条命令起生产形态**：镜像里没有密钥，token 从环境变量来，生产模式拒绝默认 token 和内存存储。
 
 ```bash
 AIAPP_TOKENS=mytoken:tenant-a docker compose -f docker-compose.prod.yml up --build

@@ -1,5 +1,7 @@
 # Local dependencies for the main project (M2 onwards). One command: docker compose up -d
 # postgres uses the pgvector image so M4 can add vector columns without switching images.
+# The app itself is opt-in behind the "full" profile so this default command never
+# competes with `uv run uvicorn` on port 8000: docker compose --profile full up -d --build --wait
 services:
   postgres:
     image: pgvector/pgvector:pg16
@@ -32,6 +34,34 @@ services:
     image: arizephoenix/phoenix:latest
     ports:
       - "6006:6006"
+
+  app:
+    # Optional: the service itself, with the playground, wired to the three services above.
+    # Not started by a plain `docker compose up`; needs --profile full. Development defaults
+    # (fake model, dev-token) so `docker compose --profile full up -d --build --wait` alone
+    # gets you a working http://localhost:8000/playground with persistent storage and traces.
+    profiles: ["full"]
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      AIAPP_ENV: development
+      MODEL_PROVIDER: ${MODEL_PROVIDER:-fake}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-fake}
+      DATABASE_URL: postgresql+asyncpg://aiapp:aiapp@postgres:5432/aiapp
+      REDIS_URL: redis://redis:6379/0
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://phoenix:6006
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "alembic -c project/src/aiapp/storage/alembic.ini upgrade head &&
+             uvicorn aiapp.api.app:create_app --factory --host 0.0.0.0 --port 8000"
 
 volumes:
   postgres-data:
