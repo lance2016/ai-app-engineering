@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 log = logging.getLogger("aiapp.api")
 
-ErrorCode = Literal["unauthorized", "invalid_request", "not_found", "model_timeout", "provider_error", "internal_error"]
+ErrorCode = Literal["unauthorized", "invalid_request", "not_found", "conflict", "model_timeout", "provider_error", "internal_error"]
 
 
 class ErrorEnvelope(BaseModel):
@@ -42,6 +42,12 @@ class NotFound(AppError):
 
 class InvalidRequest(AppError):
     status, code = 422, "invalid_request"
+
+
+class Conflict(AppError):
+    """A run is already in progress on this thread, or a concurrent writer won the race."""
+
+    status, code = 409, "conflict"
 
 
 class ProviderError(AppError):

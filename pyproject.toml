@@ -4,11 +4,15 @@ version = "0.0.1"
 description = "AI application engineering course: from calling an LLM to shipping an agent system"
 requires-python = ">=3.12"
 dependencies = [
+    "alembic>=1.19.1",
+    "asyncpg>=0.31.0",
     "fastapi>=0.141.1",
     "httpx>=0.28.1",
     "openai>=3.8.0",
     "pydantic>=2.7",
     "python-dotenv>=1.2.3",
+    "redis>=8.1.0",
+    "sqlalchemy[asyncio]>=2.0",
     "uvicorn>=0.52.4",
 ]
 
@@ -23,9 +27,7 @@ packages = ["project/src/aiapp"]
 dev = [
     "pytest>=8.0",
 ]
-prereq = [
-    "sqlalchemy>=2.0.52",
-]
+prereq = []
 
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib"

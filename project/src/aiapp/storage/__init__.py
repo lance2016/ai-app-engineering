@@ -1,6 +1,15 @@
-"""Thread storage. M1 ships an in-memory store; M2 adds PostgreSQL behind the same protocol."""
+"""Thread storage and coordination. In-memory implementations for tests, PostgreSQL and Redis for real."""
 
-from aiapp.storage.base import ThreadNotFound, ThreadStore
-from aiapp.storage.memory import InMemoryThreadStore
+from aiapp.storage.base import InvalidTransition, KeyValueStore, SeqConflict, ThreadNotFound, ThreadStore, flush
+from aiapp.storage.memory import InMemoryKeyValueStore, InMemoryThreadStore
 
-__all__ = ["InMemoryThreadStore", "ThreadNotFound", "ThreadStore"]
+__all__ = [
+    "InMemoryKeyValueStore",
+    "InMemoryThreadStore",
+    "InvalidTransition",
+    "KeyValueStore",
+    "SeqConflict",
+    "ThreadNotFound",
+    "ThreadStore",
+    "flush",
+]

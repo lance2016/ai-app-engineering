@@ -8,8 +8,23 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: aiapp
+          POSTGRES_PASSWORD: aiapp
+          POSTGRES_DB: aiapp
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U aiapp -d aiapp" --health-interval 2s --health-timeout 2s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: --health-cmd "redis-cli ping" --health-interval 2s --health-timeout 2s --health-retries 20
     env:
       MODEL_PROVIDER: fake
+      DATABASE_URL: postgresql+asyncpg://aiapp:aiapp@localhost:5432/aiapp
+      REDIS_URL: redis://localhost:6379/0
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -24,5 +39,10 @@ jobs:
         run: uv run python scripts/check_lesson_template.py
       - name: Status tables match frontmatter
         run: uv run python scripts/sync_status.py --check
-      - name: Every code sample runs offline
+      - name: Migrations apply, roll back and re-apply
+        run: |
+          uv run alembic -c project/src/aiapp/storage/alembic.ini upgrade head
+          uv run alembic -c project/src/aiapp/storage/alembic.ini downgrade base
+          uv run alembic -c project/src/aiapp/storage/alembic.ini upgrade head
+      - name: Every code sample runs offline and the project tests pass on real backends
         run: uv run pytest -q

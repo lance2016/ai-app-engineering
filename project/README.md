@@ -24,7 +24,7 @@ flowchart LR
 |---|---|---|---|---|
 | M0 | [并发实验](./m0-concurrency/README.md) | 串行、并发、限并发、取消、超时五个对照实验；为流式和并行工具调用打底 | 实现 | complete |
 | M1 | [API 骨架](./m1-api-skeleton/README.md) | FastAPI + Pydantic + pytest；健康检查、鉴权、SSE 流式、结构化错误、system prompt 版本化 | 实现 | complete |
-| M2 | [数据与状态](./m2-state-and-storage/README.md) | conversation / message / task 表、Alembic 迁移、Redis 状态、checkpoint 与 resume | 实现 | draft |
+| M2 | [数据与状态](./m2-state-and-storage/README.md) | conversation / message / task 表、Alembic 迁移、Redis 状态、checkpoint 与 resume | 实现 | complete |
 | M3 | [Tool Workflow](./m3-tool-workflow/README.md) | 工具契约、确认与幂等、失败恢复、最小 trace；再接 MCP 和一个 Skill | 实现 | draft |
 | M4 | [Tiny-RAG 与 Memory](./m4-rag-and-memory/README.md) | 混合检索、引用、Recall@k、记忆提取与删除演练 | 实现 | draft |
 | M5 | [生产化](./m5-production/README.md) | Golden set 回归、OpenTelemetry + Phoenix、限流、Fallback、成本统计、故障演练、容器化与部署 | 实现 | draft |

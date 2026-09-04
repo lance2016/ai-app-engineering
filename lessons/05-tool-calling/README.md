@@ -87,6 +87,8 @@ sequenceDiagram
 
 ## 对照真实项目
 
+幂等键的存储在 [M2](../../project/m2-state-and-storage/README.md) 已经落地：`Idempotency-Key` 请求头经 Redis `SET NX EX` 认领，重复请求重放第一次的结果而不再调模型，见 [`api/routes/threads.py`](../../project/src/aiapp/api/routes/threads.py)。工具级的幂等键派生在 M3。
+
 这一课直接对应主项目 [M3.1 Tool contract](../../project/m3-tool-workflow/README.md) 和 M3.2 确认与幂等。M3 会把这四个文件里的守卫合并成一个 `ToolRunner`，接到 M2 的状态存储上。
 
 一个来自语音机器人项目的模式，去掉了业务细节：系统用一个小模型专门做意图分类并输出工具调用，另一个大模型负责聊天。小模型偶尔会输出训练时见过但当前没注册的工具名，也会漏掉必填参数。早期的修法是改提示词，效果不稳定。后来的修法就是这一课的守卫①和②：注册表查不到就当作"没有命令"回喂，参数校验失败就把错误回给它重试一次。提示词一个字没改，问题消失了。另一个教训是大模型在聊天正文里偶尔会写出格式完美的函数调用 JSON，一度被运行时解析执行。修法是只认工具调用通道，正文一律当文本。

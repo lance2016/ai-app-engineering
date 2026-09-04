@@ -5,6 +5,10 @@ Env vars (all optional):
   AIAPP_PROMPT_VERSION   which prompts/assistant.<version>.md to use (default v1)
   AIAPP_MODEL_TIMEOUT_S  seconds to wait for the model's first chunk and between chunks (default 30)
   AIAPP_INJECT           failure injection: slow_model | provider_error (default none)
+  DATABASE_URL           postgresql+asyncpg://user:pass@host/db; unset -> in-memory thread store
+  REDIS_URL              redis://host:6379/0; unset -> in-memory key-value store
+  AIAPP_RUN_LOCK_TTL_S   seconds a run may hold the per-thread lock (default 120)
+  AIAPP_IDEMPOTENCY_TTL_S seconds an Idempotency-Key is remembered (default 86400)
 """
 
 import os
@@ -33,6 +37,10 @@ class Settings:
     prompt_version: str = "v1"
     model_timeout_s: float = 30.0
     inject: str | None = None
+    database_url: str | None = None
+    redis_url: str | None = None
+    run_lock_ttl_s: int = 120
+    idempotency_ttl_s: int = 86_400
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> "Settings":
@@ -42,4 +50,8 @@ class Settings:
             prompt_version=env.get("AIAPP_PROMPT_VERSION", "v1"),
             model_timeout_s=float(env.get("AIAPP_MODEL_TIMEOUT_S", "30")),
             inject=env.get("AIAPP_INJECT") or None,
+            database_url=env.get("DATABASE_URL") or None,
+            redis_url=env.get("REDIS_URL") or None,
+            run_lock_ttl_s=int(env.get("AIAPP_RUN_LOCK_TTL_S", "120")),
+            idempotency_ttl_s=int(env.get("AIAPP_IDEMPOTENCY_TTL_S", "86400")),
         )

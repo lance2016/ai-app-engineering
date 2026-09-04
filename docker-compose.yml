@@ -1,0 +1,31 @@
+# Local dependencies for the main project (M2 onwards). One command: docker compose up -d
+# postgres uses the pgvector image so M4 can add vector columns without switching images.
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: aiapp
+      POSTGRES_PASSWORD: aiapp
+      POSTGRES_DB: aiapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aiapp -d aiapp"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+volumes:
+  postgres-data:

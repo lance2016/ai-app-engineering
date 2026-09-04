@@ -8,7 +8,7 @@ from fastapi import Depends, Header, Request
 from aiapp.adapters.base import ModelAdapter
 from aiapp.api.errors import Unauthorized
 from aiapp.config import Settings
-from aiapp.storage.base import ThreadStore
+from aiapp.storage.base import KeyValueStore, ThreadStore
 
 
 @dataclass(frozen=True)
@@ -22,6 +22,10 @@ def get_settings(request: Request) -> Settings:
 
 def get_store(request: Request) -> ThreadStore:
     return request.app.state.store
+
+
+def get_kv(request: Request) -> KeyValueStore:
+    return request.app.state.kv
 
 
 def get_model(request: Request) -> ModelAdapter:
