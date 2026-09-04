@@ -36,7 +36,7 @@ flowchart LR
 
 | 内容 | 状态 |
 |---|---|
-| [Framework Lab 总览](./framework-lab/README.md) | outline |
+| [Framework Lab 总览](./framework-lab/README.md) | draft |
 | [框架全景与选型标准](./framework-lab/00-landscape.md) | draft |
 
 ## Capstone

@@ -1,5 +1,5 @@
 ---
-status: outline
+status: draft
 kind: lab
 depends_on: project/m3；lessons/05–12；回顾 18, 19
 ---
@@ -28,12 +28,12 @@ depends_on: project/m3；lessons/05–12；回顾 18, 19
 
 | 目录 | 框架 | 为什么选它 | 离线怎么跑 |
 |---|---|---|---|
-| `00-baseline/` | 普通 Python，即 M3 的 `aiapp.runtime` | 参照物：不用框架要写多少、哪里最痛 | 本来就是 fake adapter |
-| `01-langgraph/` | LangGraph | 显式图、内置 checkpointer、中断与 time travel，"持久化执行"路线的代表 | 包一个 `BaseChatModel` 子类回放 fake 剧本 |
-| `02-openai-agents-sdk/` | OpenAI Agents SDK | 厂商 SDK 的代表，handoff 原语最清晰；走 OpenAI 兼容协议所以 DeepSeek 也能接 | 实现 `Model` 接口回放 fake 剧本 |
-| `03-claude-agent-sdk/` | Claude Agent SDK | 另一种厂商路线：内置循环、工具和权限模型与 Claude Code 同源，锁定最深也最省事 | mock SDK 的消息流 |
+| `baseline/` | 普通 Python，即 M3 的 `aiapp.runtime` | 参照物：不用框架要写多少、哪里最痛 | 本来就是 fake adapter |
+| `langgraph_impl/` | LangGraph | 显式图、内置 checkpointer、中断与 time travel，"持久化执行"路线的代表 | 包一个 `BaseChatModel` 子类回放 fake 剧本 |
+| `openai_agents_impl/` | OpenAI Agents SDK | 厂商 SDK 的代表，handoff 原语最清晰；走 OpenAI 兼容协议所以 DeepSeek 也能接 | 实现 `Model` 接口回放 fake 剧本 |
+| `claude_agent_sdk_impl/` | Claude Agent SDK | 另一种厂商路线：内置循环、工具和权限模型与 Claude Code 同源，锁定最深也最省事 | mock SDK 的消息流 |
 
-每个实现目录固定四样东西：`README.md`（本课概念到框架概念的映射表、顺手的地方、别扭的地方、锁定点）、`agent.py`、`adapter.py`（实现共同的 `AgentRuntime` 协议让一致性测试能跑）、十二维度的自评。
+每个实现目录固定四样东西：`README.md`（本课概念到框架概念的映射表、顺手的地方、别扭的地方、锁定点）、`agent.py`、`adapter.py`（实现 `labkit.protocol.LabRuntime` 协议让一致性测试能跑）、十二维度的自评。目录名是可导入的包名，`pyproject.toml` 把 `project/framework-lab` 加进了 pytest 的 `pythonpath`。
 
 ## 十二个维度
 
@@ -56,7 +56,7 @@ depends_on: project/m3；lessons/05–12；回顾 18, 19
 
 ## 一致性测试
 
-`tests/framework-lab/conformance/` 通过共同的 `AgentRuntime` 协议跑在每个实现上：暂停恢复、崩溃恢复、幂等重放、double texting 三策略、MCP 断连、事件流与线程一致。哪个实现过不了哪条，就是那一格评分卡的证据。
+`tests/project/framework_lab/` 用 `labkit/scenarios.py` 的 8 个场景跑在每个实现上：只读工具、确认后暂停并跨进程续跑、拒绝、问用户、暂停时的 double texting 拒收、历史跨重启、步数上限、未知工具。实现抛 `NotSupported` 的场景记为 xfail，原因进评分卡。MCP、Observability、Deployment 三个维度不靠一致性测试，靠阅读代码打分。当前：`baseline` 和 `langgraph_impl` 8/8 通过，另两个见 [TODO.md](../../TODO.md)。
 
 ## 依赖
 
@@ -72,10 +72,10 @@ depends_on: project/m3；lessons/05–12；回顾 18, 19
 |---|---|---|
 | 00 | [框架全景与选型标准](./00-landscape.md) | draft |
 | spec | 共同需求（待写） | outline |
-| 00-baseline | M3 参照实现（待 M3） | outline |
-| 01-langgraph | （待写） | outline |
-| 02-openai-agents-sdk | （待写） | outline |
-| 03-claude-agent-sdk | （待写） | outline |
+| baseline | M3 参照实现，8/8 场景 | draft |
+| langgraph_impl | 图 + interrupt + SQLite checkpoint，8/8 场景 | draft |
+| openai_agents_impl | （待写） | outline |
+| claude_agent_sdk_impl | （待写） | outline |
 | scorecard | 十二维评分卡（待写） | outline |
 
 ---
