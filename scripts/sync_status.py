@@ -1,12 +1,14 @@
 """Sync status columns in the overview tables from each file's frontmatter.
 
-Run:  uv run python scripts/sync_status.py
+Run:  uv run python scripts/sync_status.py           # rewrite tables
+      uv run python scripts/sync_status.py --check   # exit 1 if any table is out of date
 It rewrites the status cell of every table row that links to a lesson,
 principle, prerequisite module or project milestone, using the `status:`
 value in that file's frontmatter. The frontmatter is the source of truth.
 """
 
 import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,7 +28,7 @@ def frontmatter_status(path: Path) -> str | None:
     return m.group(1) if m else None
 
 
-def sync_table(table: Path) -> int:
+def sync_table(table: Path, *, write: bool = True) -> int:
     changed = 0
     lines = table.read_text(encoding="utf-8").split("\n")
     for i, line in enumerate(lines):
@@ -42,11 +44,18 @@ def sync_table(table: Path) -> int:
         if new != line:
             lines[i] = new
             changed += 1
-    if changed:
+    if changed and write:
         table.write_text("\n".join(lines), encoding="utf-8")
     return changed
 
 
 if __name__ == "__main__":
+    check = "--check" in sys.argv[1:]
+    drift = 0
     for t in TABLES:
-        print(f"{t.relative_to(ROOT)}: {sync_table(t)} row(s) updated")
+        n = sync_table(t, write=not check)
+        drift += n
+        print(f"{t.relative_to(ROOT)}: {n} row(s) {'out of date' if check else 'updated'}")
+    if check and drift:
+        print("status tables are out of date; run: uv run python scripts/sync_status.py")
+        sys.exit(1)

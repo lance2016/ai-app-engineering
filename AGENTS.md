@@ -77,7 +77,7 @@
 2. 运行 `uv run python scripts/sync_status.py`，它会按 frontmatter 同步 `README.md`、`principles/README.md`、`prerequisites/README.md`、`project/README.md` 里的状态列。不要手改状态列。
 3. 检查 `principles/` 里对应原则的「相关课程」和 `project/README.md` 的课程到项目映射表是否还准确，不准就改。
 4. 跑 `uv run pytest`，它会执行所有 `code/` 文件；需要真实模型的脚本在没有 key 时必须打印提示后正常退出，不能报错。有 key 时再手动用 `MODEL_PROVIDER=deepseek` 跑一遍。
-5. 检查相对链接没有断。
+5. 跑 `uv run python scripts/check_links.py` 和 `uv run python scripts/check_lesson_template.py`。前者检查相对链接，后者检查标 `complete` 的单元是否真的满足模板（小节齐全、`code/` 有文件、练习有折叠答案）。CI 会跑同样的四个检查，本地没过就不要提交。
 
 ## 4. 写作规范
 
