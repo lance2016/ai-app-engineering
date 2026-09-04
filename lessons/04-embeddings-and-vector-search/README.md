@@ -18,7 +18,7 @@ estimated_time: 约 1.5 小时
 ## 前置
 
 - 前置 [F02 Embedding 与向量空间](../../prerequisites/llm-foundations/02-embeddings/README.md)：向量为什么能比较、余弦与归一化、embedding 层和文本 embedding 模型的区别。本课不再解释这些
-- 前置模块 [P09 SQL 与 SQLAlchemy](../../prerequisites/python/09-sql-and-sqlalchemy/README.md)：pgvector 部分要看 SQL
+- 前置模块 [B01 SQL 与 SQLAlchemy](../../prerequisites/backend/01-sql-and-sqlalchemy/README.md)：pgvector 部分要看 SQL
 
 ## 心智模型
 

@@ -19,7 +19,7 @@ estimated_time: 约 3 小时
 
 - [06 Agent 循环与控制流](../06-agent-loop/README.md)、[07 Agent State 与 Runtime](../07-agent-state-and-runtime/README.md)：轨迹评测直接对第 07 课的 `Thread` 做断言
 - [13 RAG 端到端](../13-rag-end-to-end/README.md)：Recall@k 是本课方法在检索层的应用
-- 前置模块 [P10 pytest 与测试思维](../../prerequisites/python/10-testing/README.md)
+- 前置模块 [B02 pytest 与测试思维](../../prerequisites/backend/02-testing/README.md)
 
 ## 心智模型
 

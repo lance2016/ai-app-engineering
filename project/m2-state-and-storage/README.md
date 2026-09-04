@@ -1,7 +1,7 @@
 ---
 status: complete
 kind: impl
-depends_on: 前置 P09, P11, P12；lessons/06, 07
+depends_on: 前置 B01, B03, B04；lessons/06, 07
 ---
 
 # M2 数据与状态
@@ -91,7 +91,7 @@ curl -N -X POST localhost:8000/v1/threads/<id>/messages -H "Authorization: Beare
 
 ## 依赖的课程
 
-前置 P09, P11, P12；lessons/06, 07
+前置 B01, B03, B04；lessons/06, 07
 
 ---
 

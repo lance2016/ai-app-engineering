@@ -35,14 +35,14 @@ flowchart LR
 2. 队列 FIFO：deque 两端 O(1)；list.pop(0) 是 O(n) 的常见错误
 3. 有界队列与 backpressure：生产快于消费时内存无限涨；maxsize 加满时策略
 4. double texting 的 enqueue 策略就是一个每线程队列，第 07 课
-5. 流式输出的缓冲：模型吐 token 快于客户端消费，robotics-voice 第 02 篇的三处背压
+5. 流式输出的缓冲：模型吐 token 快于客户端消费，语音 Agent 被打断时的三处背压
 6. 优先级队列留给 A03
 -->
 
 ## 它在 AI 应用里用在哪
 
 - double texting 的 enqueue → [第 07 课](../../../lessons/07-agent-state-and-runtime/README.md)
-- 流式与背压 → [第 02 课](../../../lessons/02-model-api-structured-output-streaming/README.md)、[语音 track 第 02 篇](../../../tracks/robotics-voice/02-interruption-and-backpressure.md)
+- 流式与背压 → [第 02 课](../../../lessons/02-model-api-structured-output-streaming/README.md)
 - 任务队列与后台运行 → [第 16 课](../../../lessons/16-system-architecture/README.md)
 
 ## 延伸阅读

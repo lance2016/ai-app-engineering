@@ -4,36 +4,35 @@
 
 ```mermaid
 flowchart TD
-    PRE[前置<br/>P00–P12 · A00–A06 · F00–F07] --> P0[Part 0 起步<br/>00]
+    PRE[前置<br/>P00–P07、B00–B04 · A00–A06 · F00–F07] --> P0[Part 0 起步<br/>00]
     P0 --> P1[Part 1 模型与上下文<br/>01–04]
     P1 --> P2[Part 2 Tool 与 Agent<br/>05–12]
     P1 --> P3[Part 3 知识与记忆<br/>13–15]
-    P2 --> LAB[Framework Lab<br/>M3 之后]
     P2 --> P4[Part 4 生产工程<br/>16–21]
     P3 --> P4
-    LAB --> P4
     P4 --> P5[Part 5 架构与产品<br/>22–23]
-    P5 --> CAP[Capstone<br/>四个实战]
-    P2 -.选修.-> RV[Track 语音 · 机器人 · 具身]
-    P0 -.选修.-> NW[Track 网络与公网]
+    P5 --> LAB[Framework Lab<br/>三框架对照]
+    LAB --> CAP[Capstone<br/>四个实战]
+    P2 -.M3 之后可提前开始.-> LAB
 ```
 
-Part 2 和 Part 3 没有硬依赖，可以并行。Part 4 需要两者都完成。Framework Lab 在 M3 之后、Part 4 之前做，学完 18、19 再回来重打 Observability 和 Deployment 两格。Capstone 1、2、3 分别在 M5、M4、M3 加 Lab 之后可做，Capstone 4 需要全部。
+Part 2 和 Part 3 没有硬依赖，可以并行。Part 4 需要两者都完成。Framework Lab 默认在 Part 5 之后一次做完，因为评分卡里 Observability、Deployment 两格要学完 18、19 才打得出来；想早点碰框架的人 M3 一做完就可以先做一致性测试部分，两格留到后面补。Capstone 1、2、3 分别在 M5、M4、M3 加 Lab 之后可做，Capstone 4 需要全部。
 
-## 四条轨道
+## 三条线同时走
 
-| 轨道 | 内容 | 学法 |
+这三条线不是三种学法，是同一条路上同时发生的三件事。
+
+| 线 | 内容 | 学法 |
 |---|---|---|
 | 线性主线 | Part 0 → 5 | 按编号 |
-| 实践 | `project/` 里程碑 M0～M6、Framework Lab、Capstone | 每课落一个增量；M3 后进 Lab；M5 后进 Capstone |
+| 实践 | `project/` 里程碑 M0～M6、Framework Lab、Capstone | 每课落一个增量；M6 后进 Lab 和 Capstone，Lab 最早可在 M3 后开始 |
 | 横向贯穿 | 评测、安全、可观测、成本 | 从 `project/m1` 开始每个里程碑都带最小版本，Part 4 系统深化 |
-| 方向选修 | `tracks/` | 按岗位选，不设顺序 |
 
 ## 能力阶梯
 
-这是能力阶段，不是时间表。每周投入不同，进度自然不同。
+这是能力阶段，不是时间表，也不是另一套学习顺序。学习顺序只看 README 的六阶段路线；这张表用来自评：学到某处时，对照「晋级门槛」看自己到没到。每周投入不同，进度自然不同。
 
-命名约定：`Part N` 是课程分组，`L0–L5` 是能力阶段，`P00–P12` / `A00–A06` / `F00–F07` 是前置模块，`M0–M6` 是项目里程碑。不要混用。
+命名约定：`Part N` 是课程分组，`L0–L5` 是能力阶段，`P00–P07、B00–B04` / `A00–A06` / `F00–F07` 是前置模块，`M0–M6` 是项目里程碑。不要混用。
 
 | 阶段 | 能力目标 | 对应课程 | 代表项目 | 晋级门槛 |
 |---|---|---|---|---|

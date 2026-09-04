@@ -20,7 +20,7 @@ estimated_time: 约 3 小时
 - [06 Agent 循环与控制流](../06-agent-loop/README.md)：预算和停止条件，本课把它扩展到钱和时间
 - [07 Agent State 与 Runtime](../07-agent-state-and-runtime/README.md)：状态外置是水平扩展的前提
 - [18 可观测性](../18-observability/README.md)：SLO 和告警建立在指标之上
-- 前置模块 [P07 asyncio](../../prerequisites/python/07-asyncio/README.md)、[P11 Git、命令行与 Docker Compose](../../prerequisites/python/11-git-cli-and-docker/README.md)
+- 前置模块 [P07 asyncio](../../prerequisites/python/07-asyncio/README.md)、[B03 Git、命令行与 Docker Compose](../../prerequisites/backend/03-git-cli-and-docker/README.md)
 
 ## 心智模型
 

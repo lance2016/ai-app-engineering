@@ -22,12 +22,11 @@
 - [ ] `tests/capstones/durable/`：Capstone 3 的 kill 与恢复 harness（可复用 `labkit.scenarios.confirmation_pause_restart_resume` 的思路）
 - [ ] Capstone 1 要补 M5 没做的：PII 出站过滤（第 20 课 `03`）、Skill 内容哈希钉版本（第 20 课 `04`）
 
-## 阶段 6：前置新内容与 track
+## 阶段 6：前置新内容
 
 - [ ] `prerequisites/algorithms/` A00～A06 从 outline 写到 complete，每篇 2～3 个 `code/` 文件
-- [ ] `prerequisites/python/12-redis` 正文与代码
+- [ ] `prerequisites/backend/04-redis` 正文与代码
 - [ ] `prerequisites/llm-foundations/` F02、F07 正文；F00～F06 补 `exercises.md`
-- [ ] `tracks/robotics-voice/` 加 `code/`（假 ASR 分片、假 TTS、轮次管理、打断注入、延迟埋点、双模型竞速、假设备、回放评测），补三篇具身章节
 
 ## 阶段 7：模板回填与审计
 

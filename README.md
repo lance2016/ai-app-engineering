@@ -5,9 +5,53 @@
 # AI 应用开发工程师：从入门到精通
 
 > 面向有后端开发经验的工程师。用一个贯穿全程的真实项目，讲清楚怎样把 LLM 从「能调用」做成「可上线的 Agent 系统」。
-> 中文写作。主线不绑定任何 Agent 框架，先用普通 Python 看清机制，再在 Framework Lab 里用三个主流框架对照。附带语音机器人方向的真实案例。
+> 中文写作。主线不绑定任何 Agent 框架，先用普通 Python 看清机制，再在 Framework Lab 里用三个主流框架对照。正文里的事故案例，一部分来自作者的语音机器人生产项目。
 
 **状态：第一版正文已就位，正在补实践闭环。** 各部分的完成度见 [进展与待办](#进展与待办)，具体待办见 [TODO.md](./TODO.md)。
+
+## 快速上手
+
+三种跑法，由浅到深。前两种不需要任何 API Key。
+
+**1. 五分钟离线跑通**：只要 uv 和 Python 3.12，所有课程代码和主项目都用内置的 fake 模型。
+
+```bash
+git clone <this-repo> && cd ai-app-engineering
+uv sync
+uv run python lessons/00-setup/code/01_hello_fake_adapter.py   # 第一课的第一个例子
+uv run pytest tests/project/m1 -q                               # 主项目 M1 的验收测试，16 passed
+uv run pytest -q                                                # 全部课程代码 + 项目测试，不需要数据库的部分
+```
+
+**2. 起完整服务**：PostgreSQL、Redis 和看 trace 的 Phoenix 用 Docker 起，服务本身在本机跑，方便改代码。
+
+```bash
+cp .env.example .env                       # MODEL_PROVIDER 默认 fake；要接真实模型就填 DEEPSEEK_API_KEY
+docker compose up -d --wait                # postgres(pgvector) + redis + phoenix
+export DATABASE_URL=postgresql+asyncpg://aiapp:aiapp@localhost:5432/aiapp
+export REDIS_URL=redis://localhost:6379/0
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:6006
+uv run alembic -c project/src/aiapp/storage/alembic.ini upgrade head
+uv run uvicorn aiapp.api.app:create_app --factory --port 8000
+
+# 另开一个终端，和 Agent 对话
+curl -s -X POST localhost:8000/v1/threads -H "Authorization: Bearer dev-token" -H "Content-Type: application/json" -d '{}'
+curl -N -X POST localhost:8000/v1/threads/<thread_id>/messages -H "Authorization: Bearer dev-token" \
+     -H "Content-Type: application/json" -d '{"content": "hello"}'          # SSE 事件流
+open http://localhost:6006                                                  # Phoenix 里看这次请求的 trace
+```
+
+不想敲 curl 就打开 [http://localhost:8000/playground](http://localhost:8000/playground)：一个服务自带的单页面，能新建对话、看 SSE 事件流、批准或拒绝工具执行、导入文档、搜索、查看和提取记忆。它调的就是上面这套接口，token 在页面上填。
+
+开发模式的默认 token 是 `dev-token`。完整接口和每个里程碑的运行步骤见 [project/README.md](./project/README.md)。
+
+**3. 一条命令起整套容器**：镜像里没有密钥，token 从环境变量来，生产模式拒绝默认 token 和内存存储。
+
+```bash
+AIAPP_TOKENS=mytoken:tenant-a docker compose -f docker-compose.prod.yml up --build
+```
+
+想看生产工程那几课的效果，有两个现成脚本：`uv run python scripts/eval_run.py` 跑评测门禁，`uv run python scripts/chaos.py --all` 跑六个故障演练。都不需要 key。
 
 ## 这门课和别的有什么不同
 
@@ -19,60 +63,79 @@
 | [generative-ai-for-beginners](https://github.com/microsoft/generative-ai-for-beginners) | GenAI 应用通识 | 通识压进前置，主线直接从应用工程切入 |
 | [llm-course](https://github.com/mlabonne/llm-course)、[LLMs-from-scratch](https://github.com/rasbt/LLMs-from-scratch) | 模型原理与训练 | 只取应用工程师需要的那一层，作为前置 F 组 |
 
-## 学习路线图
+## 学习路线
 
 <p align="center">
   <img src=".github/assets/roadmap.png" alt="AI Application Engineering 学习路线图：前置基础、AI 应用主线、生产工程、架构与决策、框架与选型、实战项目" width="100%">
 </p>
 
-六个阶段，对应仓库里的六块内容：
+整门课就是一条线：**学一段课，往同一个项目里加一块能力**。六个阶段按顺序走，每个阶段学什么、做什么、做完的标志是什么，都在这一张表里。
 
-| 阶段 | 学什么 | 在哪里 |
-|---|---|---|
-| 1 前置基础 | Python 语言与后端工程、算法与数据结构、LLM 原理 | [prerequisites/](./prerequisites/README.md) |
-| 2 AI 应用主线 | 模型调用、Prompt、结构化输出、Tool Calling、Agent 循环、State、Context Engineering、Workflow、多智能体、MCP、Skill、RAG、Memory | [lessons/](#课程总表) 第 00～15 课 |
-| 3 生产工程 | 系统架构、评测、可观测、可靠性、成本、安全、部署、模型适配 | 第 16～21 课 |
-| 4 架构与决策 | 产品设计、Build vs Buy、模型 vs RAG vs 微调、系统设计题与 RFC | 第 22～23 课 |
-| 5 框架与选型 | 同一需求用纯 Python、LangGraph、OpenAI Agents SDK、Claude Agent SDK 各做一遍，十二维评分卡 | [project/framework-lab/](./project/framework-lab/README.md) |
-| 6 实战项目 | Production Agent Service、RAG + Memory Agent、Durable Agent、Multi-tenant AI Platform | [project/capstones/](./project/capstones/README.md) |
+| 阶段 | 学（课程） | 做（主项目） | 做完的标志 |
+|---|---|---|---|
+| 1 前置基础 | [prerequisites/](./prerequisites/README.md)：Python 语言与后端工程 P00～P07、B00～B04、算法 A00～A06、LLM 原理 F00～F07 | M0 并发实验（学到 P07 asyncio 时做） | 前置 README 里的自检全部能打勾 |
+| 2 AI 应用主线 | 第 00～04 课 模型与上下文 | M1 API 骨架 | 服务能接一个模型，流式返回，错误有结构 |
+|  | 第 05～12 课 Tool 与 Agent | M2 数据与状态、M3 Tool Workflow | Agent 能调工具、能停下等人确认、kill 掉能续跑 |
+|  | 第 13～15 课 知识与记忆 | M4 RAG 与 Memory | 回答带引用，Recall@k 有数字，记忆能提取能删除 |
+| 3 生产工程 | 第 16～21 课 | M5 生产化 | 评测门禁、trace、限流与 fallback、容器化全部就位 |
+| 4 架构与决策 | 第 22～23 课 | M6 综合设计 | 写出一份多租户平台的 RFC |
+| 5 框架与选型 | [Framework Lab](./project/framework-lab/README.md)：同一需求用纯 Python、LangGraph、OpenAI Agents SDK、Claude Agent SDK 各做一遍 | 三个框架实现通过同一套一致性测试 | 十二维评分卡填满，能说清选某个框架的理由 |
+| 6 实战项目 | [Capstone](./project/capstones/README.md) 四选一 | 一个完整系统 | 过验收清单，评分量表拿到分 |
 
-学习顺序上有三点要知道：
+几点说明：
 
-- 零基础从 [前置](./prerequisites/README.md) 开始，四组学完再进主线。有后端经验但没碰过 LLM 的人只学 LLM 原理那一组。
-- Part 2（Tool 与 Agent）和 Part 3（知识与记忆）没有硬依赖，可以并行或按兴趣先后。
-- 实践和课程交错走：每课的「对照真实项目」小节要求你在 [主项目](./project/README.md) 里落一个增量。做完 M3 进 Framework Lab，做完 M5 挑一个 Capstone。
+- 第 05～12 课和第 13～15 课没有硬依赖，可以先学任一段。阶段 3 需要两段都学完。
+- Framework Lab 在 M3 之后就能开始，那时你刚用普通 Python 写过同样的东西，对照最清楚。但评分卡里 Observability、Deployment 两格要学完第 18、19 课才打得出来，所以默认放在阶段 5 一次做完。
+- 评测、安全、可观测、成本四件事不是等到阶段 3 才碰，从 M1 起每个里程碑都带最小版本。
+- [principles/](./principles/README.md) 的 12 条原则不占阶段，它是贯穿全课的对照清单，每课的正文都会指回其中一两条。
 
-评测、安全、可观测、成本四条线从第一个里程碑就带着，Part 4 再系统深化。方向选修在 [tracks/](#方向选修)，按岗位挑。阶段依赖图和 L0～L5 能力阶梯见 [ROADMAP.md](./ROADMAP.md)。
+**三种起点**
+
+| 你是 | 从哪开始 |
+|---|---|
+| 零基础 | 阶段 1 从 P00 开始按顺序学 |
+| 有后端经验，没碰过 LLM | 做一遍 [前置自检](./prerequisites/README.md#自检)，通常只需要补 F 组，然后进第 00 课 |
+| 已经在做 Agent 项目 | 直接从第 05 课进，把 12 条原则当对照清单，主项目从 M2 开始补 |
+
+阶段依赖图和 L0～L5 能力阶梯的自评标准见 [ROADMAP.md](./ROADMAP.md)。
 
 ## 仓库结构
 
+学习者只需要关心前两组目录。第三组是查资料用的，第四组只有维护者和贡献者才会碰。
+
 ```text
 .
-├── prerequisites/          前置：零基础读者的四组模块，独立于主线
-│   ├── python/             P00–P12  Python 语言（P00–P07）与后端工程（P08–P12）
-│   ├── algorithms/         A00–A06  算法与数据结构，从真实工程问题进入
-│   └── llm-foundations/    F00–F07  LLM 原理，只到应用工程师能做决策的深度
-├── principles/             12 条 AI 应用工程原则，一条一个文件
-├── lessons/                主线 24 课（00–23），每课 README + code/ + exercises.md + images/
-├── project/                贯穿全程的主项目
-│   ├── src/aiapp/          服务源码：adapters、runtime、tools、mcp、knowledge、storage、api、ops、eval
-│   ├── m0-concurrency/ … m6-platform-design/   七个里程碑的说明与验收证据
-│   ├── framework-lab/      同一个审批型 Agent 在 baseline 与三个框架上的实现与一致性测试
-│   ├── capstones/          四个实战题目的需求、验收清单与评分量表
-│   ├── eval/               Golden set、判分校准数据、评测阈值与基线
+│  ── 学 ──────────────────────────────────────────────────────────
+├── prerequisites/          前置，零基础读者的起点，独立于主线
+│   ├── python/             P00–P07 Python 语言
+│   ├── backend/            B00–B04 后端工程：HTTP 与 FastAPI、SQL、测试、Git 与 Docker、Redis
+│   ├── algorithms/         A00–A06 算法，每篇从一个真实工程问题进入
+│   └── llm-foundations/    F00–F07 LLM 原理，只到应用工程师能做决策的深度
+├── lessons/                主线 24 课 00–23，每课 README + code/ + exercises.md
+├── principles/             12 条工程原则，一条一个文件，贯穿全课的对照清单
+│
+│  ── 做 ──────────────────────────────────────────────────────────
+├── project/                贯穿全程的主项目，一个 AI 应用服务
+│   ├── src/aiapp/          全部服务代码都在这里，按 adapters / runtime / tools / knowledge / storage / api / ops 分包
+│   ├── m0-concurrency/ … m6-platform-design/   七个里程碑，每个目录只有说明、运行步骤和验收证据
+│   ├── framework-lab/      阶段 5：baseline 与三个框架实现，加一致性测试
+│   ├── capstones/          阶段 6：四个实战题目
+│   ├── eval/               评测数据：golden set、判分校准、阈值与基线
 │   └── skills/             项目用到的 Skill 示例
-├── tracks/                 方向选修，不编号：robotics-voice、networking
+│
+│  ── 查 ──────────────────────────────────────────────────────────
 ├── reference/              术语表、技术选型、外部资料
-├── templates/              写作模板（课程 README）
-├── scripts/                状态同步、链接检查、模板检查、评测与故障演练脚本
-├── tests/                  所有 code/ 的 smoke test，以及按里程碑组织的验收测试
-├── ROADMAP.md              阶段依赖与能力阶梯
-├── TODO.md                 维护者待办，按优先级排
-├── AGENTS.md               给 AI 协作者的续写说明：目录规则、写作流程、质量门槛
-└── CONTRIBUTING.md         贡献方式
+├── ROADMAP.md              阶段依赖图与 L0～L5 能力阶梯
+│
+│  ── 维护 ────────────────────────────────────────────────────────
+├── tests/                  所有 code/ 的 smoke test，和按里程碑组织的验收测试
+├── scripts/                状态同步、链接与模板检查、评测门禁、故障演练
+├── templates/              课程 README 的写作模板
+├── TODO.md · AGENTS.md · CONTRIBUTING.md   待办、AI 协作者说明、贡献方式
+└── .github/                CI 配置与 README 用到的图片
 ```
 
-编号约定：`Part N` 是课程分组，`L0–L5` 是能力阶段，`P00–P12` / `A00–A06` / `F00–F07` 是前置模块，`M0–M6` 是项目里程碑。`prerequisites/`、`lessons/`、`project/mN` 的编号严格等于学习顺序，不在末尾追加编号塞新主题。
+编号只表示学习顺序：`P` / `B` / `A` / `F` 是四组前置模块，`00～23` 是主线课，`M0～M6` 是项目里程碑，课程总表里的 `Part 0～5` 只是把 24 课分成六组方便对照。它们都不会在末尾追加编号塞新主题。
 
 本地跑起来只需要 uv 和 Python 3.12，依赖 PostgreSQL 与 Redis 的部分用 `docker compose up -d` 起。所有示例默认走离线的 fake 模型，接真实模型的方法见 [第 00 课](./lessons/00-setup/README.md)。
 
@@ -115,7 +178,7 @@
 | 22 | [AI 产品设计与交互](./lessons/22-product-design-ux/README.md) | 何时该用 AI、人工基线、流式 UI、引用展示、确认与撤销、转人工、指标与反馈闭环 | complete |
 | 23 | [系统设计与技术决策](./lessons/23-system-design-decisions/README.md) | Build vs Buy、模型 vs RAG、Workflow vs Agent、单体 vs 平台；一道多租户知识库 + 任务 Agent 的综合设计题 | complete |
 | **Lab** | | | |
-| Lab | [Framework & Architecture Lab](./project/framework-lab/README.md) | 同一个审批型 Agent 需求在 LangGraph、OpenAI Agents SDK、Claude Agent SDK 上各做一遍，一致性测试加十二维评分卡，做完 M3 后做 | draft |
+| Lab | [Framework & Architecture Lab](./project/framework-lab/README.md) | 同一个审批型 Agent 需求在 LangGraph、OpenAI Agents SDK、Claude Agent SDK 上各做一遍，一致性测试加十二维评分卡；M3 之后可开始，Part 4 学完再做完整一遍 | draft |
 | **Capstone** | | | |
 | Cap | [Capstone 实战](./project/capstones/README.md) | Production Agent Service、RAG + Memory Agent、Long-running Durable Agent、Multi-tenant AI Platform 四个实战，各有可执行验收与评分量表 | outline |
 
@@ -125,7 +188,7 @@
   <img src=".github/assets/architecture.png" alt="AI 应用服务骨架：FastAPI、Agent Runtime、Context Builder、Model Adapter、Tool Runner / MCP、RAG、Memory、PostgreSQL + pgvector、Redis、Observability、Evaluation、Background Jobs、Deployment" width="100%">
 </p>
 
-[AI 应用服务骨架](./project/README.md)：一个不绑定模型供应商的 AI 应用后端。从 asyncio 实验开始，七个里程碑，每个只加一个能力簇，最终长成上图这样带工具、RAG、Memory、评测、可观测性、安全护栏和部署的生产级服务。
+[AI 应用服务骨架](./project/README.md)：一个不绑定模型供应商的 AI 应用后端。从 asyncio 实验开始，七个里程碑，每个只加一个能力簇，最终长成上图这样带工具、RAG、Memory、评测、可观测性、安全护栏和部署的生产级服务。代码全部在 `project/src/aiapp/`，里程碑目录只放说明和验收。
 
 | 里程碑 | 加什么 |
 |---|---|
@@ -137,25 +200,17 @@
 | M5 生产化 | Golden set 回归、OpenTelemetry、限流、Fallback、成本统计、故障演练、容器化 |
 | M6 综合设计 | 多租户平台的 RFC：容量、威胁模型、模型与推理选型、迁移与退出 |
 
-每课的「对照真实项目」小节都指向这里。里程碑的运行步骤、验收证据和课程到项目的映射表见 [project/README.md](./project/README.md)。
+每课的「对照真实项目」小节都指向这里。哪一课对应哪个里程碑的哪一块，见 project/README.md 里的[课程到项目的映射表](./project/README.md#课程到项目的映射)。
 
 ## 原则
 
 [12 条 AI 应用工程原则](./principles/README.md)。前 6 条和 12-factor-agents 重合，后 6 条是生产视角的补充。已经在做 Agent 项目的人可以把它当对照清单。
 
-## 方向选修
+## 学每一课的固定动作
 
-| Track | 内容 |
-|---|---|
-| [语音、机器人与具身 AI Agent](./tracks/robotics-voice/README.md) | ASR/TTS 流式管线、打断、Realtime、双模型 racing、设备端工具、具身场景的规划与安全 |
-| [网络与公网访问](./tracks/networking/README.md) | TCP/TLS、DNS、反向代理、WSS、Tunnel、VPN |
-
-## 怎么用这门课
-
-1. 零基础从 [prerequisites/](./prerequisites/README.md) 开始；有后端经验的先做那里的自检，缺哪个模块补哪个。LLM 原理在前置 F 组，主线不再补。
-2. 已经在做 Agent 项目的人从 Part 2 开始，把 `principles/` 当对照清单。
-3. 每课先跑 `code/` 再看正文；做完练习再看 `exercises.md` 里的答案。代码默认用离线的 fake 模型，需要真实模型时按第 00 课配一个 DeepSeek key。
-4. 不要只读。每课的「对照真实项目」小节要求你在 `project/` 里落一个增量。做完 M3 去 Framework Lab 用框架重做一遍，做完 M5 挑一个 Capstone。
+1. 先跑 `code/`，再读正文。代码默认用离线的 fake 模型，需要真实模型时按第 00 课配一个 DeepSeek key。
+2. 做练习，做完再看 `exercises.md` 里折叠的答案。
+3. 看「对照真实项目」小节，去 `project/` 里落一个增量。不动手不算学完。
 
 ## 参考资料
 
@@ -169,13 +224,12 @@
 |---|---|
 | 主线 24 课 | 全部 `complete`：正文、可运行代码、失败注入、带答案的练习、项目落点 |
 | 12 条原则 | 全部 `complete` |
-| 前置 Python 与后端 P00～P12 | P00～P11 `complete`；P12 Redis 只有大纲 |
+| 前置 Python P00～P07、后端 B00～B04 | 除 B04 Redis 只有大纲外全部 `complete` |
 | 前置 LLM 原理 F00～F07 | 6 篇带实验的 `draft`，F02、F07 还是大纲 |
 | 前置算法 A00～A06 | 全部大纲 |
 | 主项目 M0～M6 | M0～M5 有代码和 `tests/project/mN` 验收测试；M6 是设计型里程碑，`draft` |
 | Framework Lab | baseline 和 LangGraph 实现通过 8 个一致性场景；OpenAI Agents SDK、Claude Agent SDK、spec、评分卡待做 |
 | Capstone | 四个题目只有大纲 |
-| Tracks | 网络 `complete`；语音与具身 `draft`，缺代码和具身章节 |
 
 下一步按优先级排在 [TODO.md](./TODO.md)：先补完 Framework Lab，再补 Capstone，然后是前置新内容和模板回填。做完一项删一项。
 

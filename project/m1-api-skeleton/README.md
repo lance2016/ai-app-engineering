@@ -1,7 +1,7 @@
 ---
 status: complete
 kind: impl
-depends_on: 前置 P06, P08, P10；lessons/02, 03
+depends_on: 前置 P06, B00, B02；lessons/02, 03
 ---
 
 # M1 API 骨架
@@ -90,7 +90,7 @@ AIAPP_PROMPT_VERSION=v2 uv run uvicorn aiapp.api.app:create_app --factory       
 
 ## 依赖的课程
 
-前置 P06, P08, P10；lessons/02, 03
+前置 P06, B00, B02；lessons/02, 03
 
 ---
 

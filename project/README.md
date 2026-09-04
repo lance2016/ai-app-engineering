@@ -20,6 +20,8 @@ flowchart LR
 
 ## 里程碑
 
+服务跑起来后打开 `http://localhost:8000/playground`，M1～M4 的能力都能在这一页上操作：对话与事件流、人工确认、文档导入与检索、记忆。页面源码在 `src/aiapp/api/static/playground.html`，只调 `/v1` 接口。
+
 | 里程碑 | 名称 | 内容 | 类型 | 状态 |
 |---|---|---|---|---|
 | M0 | [并发实验](./m0-concurrency/README.md) | 串行、并发、限并发、取消、超时五个对照实验；为流式和并行工具调用打底 | 实现 | complete |
@@ -32,7 +34,7 @@ flowchart LR
 
 ## Framework & Architecture Lab
 
-做完 M3 之后做。[Framework Lab](./framework-lab/README.md) 用同一个审批型任务 Agent 的需求，在 LangGraph、OpenAI Agents SDK、Claude Agent SDK 上各实现一遍，跑同一套一致性测试，按十二个维度逐格对照。产出是选型的判断力，不是排名。
+M3 之后可以开始，默认在 Part 5 学完后一次做完。[Framework Lab](./framework-lab/README.md) 用同一个审批型任务 Agent 的需求，在 LangGraph、OpenAI Agents SDK、Claude Agent SDK 上各实现一遍，跑同一套一致性测试，按十二个维度逐格对照。产出是选型的判断力，不是排名。
 
 | 内容 | 状态 |
 |---|---|
@@ -60,10 +62,10 @@ flowchart LR
 | [01](../lessons/01-how-llms-work/README.md) | 选型矩阵、能力探针、成本模型 | adapters/PRESETS；M5 成本账与 fallback；M6 ADR-4 | F00, F01, F04, F07 |
 | [02](../lessons/02-model-api-structured-output-streaming/README.md) | 模型调用、结构化输出、流式 | M0, M1 | P05, P06, P07 |
 | [03](../lessons/03-prompt-engineering/README.md) | system prompt 与版本化 | M1 | 02 |
-| [04](../lessons/04-embeddings-and-vector-search/README.md) | Embedding 选型与向量索引 | M4.1 | F02, P09 |
+| [04](../lessons/04-embeddings-and-vector-search/README.md) | Embedding 选型与向量索引 | M4.1 | F02, B01 |
 | [05](../lessons/05-tool-calling/README.md) | Tool contract | M3.1, M3.2 | P04, P06, 02 |
 | [06](../lessons/06-agent-loop/README.md) | Agent loop | M2, M3 | P07, 05 |
-| [07](../lessons/07-agent-state-and-runtime/README.md) | State schema 与 runtime | M2 | P09, 06 |
+| [07](../lessons/07-agent-state-and-runtime/README.md) | State schema 与 runtime | M2 | B01, 06 |
 | [08](../lessons/08-context-engineering-for-agents/README.md) | Context builder | M3 | 03, 06, 07 |
 | [09](../lessons/09-workflow-vs-agent/README.md) | 架构模式选型说明 | M3（选型记录） | 06 |
 | [10](../lessons/10-multi-agent-handoff/README.md) | 两个 Agent 的 handoff | M3.4（可选） | 07, 09 |
@@ -73,7 +75,7 @@ flowchart LR
 | [14](../lessons/14-memory/README.md) | Memory 提取与检索 | M4.3 | 07, 13 |
 | [15](../lessons/15-data-engineering/README.md) | 文档版本与删除演练 | M4 | 13 |
 | [16](../lessons/16-system-architecture/README.md) | 端到端架构图 | M1, M2 回顾；M5 前置 | 07, 13 |
-| [17](../lessons/17-evaluation/README.md) | Golden set 与回归门禁 | M5.1 | P10, 06, 13 |
+| [17](../lessons/17-evaluation/README.md) | Golden set 与回归门禁 | M5.1 | B02, 06, 13 |
 | [18](../lessons/18-observability/README.md) | Trace 与故障实验 | M5.2 | P03, 17 |
 | [19](../lessons/19-reliability-cost-llmops/README.md) | 限流、Fallback、成本、部署 | M5.3 | P07, 18 |
 | [20](../lessons/20-security-governance/README.md) | 注入与越权测试、多租户边界 | M5 | 05, 13 |
@@ -91,4 +93,4 @@ Python 3.12 + uv、FastAPI、Pydantic v2、pytest、PostgreSQL + pgvector、Redi
 - Redis 不当永久事实来源；Prompt 不当唯一业务逻辑。
 - 仓库里不出现真实 API Key、内部地址或账号。
 - `src/` 存放最终形态；各 `mN-*/` 目录存放该阶段的增量说明和阶段性代码；`tests/project/mN/` 是该里程碑的验收测试。
-- `framework-lab/` 和 `capstones/` 不编号，是 M3 之后和 M5 之后的两个实践单元。框架依赖只进 `frameworks` 依赖组。
+- `framework-lab/` 和 `capstones/` 不编号，是七个里程碑之后的两个实践单元；Lab 最早可在 M3 后开始。框架依赖只进 `frameworks` 依赖组。

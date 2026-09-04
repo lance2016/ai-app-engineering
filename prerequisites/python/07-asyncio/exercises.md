@@ -88,6 +88,6 @@ await asyncio.gather(*(handle(i) for i in range(20)))
 
 `requests.get` 是同步调用，它在等网络的时候不会把控制权交给事件循环。20 个 `handle` 名义上并发，实际上一个接一个地把事件循环卡住，总耗时和串行一样。
 
-修法：换成 `httpx.AsyncClient`，`data = (await client.get(url)).json()`。规律是：在 `async def` 里，任何会等待的操作都必须是 `await` 得了的版本，否则并发就是假的。P08 会用到 httpx。
+修法：换成 `httpx.AsyncClient`，`data = (await client.get(url)).json()`。规律是：在 `async def` 里，任何会等待的操作都必须是 `await` 得了的版本，否则并发就是假的。B00 会用到 httpx。
 
 </details>

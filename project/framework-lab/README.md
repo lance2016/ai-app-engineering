@@ -64,7 +64,7 @@ depends_on: project/m3；lessons/05–12；回顾 18, 19
 
 ## 学习位置
 
-做完 M3 之后做 Lab，那时你刚用普通 Python 写完同样的东西，对照最清楚。学完 18、19 再回来重打 Observability、Deployment 两格。Capstone 3 要求用普通 Python 和一个框架各做一遍，选哪个框架用这里的评分卡决定。
+M3 一做完就可以开始，那时你刚用普通 Python 写完同样的东西，对照最清楚。但 Observability、Deployment 两格要学完 18、19 才打得出来，所以默认放在 Part 5 之后一次做完；提前做的人把这两格留到后面补。Capstone 3 要求用普通 Python 和一个框架各做一遍，选哪个框架用这里的评分卡决定。
 
 ## 目录
 

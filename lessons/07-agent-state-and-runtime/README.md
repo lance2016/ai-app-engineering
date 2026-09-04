@@ -18,7 +18,7 @@ estimated_time: 约 2.5 小时
 
 - [06 Agent 循环与控制流](../06-agent-loop/README.md)：循环结构、停止条件、"跳出循环等人"的伏笔
 - [05 Tool Calling](../05-tool-calling/README.md)：幂等键。恢复时不重跑已执行的工具，靠的是同一个思路
-- 前置模块 [P09 SQL 与 SQLAlchemy](../../prerequisites/python/09-sql-and-sqlalchemy/README.md)：本课用 JSON 文件代替数据库，M2 换成 PostgreSQL
+- 前置模块 [B01 SQL 与 SQLAlchemy](../../prerequisites/backend/01-sql-and-sqlalchemy/README.md)：本课用 JSON 文件代替数据库，M2 换成 PostgreSQL
 
 ## 心智模型
 

@@ -63,15 +63,15 @@
 | A05 | [图、BFS/DFS 与拓扑排序](./algorithms/05-graphs/README.md) | Workflow DAG、并行度、环检测、框架里的 State Graph | lessons/06, 09, 10 | outline |
 | A06 | [并发模型](./algorithms/06-concurrency-models/README.md) | 线程、进程、协程；GIL；竞态、锁与死锁；单写者 | P07, lessons/07；project/m0, m2 | outline |
 
-### 后端工程（P08～P12）
+### 后端工程（B00～B04）
 
 | # | 模块 | 一句话 | 主线落点 | 状态 |
 |---|---|---|---|---|
-| P08 | [HTTP 与 FastAPI](./python/08-http-and-fastapi/README.md) | HTTP 请求响应、状态码、JSON、鉴权头；httpx 发请求；FastAPI 写最小 API、路径参数、依赖注入、SSE 流式 | lessons/02, 16；project/m1 | complete |
-| P09 | [SQL、PostgreSQL 与 SQLAlchemy](./python/09-sql-and-sqlalchemy/README.md) | 建表、索引、JOIN、事务；SQLAlchemy 2.0 的 ORM 与 session；Alembic 迁移 | lessons/14, 16；project/m2 | complete |
-| P10 | [pytest 与测试思维](./python/10-testing/README.md) | fixture、参数化、mock、断言异常；先写测试再写实现；怎样给不确定的模型输出写测试 | lessons/17；project 全部 | complete |
-| P11 | [Git、命令行与 Docker Compose](./python/11-git-cli-and-docker/README.md) | 分支、提交、rebase、解决冲突；常用 shell 命令；用 Docker Compose 一条命令起 PostgreSQL 和 Redis | project/m2 起 | complete |
-| P12 | [Redis](./python/12-redis/README.md) | TTL、`SET NX` 幂等键与运行锁、令牌桶限流；Redis 为什么不当事实来源 | lessons/05, 07, 19；project/m2, m5 | outline |
+| B00 | [HTTP 与 FastAPI](./backend/00-http-and-fastapi/README.md) | HTTP 请求响应、状态码、JSON、鉴权头；httpx 发请求；FastAPI 写最小 API、路径参数、依赖注入、SSE 流式 | lessons/02, 16；project/m1 | complete |
+| B01 | [SQL、PostgreSQL 与 SQLAlchemy](./backend/01-sql-and-sqlalchemy/README.md) | 建表、索引、JOIN、事务；SQLAlchemy 2.0 的 ORM 与 session；Alembic 迁移 | lessons/14, 16；project/m2 | complete |
+| B02 | [pytest 与测试思维](./backend/02-testing/README.md) | fixture、参数化、mock、断言异常；先写测试再写实现；怎样给不确定的模型输出写测试 | lessons/17；project 全部 | complete |
+| B03 | [Git、命令行与 Docker Compose](./backend/03-git-cli-and-docker/README.md) | 分支、提交、rebase、解决冲突；常用 shell 命令；用 Docker Compose 一条命令起 PostgreSQL 和 Redis | project/m2 起 | complete |
+| B04 | [Redis](./backend/04-redis/README.md) | TTL、`SET NX` 幂等键与运行锁、令牌桶限流；Redis 为什么不当事实来源 | lessons/05, 07, 19；project/m2, m5 | outline |
 
 ### LLM 原理（F00～F07）
 
@@ -90,7 +90,7 @@
 
 ## 学法
 
-1. 推荐顺序：P00～P06 → A00～A05 → P07 与 A06 一起 → P08～P12 → F00～F07。Python 语言和后端工程之间没有捷径；算法组不长，放在中间正好给 P07 的并发打底。
+1. 推荐顺序：P00～P06 → A00～A05 → P07 与 A06 一起 → B00～B04 → F00～F07。Python 语言和后端工程之间没有捷径；算法组不长，放在中间正好给 P07 的并发打底。
 2. 每个模块先跑 `code/`，再读正文，再做 `exercises.md`。
 3. 「它在 AI 应用里用在哪」这一节告诉你这个知识点将来在哪会用到。看不懂没关系，知道有这回事就行。
 4. 学到 P07 asyncio 时同步做 [project/m0](../project/m0-concurrency/README.md)，这是主项目的第一个里程碑。

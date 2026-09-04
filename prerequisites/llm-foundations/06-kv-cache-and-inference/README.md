@@ -50,7 +50,7 @@ flowchart LR
 
 - TTFT 与输入长度、prompt caching → [第 08 课 Context Engineering](../../../lessons/08-context-engineering-for-agents/README.md)
 - 自部署 vs 托管、量化选型 → [第 21 课](../../../lessons/21-model-adaptation-finetuning-inference/README.md)
-- 延迟预算 → [第 19 课](../../../lessons/19-reliability-cost-llmops/README.md)，以及 [语音机器人 track 第 03 篇](../../../tracks/robotics-voice/03-latency-budget.md)
+- 延迟预算 → [第 19 课](../../../lessons/19-reliability-cost-llmops/README.md)
 
 ## 延伸阅读
 

@@ -18,7 +18,7 @@ estimated_time: 约 2.5 小时
 
 - [07 Agent State 与 Runtime](../07-agent-state-and-runtime/README.md)：事件线程和事件流。本课的持久化就是存它
 - [13 RAG 端到端](../13-rag-end-to-end/README.md)：检索这一跳的内部
-- 前置模块 [P08 HTTP 与 FastAPI](../../prerequisites/python/08-http-and-fastapi/README.md)：SSE 端点用到
+- 前置模块 [B00 HTTP 与 FastAPI](../../prerequisites/backend/00-http-and-fastapi/README.md)：SSE 端点用到
 
 ## 心智模型
 

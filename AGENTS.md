@@ -8,22 +8,22 @@
 
 | 层 | 目录 | 形式 |
 |---|---|---|
-| 前置 | `prerequisites/` | 四组，面向零基础，独立于主线：`python/` P00–P12（语言 P00–P07、后端工程 P08–P12）、`algorithms/` A00–A06、`llm-foundations/` F00–F07 |
+| 前置 | `prerequisites/` | 四组，面向零基础，独立于主线：`python/` P00–P07 语言、`backend/` B00–B04 后端工程、`algorithms/` A00–A06、`llm-foundations/` F00–F07 |
 | 原则 | `principles/` | 12 条，一条一个文件，12-factor-agents 风格 |
 | 课程 | `lessons/` | 24 课，编号即顺序，每课 `README.md + code/ + exercises.md + images/` |
 | 项目 | `project/` | 一个贯穿全程的服务骨架，7 个里程碑 M0–M6；另有不编号的 `framework-lab/`（同一需求三框架对照）和 `capstones/`（四个实战） |
 
-命名约定：`Part N` 是课程分组，`L0–L5` 是 ROADMAP 里的能力阶段，`P00–P12` / `A00–A06` / `F00–F07` 是前置模块，`M0–M6` 是项目里程碑。
+命名约定：`Part N` 是课程分组，`L0–L5` 是 ROADMAP 里的能力阶段，`P00–P07、B00–B04` / `A00–A06` / `F00–F07` 是前置模块，`M0–M6` 是项目里程碑。
 
-另有 `tracks/`（方向选修，不编号，目前两条：networking、robotics-voice）、`reference/`（术语、选型、资料）、`templates/`（写作模板）、`scripts/`（状态同步、链接与模板检查）、`tests/`（所有 `code/` 的 smoke test，将来按里程碑放验收测试）。 README 顶部用到的 banner、路线图、架构图放在 `.github/assets/`，它不是内容目录，不受下面第 1 条限制。
+另有 `reference/`（术语、选型、资料）、`templates/`（写作模板）、`scripts/`（状态同步、链接与模板检查）、`tests/`（所有 `code/` 的 smoke test，将来按里程碑放验收测试）。 README 顶部用到的 banner、路线图、架构图放在 `.github/assets/`，它不是内容目录，不受下面第 1 条限制。
 
 课程的历史来源是作者的 Obsidian 笔记（Codex 多轮对话生成的大纲），位于作者本机 `~/Documents/work/Codex 学习沉淀/`。它们只是大纲，没有代码。每课 README 底部的「写作素材」折叠块列出了对应的旧文件和参考仓库章节。
 
 ## 2. 硬性目录规则
 
-1. **不新增一级目录。** 新内容只能进现有的 `prerequisites/ principles/ lessons/ project/ tracks/ reference/`。
-2. **`prerequisites/` 三组、`lessons/` 和 `project/mN` 的编号严格等于学习顺序。** 不允许在末尾追加编号来塞新主题。真的需要新课，要么放进最相关那课的 `bonus/` 子目录，要么和维护者确认后整体重排编号。历史：2026-09-04 公开前做过一次整体重排，在原 06 之后插入了 07 State/Runtime 和 08 Context Engineering，22 课变 24 课；同日的架构优化把 `tracks/llm-internals` 迁入 `prerequisites/llm-foundations/` 重排为 F00–F07，新建 `prerequisites/algorithms/` A00–A06，并在 `prerequisites/python/` 末尾追加了 P12 Redis（它依赖 P11 的 compose，学习顺序成立，这是唯一一次追加）。lessons 编号自重排后没有再动过。
-3. **`tracks/`、`project/framework-lab/`、`project/capstones/` 不编号进主线**，内部文件可以用 `NN-topic` 排序。
+1. **不新增一级目录。** 新内容只能进现有的 `prerequisites/ principles/ lessons/ project/ reference/`。
+2. **`prerequisites/` 四组、`lessons/` 和 `project/mN` 的编号严格等于学习顺序。** 不允许在末尾追加编号来塞新主题。真的需要新课，要么放进最相关那课的 `bonus/` 子目录，要么和维护者确认后整体重排编号。历史：2026-09-04 公开前做过一次整体重排，在原 06 之后插入了 07 State/Runtime 和 08 Context Engineering，22 课变 24 课；同日的架构优化把 `tracks/llm-internals` 迁入 `prerequisites/llm-foundations/` 重排为 F00–F07，新建 `prerequisites/algorithms/` A00–A06，并在 `prerequisites/python/` 末尾追加了 P12 Redis（它依赖 P11 的 compose，学习顺序成立，这是唯一一次追加）。lessons 编号自重排后没有再动过。同日晚上把 `python/` 的后端工程部分 P08–P12 拆成独立的 `backend/` B00–B04，并删除了 `tracks/`（两条方向选修，与主题不够聚焦）。
+3. **`project/framework-lab/`、`project/capstones/` 不编号进主线**，内部文件可以用 `NN-topic` 排序。
 4. **目录名英文 kebab-case，标题中文。** 不改已有目录名，改名会断所有链接。
 5. **不创建 Dashboard、周计划、学习记录、复盘之类的文件。** 那是读者自己的事，参考仓库都没有。
 6. **不改 `README.md` 课程总表的结构**，只改状态列。2026-09-04 加过 Lab 和 Capstone 两个分组行，之后不再改结构。
@@ -69,7 +69,7 @@
 - **生产方案** 最小实现到生产之间差什么，指向 `project/` 里落地它的里程碑或文件，不在课里重复实现。
 - **框架映射** 一张表，本课概念在 LangGraph、OpenAI Agents SDK、Claude Agent SDK 里各叫什么、藏在哪一层。只放表不放代码，标核对日期。和本课无关就写「本课概念在框架层没有对应」，不硬凑。三个框架是 Framework Lab 选定的，不换。
 - **练习** 3～5 题，每题写清任务和验收标准。答案和提示放 `exercises.md`，用 `<details>` 折叠。
-- **对照真实项目** 指向 `project/` 里哪个里程碑落地这个概念；里程碑有代码后改成指向具体文件和测试。第 07、08、10 课和 `tracks/robotics-voice/` 可以用语音机器人案例，但只保留架构模式和取舍，不出现业务细节、内部接口名、任何标识信息。
+- **对照真实项目** 指向 `project/` 里哪个里程碑落地这个概念；里程碑有代码后改成指向具体文件和测试。第 07、08、10、15、17 课可以用语音机器人案例，但只保留架构模式和取舍，不出现业务细节、内部接口名、任何标识信息。
 - **延伸阅读** 每条一句话说为什么值得读。
 
 写完后删除底部的「写作素材」折叠块，或把它压缩成延伸阅读的一部分。
@@ -111,15 +111,14 @@ frontmatter 是唯一事实来源，各总表的状态列由 `scripts/sync_statu
 1. M1～M5 已落地（2026-09-04），每个有 `tests/project/mN`；改运行时代码时同步更新对应课的「对照真实项目」和里程碑 README 的验收证据。
 2. `project/framework-lab/`：先 `spec.md` 和一致性测试，再三个实现，最后评分卡。同步给 05～14 课补「框架映射」。
 3. `project/capstones/` 四个 README 补全，能自动化的验收进 `tests/capstones/`。
-4. 前置新内容：`algorithms/` A00～A06、`python/12-redis`、`llm-foundations/` 的 F02、F04、F07 正文与代码，其余 F 模块补练习。
-5. `tracks/robotics-voice/` 加 `code/`（回放音频加假设备）和具身章节。
-6. 24 课回填「为什么需要」「生产方案」，然后做一次状态审计。
+4. 前置新内容：`algorithms/` A00～A06、`backend/04-redis`、`llm-foundations/` 的 F02、F04、F07 正文与代码，其余 F 模块补练习。
+5. 24 课回填「为什么需要」「生产方案」，然后做一次状态审计。
 
 维护者说了具体要做哪一课，以维护者为准。
 
-## 7. 写前置模块、原则、项目、track 的差异
+## 7. 写前置模块、原则、项目的差异
 
-- **前置模块**（`prerequisites/python/PNN-*/`）：读者是零基础，先给能跑的例子再解释概念，每段代码不超过 15 行，不用主线里的术语。「常见错误」小节要贴真实的报错信息。「它在 AI 应用里用在哪」写一个具体场景把它连到主线某一课，让初学者知道为什么学。P07 asyncio 的五个对照实验直接对应 `project/m0`，两边要一致。
+- **前置模块**（`prerequisites/python/NN-*/`、`prerequisites/backend/NN-*/`）：读者是零基础，先给能跑的例子再解释概念，每段代码不超过 15 行，不用主线里的术语。「常见错误」小节要贴真实的报错信息。「它在 AI 应用里用在哪」写一个具体场景把它连到主线某一课，让初学者知道为什么学。P07 asyncio 的五个对照实验直接对应 `project/m0`，两边要一致。
 
 - **前置 F 组**（`prerequisites/llm-foundations/NN-*/`）：同前置模块的写法，另加两条：不训练、不依赖 torch，每篇一到两个纯 Python 实验；只写到应用工程师能做决策的深度，训练细节一句话带过并链接 LLMs-from-scratch。
 
@@ -131,7 +130,6 @@ frontmatter 是唯一事实来源，各总表的状态列由 `scripts/sync_statu
 
 - **原则**（`principles/NN-*.md`）：主张 → 违反它会怎样 → 最小做法 → 对照。整篇不超过 150 行，代码不超过 30 行。先读 12-factor-agents 对应 factor 的写法，但用自己的反例。
 - **项目里程碑**（`project/mN-*/README.md`）：这一步加什么 → 运行步骤 → 验收证据 → 依赖的课程。代码放 `project/src`，里程碑目录只放说明和该阶段特有的脚本。验收证据必须包括一次失败注入。
-- **track**（`tracks/*/NN-topic.md`）：复用课程模板，但可以省略「对照真实项目」。
 
 ## 8. 不要做的事
 
