@@ -1,0 +1,67 @@
+# 09 Workflow 还是 Agent｜练习
+
+## 练习 1：给五个需求选模式
+
+不写代码。为下面每个需求选一种模式（或"确定性代码"或"自治 Agent"），一句话理由：
+
+1. 把用户上传的简历抽成结构化字段，再生成一段评价
+2. 客服进线，问题分为账单、物流、技术三类
+3. 对一份合同同时做风险、合规、可读性三方面审查
+4. 给一个代码仓库做重构，改动的文件数事先不知道
+5. 把一篇文学作品翻译成中文，要求反复打磨
+
+<details><summary>参考答案</summary>
+
+1. Prompt chaining。抽取和评价是固定顺序，中间可以加校验（字段齐不齐）。
+2. Routing。类别明确，每类用专门的提示词效果更好。
+3. Parallelization（分段）。三个视角独立，最后合并。
+4. Orchestrator-workers。子任务数量看输入才知道，但要有上限。如果改动之间有依赖、需要边改边看结果，才升级成 Agent。
+5. Evaluator-optimizer。有明确的评审维度，迭代确实能改善。
+
+</details>
+
+## 练习 2：给 chaining 加一个可以回退的门
+
+`01_prompt_chaining.py` 的门失败就抛异常。改成：大纲不合格时把失败原因作为反馈，让模型重试一次大纲；两次都失败才放弃。
+
+验收：`INJECT_BAD_OUTLINE=1` 时看到"outline retry 1/1"，剧本里第二次大纲合格则链继续。
+
+<details><summary>提示</summary>
+
+这是把 evaluator-optimizer 的思路嵌进 chaining 的一步里。注意重试次数写死为 1，不要变成无界循环，否则你又回到了第 06 课的问题。
+
+</details>
+
+## 练习 3：路由到不同模型的成本核算
+
+在 `02_routing.py` 里给每个 lane 加一个"每千 token 单价"，用 `reply.usage` 累计每条问题的成本。然后把分类器故意全部输出 `refund`，比较两次总成本。
+
+验收：打印两种情况的总成本，说明 routing 省了多少。
+
+<details><summary>讨论</summary>
+
+routing 的收益不只是准确率，很多时候主要是成本：大部分请求是简单的，让强模型处理它们是浪费。但分类器本身也是一次调用，请求量小或者问题都很难时，routing 反而更贵。
+
+</details>
+
+## 练习 4：让投票有置信度
+
+`03_parallelization.py` 的投票是简单多数。改成：三票一致时直接采纳；2:1 时采纳但标记 `low_confidence`；加第四次投票打破 2:2。
+
+验收：输出里带有 `confidence` 字段。
+
+<details><summary>答案</summary>
+
+`Counter` 的 `most_common(1)` 给出多数票和票数，票数等于总数就是 high，否则 low。2:2 只在偶数票时出现，加一票即可。这个模式的关键是：置信度是代码算出来的，不是问模型"你有多确定"。
+
+</details>
+
+## 练习 5：找出一个应该降级成 workflow 的 Agent
+
+看你手边任何一个 Agent 项目（自己的或开源的），找出一个它用循环处理、但其实步骤固定的任务。写下：现在的做法、改成哪种 workflow、改完能少掉哪些失败模式。
+
+<details><summary>参考</summary>
+
+常见的候选："搜索、总结、写报告"（chaining）、"先判断用户想要什么再回答"（routing）、"检查这段代码的多个方面"（parallelization）。改成 workflow 之后通常少掉的失败：跳步、重复步、在中间步骤上无限打转、成本不可预测。
+
+</details>
