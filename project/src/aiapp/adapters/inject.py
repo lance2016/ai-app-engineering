@@ -47,6 +47,7 @@ class FailingAdapter:
 INJECTIONS = {
     "slow_model": lambda inner: SlowAdapter(inner, delay_s=10.0),
     "provider_error": lambda inner: FailingAdapter(inner),
+    "provider_down": lambda inner: FailingAdapter(inner, "provider is down"),  # same as provider_error; the name says "test the fallback"
 }
 
 

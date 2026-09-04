@@ -17,6 +17,12 @@ Env vars (all optional):
   EMBEDDING_PROVIDER     fake (hashing, offline) | dashscope | openai   (default fake)
   AIAPP_CHUNK_MAX_CHARS  chunk size for ingestion (default 600)
   AIAPP_MEMORY_RECALL_K  memories injected per turn (default 5; 0 disables)
+  AIAPP_ENV              development | production (production refuses default tokens and in-memory stores)
+  OTEL_EXPORTER_OTLP_ENDPOINT  e.g. http://localhost:6006 (Phoenix); unset -> spans kept in memory
+  AIAPP_RATE_LIMIT_RPS / AIAPP_RATE_LIMIT_BURST   per-tenant token bucket (default 5 / 20; 0 rps disables)
+  AIAPP_DAILY_BUDGET_USD per-tenant daily budget; unset -> unlimited
+  AIAPP_FALLBACK_PROVIDER  a second MODEL_PROVIDER used when the primary fails or the breaker is open
+  AIAPP_PRICES_PATH      price table json (default aiapp/prices.json)
 """
 
 import os
@@ -62,6 +68,12 @@ class Settings:
     embedding_provider: str = "fake"
     chunk_max_chars: int = 600
     memory_recall_k: int = 5
+    env: str = "development"
+    otel_endpoint: str | None = None
+    rate_limit_rps: float = 5.0
+    rate_limit_burst: int = 20
+    daily_budget_usd: float | None = None
+    fallback_provider: str | None = None
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> "Settings":
@@ -85,4 +97,23 @@ class Settings:
             embedding_provider=env.get("EMBEDDING_PROVIDER", "fake"),
             chunk_max_chars=int(env.get("AIAPP_CHUNK_MAX_CHARS", "600")),
             memory_recall_k=int(env.get("AIAPP_MEMORY_RECALL_K", "5")),
+            env=env.get("AIAPP_ENV", "development"),
+            otel_endpoint=env.get("OTEL_EXPORTER_OTLP_ENDPOINT") or None,
+            rate_limit_rps=float(env.get("AIAPP_RATE_LIMIT_RPS", "5")),
+            rate_limit_burst=int(env.get("AIAPP_RATE_LIMIT_BURST", "20")),
+            daily_budget_usd=float(env["AIAPP_DAILY_BUDGET_USD"]) if env.get("AIAPP_DAILY_BUDGET_USD") else None,
+            fallback_provider=env.get("AIAPP_FALLBACK_PROVIDER") or None,
         )
+
+    def validate_for_production(self) -> list[str]:
+        """What must be true before this configuration may serve real traffic. Empty list = fine."""
+        problems = []
+        if self.tokens == DEFAULT_TOKENS:
+            problems.append("AIAPP_TOKENS is the development default")
+        if not self.database_url:
+            problems.append("DATABASE_URL is not set (threads would live in memory)")
+        if not self.redis_url:
+            problems.append("REDIS_URL is not set (locks and rate limits would be per-process)")
+        if self.inject:
+            problems.append(f"AIAPP_INJECT={self.inject!r} is a failure injection")
+        return problems

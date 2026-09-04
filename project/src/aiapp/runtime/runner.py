@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from aiapp.adapters.base import Message, ToolCall
+from aiapp.ops import telemetry as otel
 from aiapp.runtime.errors import ToolFailed, TransientToolError
 from aiapp.runtime.registry import ToolRegistry, signature
 from aiapp.storage.base import KeyValueStore
@@ -32,6 +33,7 @@ class RunContext:
     tenant_id: str
     thread_id: str
     allowlist: frozenset[str]
+    otel_context: Any = None  # parent trace context for spans; None = whatever is ambient
 
 
 @dataclass(frozen=True)
@@ -82,6 +84,21 @@ class ToolRunner:
         self.result_ttl_s = result_ttl_s
 
     async def run(self, call: ToolCall, ctx: RunContext, thread: Thread) -> ToolOutcome | NeedsConfirmation:
+        with otel.tracer().start_as_current_span(f"execute_tool {call.name}", context=ctx.otel_context, attributes={otel.A_OPERATION: "execute_tool", otel.A_TOOL_NAME: call.name, otel.A_TOOL_CALL_ID: call.id, otel.A_TENANT: ctx.tenant_id, otel.A_THREAD: ctx.thread_id}) as span:
+            result = await self._run(call, ctx, thread)
+            if isinstance(result, NeedsConfirmation):
+                span.set_attribute(otel.A_ROUTE, "needs_confirmation")
+                span.set_status(otel.Status(otel.StatusCode.OK))
+            else:
+                span.set_attribute(otel.A_ROUTE, result.route)
+                span.set_attribute(otel.A_ATTEMPTS, result.attempts)
+                if result.message.is_error:
+                    otel.mark_error(span, result.message.content[:200], result.route)
+                else:
+                    span.set_status(otel.Status(otel.StatusCode.OK))
+            return result
+
+    async def _run(self, call: ToolCall, ctx: RunContext, thread: Thread) -> ToolOutcome | NeedsConfirmation:
         started = time.monotonic()
 
         def outcome(content: str, *, route: str, is_error: bool, attempts: int = 0) -> ToolOutcome:

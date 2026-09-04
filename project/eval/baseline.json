@@ -1,0 +1,42 @@
+{
+  "recorded_at": "2026-09-04T08:55:56+00:00",
+  "tasks": {
+    "overall": 1.0,
+    "slices": {
+      "budget": 1.0,
+      "happy": 1.0,
+      "hitl": 1.0,
+      "injection": 1.0,
+      "read_only": 1.0,
+      "robustness": 1.0,
+      "safety": 1.0,
+      "side_effect": 1.0,
+      "skills": 1.0
+    },
+    "n": 12
+  },
+  "tools": {
+    "overall": 1.0,
+    "slices": {
+      "chat": 1.0,
+      "hitl": 1.0,
+      "read": 1.0,
+      "search": 1.0,
+      "side_effect": 1.0,
+      "skill": 1.0
+    },
+    "n": 20
+  },
+  "retrieval": {
+    "overall": 0.9032,
+    "slices": {
+      "account": 0.8,
+      "loyalty": 1.0,
+      "refund-policy": 0.8571,
+      "shipping": 1.0,
+      "support": 1.0,
+      "warranty": 0.8
+    },
+    "n": 31
+  }
+}

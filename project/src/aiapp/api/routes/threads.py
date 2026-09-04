@@ -17,11 +17,16 @@ from fastapi import APIRouter, Depends, Header, Request
 from fastapi.responses import StreamingResponse
 
 from aiapp.adapters.base import ModelAdapter
-from aiapp.api.deps import Tenant, get_kv, get_memory, get_model, get_runner, get_settings, get_skills, get_store, get_system_prompt, get_tenant, get_user_id
-from aiapp.api.errors import Conflict, InvalidRequest, ModelTimeout, NotFound, ProviderError, request_id_of
+from aiapp.api.deps import Tenant, get_cost_ledger, get_kv, get_memory, get_model, get_rate_limiter, get_runner, get_settings, get_skills, get_store, get_system_prompt, get_tenant, get_user_id
+from aiapp.api.errors import BudgetExhaustedError, Conflict, InvalidRequest, ModelTimeout, NotFound, ProviderError, RateLimited, request_id_of
 from aiapp.api.schemas import CreateThreadRequest, HumanInputRequest, MessageRequest, ThreadView
 from aiapp.config import Settings
+from aiapp.adapters.base import Usage
 from aiapp.knowledge.citations import verify_citations
+from aiapp.ops import telemetry as otel
+from opentelemetry import context as otel_context_api
+from aiapp.ops.cost import BudgetExhausted, CostLedger
+from aiapp.ops.ratelimit import RateLimiter
 from aiapp.knowledge.memory import MemoryService, render_memories
 from aiapp.tools.knowledge import CITATION_INSTRUCTIONS, SEARCH_KNOWLEDGE, sources_from_tool_result
 from aiapp.runtime import Budget, ContextBuilder, Delta, RunContext, SkillLoader, ToolRunner, run_agent
@@ -108,9 +113,22 @@ async def _run_and_stream(
     idempotency_key: str | None,
     prelude: tuple[str, dict] | None = None,
     memory_block: str = "",
+    rate_limiter: RateLimiter | None = None,
+    cost_ledger: CostLedger | None = None,
 ) -> StreamingResponse:
     """Run the agent and stream its events. ``prelude`` is an event to record and stream before the run (the human's answer)."""
     thread_id, request_id = thread.thread_id, request_id_of(request)
+
+    # 0. Per-tenant admission: rate limit, then daily budget. Both fail fast with a code the client can act on.
+    if rate_limiter is not None and settings.rate_limit_rps > 0:
+        decision = await rate_limiter.acquire(f"tenant:{tenant.id}", rate=settings.rate_limit_rps, capacity=settings.rate_limit_burst)
+        if not decision.allowed:
+            raise RateLimited(f"tenant {tenant.id} exceeded {settings.rate_limit_rps:g} requests/s", decision.retry_after_s)
+    if cost_ledger is not None:
+        try:
+            await cost_ledger.ensure_budget(tenant.id)
+        except BudgetExhausted as exc:
+            raise BudgetExhaustedError(str(exc)) from None
 
     # 1. Idempotency: a retried request replays the events the first one produced. No second model call.
     idem_key = f"idem:{tenant.id}:{thread_id}:{idempotency_key}" if idempotency_key else None
@@ -131,6 +149,7 @@ async def _run_and_stream(
         raise Conflict("a run is already in progress on this thread")
 
     persisted = from_seq = len(thread.events)
+    http_ctx = otel_context_api.get_current()  # the response body streams in another task; keep the HTTP span as parent explicitly
     prelude_event = thread.append(prelude[0], **prelude[1]) if prelude else None
     ctx = RunContext(tenant_id=tenant.id, thread_id=thread_id, allowlist=allowlist)
     budget = Budget(max_steps=settings.max_steps, max_tokens=settings.max_tokens, max_seconds=settings.max_seconds)
@@ -182,6 +201,8 @@ async def _run_and_stream(
                     yield sse_frame(check)
                     await checkpoint()
             completed = True
+            if cost_ledger is not None:
+                await _charge(cost_ledger, tenant.id, thread, from_seq, http_ctx)
         except asyncio.CancelledError:
             log.warning("stream cancelled by client request_id=%s thread=%s", request_id, thread_id)
             thread.append("run_failed", reason="client_disconnected")
@@ -198,6 +219,18 @@ async def _run_and_stream(
             await finish(record=completed)
 
     return _sse_response(events(), settings)
+
+
+async def _charge(ledger: CostLedger, tenant_id: str, thread: Thread, from_seq: int, parent_ctx) -> None:
+    """Every model call in this run carried its usage on the assistant_message event; price them and attribute to the tenant."""
+    with otel.tracer().start_as_current_span("cost.charge", context=parent_ctx, attributes={otel.A_TENANT: tenant_id, otel.A_THREAD: thread.thread_id}) as span:
+        total = 0.0
+        for e in thread.events[from_seq:]:
+            usage = e.data.get("usage") if e.type == "assistant_message" else None
+            if usage:
+                model = str(e.data.get("model", "unknown")).split(":")[0]
+                total += float(await ledger.charge(tenant_id, Usage(usage["input_tokens"], usage["output_tokens"]), model))
+        span.set_attribute(otel.A_COST_USD, round(total, 6))
 
 
 def _citations_event(thread: Thread, from_seq: int) -> Event | None:
@@ -236,6 +269,8 @@ async def send_message(
     system_prompt: Annotated[str, Depends(get_system_prompt)],
     memory: Annotated[MemoryService, Depends(get_memory)],
     user_id: Annotated[str, Depends(get_user_id)],
+    rate_limiter: Annotated[RateLimiter, Depends(get_rate_limiter)],
+    cost_ledger: Annotated[CostLedger, Depends(get_cost_ledger)],
     idempotency_key: Annotated[str | None, Header()] = None,
 ) -> StreamingResponse:
     thread = await _load(store, thread_id, tenant)
@@ -246,6 +281,7 @@ async def send_message(
         settings=settings, system_prompt=system_prompt, allowlist=_allowlist(settings, runner, body.allowed_tools),
         user_content=body.content, idempotency_key=idempotency_key,
         memory_block=await _memory_block(memory, settings, tenant, user_id, body.content),
+        rate_limiter=rate_limiter, cost_ledger=cost_ledger,
     )
 
 
@@ -262,6 +298,8 @@ async def human_input(
     skills: Annotated[SkillLoader, Depends(get_skills)],
     settings: Annotated[Settings, Depends(get_settings)],
     system_prompt: Annotated[str, Depends(get_system_prompt)],
+    rate_limiter: Annotated[RateLimiter, Depends(get_rate_limiter)],
+    cost_ledger: Annotated[CostLedger, Depends(get_cost_ledger)],
     idempotency_key: Annotated[str | None, Header()] = None,
 ) -> StreamingResponse:
     """Answer the agent's question or decide on a confirmation, then resume the run from the checkpoint."""
@@ -281,5 +319,5 @@ async def human_input(
     return await _run_and_stream(
         request=request, thread=thread, tenant=tenant, store=store, kv=kv, model=model, runner=runner, skills=skills,
         settings=settings, system_prompt=system_prompt, allowlist=allowlist, user_content=None, idempotency_key=idempotency_key,
-        prelude=prelude,
+        prelude=prelude, rate_limiter=rate_limiter, cost_ledger=cost_ledger,
     )

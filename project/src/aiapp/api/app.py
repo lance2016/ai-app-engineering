@@ -13,6 +13,12 @@ from aiapp.adapters.embeddings import get_embedding_adapter
 from aiapp.adapters.inject import apply_injection
 from aiapp.api.errors import install_error_handlers
 from aiapp.api.routes import health, knowledge, threads
+from aiapp.ops import telemetry
+from aiapp.ops.cost import CostLedger, CostStore, InMemoryCostStore, PriceTable
+from aiapp.ops.logging import setup_logging
+from aiapp.ops.ratelimit import InMemoryRateLimiter, RateLimiter
+from aiapp.ops.resilience import CircuitBreaker, FallbackAdapter
+from decimal import Decimal
 from aiapp.knowledge.memory import InMemoryMemoryStore, MemoryService, MemoryStore
 from aiapp.knowledge.memory_store import InMemoryKnowledgeStore
 from aiapp.knowledge.base import KnowledgeStore
@@ -37,6 +43,31 @@ def build_stores(settings: Settings) -> tuple[ThreadStore, KeyValueStore]:
     else:
         store = InMemoryThreadStore()
     return store, _build_kv(settings)
+
+
+def build_ops(settings: Settings) -> tuple[RateLimiter, CostStore]:
+    if settings.redis_url:
+        from aiapp.ops.ratelimit import RedisRateLimiter
+
+        limiter: RateLimiter = RedisRateLimiter.from_url(settings.redis_url)
+    else:
+        limiter = InMemoryRateLimiter()
+    if settings.database_url:
+        from aiapp.ops.postgres_cost import PostgresCostStore
+
+        cost_store: CostStore = PostgresCostStore.from_url(settings.database_url)
+    else:
+        cost_store = InMemoryCostStore()
+    return limiter, cost_store
+
+
+def build_model(settings: Settings, model: ModelAdapter | None) -> ModelAdapter:
+    """Primary (with any injection applied) behind a breaker and a fallback when one is configured."""
+    primary = apply_injection(model or get_adapter(), settings.inject)
+    if not settings.fallback_provider:
+        return primary
+    secondary = get_adapter(settings.fallback_provider)
+    return FallbackAdapter(primary, secondary, CircuitBreaker(failure_threshold=3, recovery_timeout_s=30.0), primary_timeout_s=settings.model_timeout_s)
 
 
 def build_knowledge(settings: Settings) -> tuple[KnowledgeStore, MemoryStore]:
@@ -81,9 +112,16 @@ def create_app(
     registry: ToolRegistry | None = None,
     knowledge_store: KnowledgeStore | None = None,
     memory_store: MemoryStore | None = None,
+    rate_limiter: RateLimiter | None = None,
+    cost_store: CostStore | None = None,
 ) -> FastAPI:
     settings = settings or Settings.from_env()
-    model = apply_injection(model or get_adapter(), settings.inject)
+    if settings.env == "production" and (problems := settings.validate_for_production()):
+        raise RuntimeError("refusing to start in production: " + "; ".join(problems))
+    telemetry.setup_tracing(settings.otel_endpoint)
+    if settings.env == "production":
+        setup_logging()
+    model = build_model(settings, model)
     system_prompt = load_prompt("assistant", settings.prompt_version)  # fail at startup, not on the first request
     default_store, default_kv = build_stores(settings)
     store = store or default_store
@@ -94,18 +132,21 @@ def create_app(
     memory = MemoryService(memory_store or default_memory, embedder)
     registry, skills, mcp = build_registry(settings, registry, retriever)
     runner = ToolRunner(registry, kv, result_ttl_s=settings.idempotency_ttl_s)
+    default_limiter, default_cost_store = build_ops(settings)
+    rate_limiter = rate_limiter or default_limiter
+    cost_ledger = CostLedger(cost_store or default_cost_store, PriceTable.load(), Decimal(str(settings.daily_budget_usd)) if settings.daily_budget_usd is not None else None)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         yield
         if mcp:
             mcp.close()
-        for resource in (store, kv, retriever.store, memory.store):
+        for resource in (store, kv, retriever.store, memory.store, rate_limiter, cost_ledger.store):
             closer = getattr(resource, "dispose", None) or getattr(resource, "close", None)
             if closer:
                 await closer()
 
-    app = FastAPI(title="aiapp", version="0.3.0-m3", lifespan=lifespan)
+    app = FastAPI(title="aiapp", version="0.5.0-m5", lifespan=lifespan)
     app.state.settings = settings
     app.state.model = model
     app.state.store = store
@@ -116,11 +157,17 @@ def create_app(
     app.state.skills = skills
     app.state.retriever = retriever
     app.state.memory = memory
+    app.state.rate_limiter = rate_limiter
+    app.state.cost_ledger = cost_ledger
 
     @app.middleware("http")
     async def request_id(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         request.state.request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex[:12]
-        response = await call_next(request)
+        with telemetry.tracer().start_as_current_span(f"{request.method} {request.url.path}", attributes={"http.request.method": request.method, "url.path": request.url.path, telemetry.A_REQUEST_ID: request.state.request_id, telemetry.A_PROMPT_VERSION: settings.prompt_version}) as span:
+            response = await call_next(request)
+            span.set_attribute("http.response.status_code", response.status_code)
+            if response.status_code >= 500:
+                telemetry.mark_error(span, f"HTTP {response.status_code}")
         response.headers.setdefault("X-Request-ID", request.state.request_id)
         return response
 

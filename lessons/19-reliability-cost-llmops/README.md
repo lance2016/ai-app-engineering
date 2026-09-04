@@ -157,7 +157,7 @@ SLO 是对用户的承诺，用可测量的指标表达。AI 服务常用的几�
 
 ## 对照真实项目
 
-主项目 [M5.3 可靠性与成本](../../project/m5-production/README.md) 把本课四个文件合成一个 `ResilientModelClient`，放在 M1 的 adapter 和 M3 的 `ToolRunner` 之间，并接上 M5.2 的指标。故障演练清单在 M5 的验收里逐条执行。
+主项目 [M5.3](../../project/m5-production/README.md) 把本课四个文件放进 [`aiapp/ops/`](../../project/src/aiapp/ops/)：`01` 是 `resilience.with_timeout_retry()`，`02` 是 `ratelimit.py` 的每租户令牌桶（Redis 用 Lua 原子执行），`03` 是 `CircuitBreaker` 加 `FallbackAdapter`（流式只在首块前切换），`04` 是 `cost.py` 的带日期价格表和日预算，超限 402、超频 429。本课"部署"一节是 M5.4：`Dockerfile`、`docker-compose.prod.yml`、`/readyz`、生产配置校验。故障演练清单的六条在 `scripts/chaos.py` 里每次 CI 都跑。
 
 语音机器人项目的一个经验：早期模型调用没有熔断，供应商一次十分钟的故障期间每个用户请求都等满 15 秒超时再失败，机器人在用户面前"发呆"，比直接说"我现在有点问题"糟糕得多。加了熔断和备用模型后，故障期间用户听到的是备用模型稍显生硬的回答，但响应时间正常。另一个经验和成本有关：一个多轮玩法的循环在特定用户输入下不收敛，每轮都带完整历史，直到步数上限才停。按会话计费加上 80% 告警之后，这类问题在发生的当天就能看到，而不是在账单上。
 

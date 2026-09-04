@@ -46,3 +46,30 @@ jobs:
           uv run alembic -c project/src/aiapp/storage/alembic.ini upgrade head
       - name: Every code sample runs offline and the project tests pass on real backends
         run: uv run pytest -q
+      - name: Evaluation gate (tasks, tool selection, retrieval, judge calibration vs baseline)
+        run: uv run python scripts/eval_run.py --report eval-report.md
+      - name: Chaos drills behave as designed
+        run: uv run python scripts/chaos.py --all
+      - name: Upload eval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: eval-report.md
+
+  image:
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the production image
+        run: docker build -t aiapp:ci .
+      - name: Container starts, serves /healthz, refuses default tokens in production
+        run: |
+          set -e
+          docker run -d --name aiapp -p 8000:8000 -e AIAPP_ENV=development -e MODEL_PROVIDER=fake aiapp:ci
+          for i in $(seq 1 20); do curl -sf localhost:8000/healthz && break || sleep 1; done
+          curl -sf localhost:8000/healthz
+          docker rm -f aiapp
+          if docker run --rm -e AIAPP_ENV=production -e MODEL_PROVIDER=fake aiapp:ci 2>&1 | grep -q "refusing to start in production"; then
+            echo "production guard works"; else echo "production guard missing"; exit 1; fi

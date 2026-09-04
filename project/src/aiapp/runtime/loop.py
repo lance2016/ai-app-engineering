@@ -11,10 +11,12 @@ call still reaches the client as a real status code.
 """
 
 import asyncio
+import dataclasses
 import logging
 from collections.abc import AsyncIterator
 
 from aiapp.adapters.base import Message, ModelAdapter, StreamChunk, ToolCall, ToolSpec, Usage
+from aiapp.ops import telemetry as otel
 from aiapp.runtime.budget import Budget, StopReason
 from aiapp.runtime.context import ContextBuilder, estimate_tokens
 from aiapp.runtime.registry import signature
@@ -58,6 +60,48 @@ async def run_agent(
 ) -> AsyncIterator[Event | Delta]:
     buffered: list[Event] = []  # held back until the first model chunk so the caller can still answer with a status code
     streaming = False
+    # The generator is resumed from different tasks (the request handler primes it, the response body drains it), so the
+    # parent span travels explicitly instead of through the ambient context: contextvars do not cross tasks.
+    root = otel.tracer().start_span("invoke_agent aiapp", attributes={otel.A_OPERATION: "invoke_agent", otel.A_AGENT_NAME: "aiapp", otel.A_CONVERSATION_ID: thread.thread_id, otel.A_TENANT: ctx.tenant_id, otel.A_THREAD: thread.thread_id})
+    root_ctx = otel.trace.set_span_in_context(root)
+    ctx = dataclasses.replace(ctx, otel_context=root_ctx)
+    try:
+        async for item in _run_agent(thread, model, runner, ctx=ctx, budget=budget, context=context, skills=skills, timeout_s=timeout_s, user_content=user_content, buffered=buffered, root_ctx=root_ctx):
+            yield item
+    except BaseException as exc:
+        root.record_exception(exc)
+        otel.mark_error(root, str(exc) or type(exc).__name__, type(exc).__name__)
+        raise
+    finally:
+        last = thread.events[-1] if thread.events else None
+        if last is not None and last.type in ("run_finished", "run_failed", "human_input_requested"):
+            reason = last.data.get("reason", "finished" if last.type == "run_finished" else "paused")
+            root.set_attribute(otel.A_STOP_REASON, str(reason))
+            if last.type == "run_failed":
+                otel.mark_error(root, str(reason))
+            elif root.is_recording() and root.status.status_code == otel.StatusCode.UNSET:
+                root.set_status(otel.Status(otel.StatusCode.OK))
+        budget_now = budget.snapshot()
+        root.set_attribute("aiapp.steps", budget_now["steps"])
+        root.set_attribute("aiapp.tokens", budget_now["tokens"])
+        root.end()
+
+
+async def _run_agent(
+    thread: Thread,
+    model: ModelAdapter,
+    runner: ToolRunner,
+    *,
+    ctx: RunContext,
+    budget: Budget,
+    context: ContextBuilder,
+    skills: SkillLoader | None,
+    timeout_s: float,
+    user_content: str | None,
+    buffered: list[Event],
+    root_ctx=None,
+) -> AsyncIterator[Event | Delta]:
+    streaming = False
 
     def note(event: Event) -> list[Event | Delta]:
         if streaming:
@@ -99,15 +143,21 @@ async def run_agent(
                 for item in note(thread.append("skill_loaded", name=call.arguments.get("name"), tokens=estimate_tokens(outcome.message.content))):
                     yield item
 
-        # 2. ask the model for the next step, streaming text as it arrives
+        # 2. ask the model for the next step, streaming text as it arrives. One span per model call.
         messages = context.build(thread)
+        chat_span = otel.tracer().start_span(f"chat {model.name}", context=root_ctx, attributes={otel.A_OPERATION: "chat", otel.A_PROVIDER: model.name, otel.A_REQUEST_MODEL: model.name})
         stream = model.stream(messages, tools=specs)
         try:
             chunk = await _next_chunk(stream, timeout_s)
-        except TimeoutError:
+        except TimeoutError as exc:
+            otel.mark_error(chat_span, "model timeout before first chunk", "TimeoutError")
+            chat_span.end()
             thread.append("run_failed", reason=StopReason.MODEL_TIMEOUT, stage="first_chunk", budget=budget.snapshot())
             raise
         except Exception as exc:
+            chat_span.record_exception(exc)
+            otel.mark_error(chat_span, str(exc), type(exc).__name__)
+            chat_span.end()
             thread.append("run_failed", reason=StopReason.PROVIDER_ERROR, stage="first_chunk", detail=str(exc), budget=budget.snapshot())
             raise
         if not streaming:
@@ -131,14 +181,32 @@ async def run_agent(
             except StopAsyncIteration:
                 break
             except TimeoutError:
+                otel.mark_error(chat_span, "model stalled mid-stream", "TimeoutError")
+                chat_span.end()
                 yield thread.append("run_failed", reason=StopReason.MODEL_TIMEOUT, stage="mid_stream", partial="".join(parts), budget=budget.snapshot())
                 return
             except Exception as exc:
+                chat_span.record_exception(exc)
+                otel.mark_error(chat_span, str(exc), type(exc).__name__)
+                chat_span.end()
                 yield thread.append("run_failed", reason=StopReason.PROVIDER_ERROR, stage="mid_stream", detail=str(exc), budget=budget.snapshot())
                 return
 
         content = "".join(parts)
-        yield thread.append("assistant_message", content=content, tool_calls=tool_calls_as_data(tool_calls), context=context.report.as_dict())
+        if usage:
+            chat_span.set_attribute(otel.A_INPUT_TOKENS, usage.input_tokens)
+            chat_span.set_attribute(otel.A_OUTPUT_TOKENS, usage.output_tokens)
+        chat_span.set_attribute(otel.A_FINISH_REASONS, ["tool_calls" if tool_calls else "stop"])
+        if not tool_calls and not content:
+            chat_span.set_attribute("aiapp.empty_output", True)
+            otel.mark_error(chat_span, "empty model output", "EmptyOutput")
+        else:
+            chat_span.set_status(otel.Status(otel.StatusCode.OK))
+        chat_span.end()
+        yield thread.append(
+            "assistant_message", content=content, tool_calls=tool_calls_as_data(tool_calls), context=context.report.as_dict(),
+            usage=_usage_dict(usage), model=getattr(model, "last_served_by", None) and f"{model.name}:{model.last_served_by}" or model.name,
+        )
         spent = (usage.input_tokens + usage.output_tokens) if usage else estimate_tokens(content)
         exhausted = budget.charge(tokens=spent)
 

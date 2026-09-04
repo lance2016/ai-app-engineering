@@ -27,5 +27,11 @@ services:
       timeout: 2s
       retries: 20
 
+  phoenix:
+    # Traces UI + OTLP/HTTP collector. Point the app at it with OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:6006
+    image: arizephoenix/phoenix:latest
+    ports:
+      - "6006:6006"
+
 volumes:
   postgres-data:

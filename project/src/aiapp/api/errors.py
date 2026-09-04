@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 log = logging.getLogger("aiapp.api")
 
-ErrorCode = Literal["unauthorized", "invalid_request", "not_found", "conflict", "model_timeout", "provider_error", "internal_error"]
+ErrorCode = Literal["unauthorized", "invalid_request", "not_found", "conflict", "rate_limited", "budget_exhausted", "model_timeout", "provider_error", "internal_error"]
 
 
 class ErrorEnvelope(BaseModel):
@@ -50,6 +50,18 @@ class Conflict(AppError):
     status, code = 409, "conflict"
 
 
+class RateLimited(AppError):
+    status, code = 429, "rate_limited"
+
+    def __init__(self, message: str, retry_after_s: float):
+        super().__init__(message)
+        self.retry_after_s = retry_after_s
+
+
+class BudgetExhaustedError(AppError):
+    status, code = 402, "budget_exhausted"
+
+
 class ProviderError(AppError):
     status, code = 502, "provider_error"
 
@@ -70,7 +82,10 @@ def envelope(request: Request, status: int, code: ErrorCode, message: str) -> JS
 def install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def _app_error(request: Request, exc: AppError) -> JSONResponse:
-        return envelope(request, exc.status, exc.code, exc.message)
+        response = envelope(request, exc.status, exc.code, exc.message)
+        if isinstance(exc, RateLimited):
+            response.headers["Retry-After"] = str(max(1, int(exc.retry_after_s + 0.999)))
+        return response
 
     @app.exception_handler(RequestValidationError)
     async def _validation(request: Request, exc: RequestValidationError) -> JSONResponse:

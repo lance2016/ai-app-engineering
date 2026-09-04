@@ -81,7 +81,7 @@ flowchart TB
 
 ## 对照真实项目
 
-主项目 [M5.1 评测](../../project/m5-production/README.md) 把 `01` 和 `04` 变成 `pytest` 的一部分，把 `03` 的 fixture 目录接到 M3 的 `ToolRunner` 上。M4 的 Recall@k 是同一套机制在检索层的应用。
+主项目 [M5.1](../../project/m5-production/README.md) 的 [`aiapp/eval/`](../../project/src/aiapp/eval/) 是这四个文件的合体：`suites.py` 的 `tasks` 套件是 `03` 的轨迹断言跑在真实 `run_agent` 上，`tools` 和 `retrieval` 是 `01` 的 golden set 加切片；`judge.py` 是 `02` 的一致率和 kappa；`gate.py` 是 `04` 的门禁，下限和容忍度在 `project/eval/thresholds.toml`。`scripts/eval_run.py` 出报告并在 CI 里挡 PR，`INJECT_REGRESSION=1` 能看到它变红。
 
 语音机器人项目的经验：最有价值的评测集不是一开始设计出来的，而是从"退出类 bad case"里长出来的。用户说"不聊了"机器人还在说，这类失败先被记成案例，再用真实模型加假数据库跑整个 workflow 复现，复现出来的就进回归集。另一个教训是评测暴露了一个 flaky 的行为：某个选择阶段的点名结果不稳定，不是 bug 而是模型随机性。这类案例要么多跑几次取通过率，要么把断言从"必须点名 A"放宽成"必须点名候选之一"。评测集里 flaky 的案例不处理，整个门禁就会被当成噪声忽略。
 

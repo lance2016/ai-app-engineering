@@ -1,0 +1,12 @@
+# Product decisions, kept as data. The gate reads this file; change it in a reviewed commit, not in code.
+[floors]          # minimum pass rate regardless of baseline
+tasks = 0.95
+tools = 0.90
+retrieval = 0.85
+
+[gate]
+max_drop = 0.05        # overall drop vs baseline that fails the gate
+max_slice_drop = 0.10  # per-slice drop that fails the gate
+
+[judge]
+min_kappa = 0.60       # below this the judge is not trusted for open-ended answers (warning, not failure)

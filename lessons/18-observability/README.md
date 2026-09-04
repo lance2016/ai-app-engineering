@@ -83,7 +83,7 @@ flowchart LR
 
 ## 对照真实项目
 
-主项目 [M5.2 可观测](../../project/m5-production/README.md) 把 `02` 的 tracer 换成 OpenTelemetry SDK，导出到本地 Phoenix，并把 `03` 的四个故障实验变成故障演练脚本。M3 的 `ToolRunner` 从一开始就要带 `execute_tool` span，这是"第一次调用就该有"的意思。
+主项目 [M5.2](../../project/m5-production/README.md) 的 [`aiapp/ops/telemetry.py`](../../project/src/aiapp/ops/telemetry.py) 把 `02` 的 tracer 换成 OpenTelemetry SDK，属性名照本课的 GenAI 约定；`run_agent` 开 `invoke_agent` 根 span，每次模型调用一个 `chat` span，`ToolRunner.run` 一个 `execute_tool` span，错误结果既记事件又标 ERROR。`03` 的故障实验变成了 `scripts/chaos.py` 的六个演练，`--spans` 打出每个场景的 span。`ops/logging.py` 是 `01` 的 JSON 日志，每行带 trace id。一个本课没提到的坑：SSE 生成器跨任务执行，contextvars 不跟着走，父 span 要显式传。
 
 语音机器人项目的两个教训都写进了这一课。第一个是 `record_exception` 不 `set_status` 的坑，代价是两周的静默超时。第二个和事件驱动架构有关：每个处理步骤接收一类事件、产出另一类事件，代码里看不出"当前走到哪"，只有 trace 能回答。所以那个项目里 trace 不是排障工具，是理解系统运行方式的唯一途径。顺带一个细节：span 属性里放状态对象时做了白名单，只放小的、稳定的字段，否则一个大状态对象序列化进去，每个 span 几十 KB，后端很快撑不住。
 

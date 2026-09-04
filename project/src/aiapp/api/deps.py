@@ -9,6 +9,8 @@ from aiapp.adapters.base import ModelAdapter
 from aiapp.api.errors import Unauthorized
 from aiapp.config import Settings
 from aiapp.knowledge.memory import MemoryService
+from aiapp.ops.cost import CostLedger
+from aiapp.ops.ratelimit import RateLimiter
 from aiapp.knowledge.retriever import Retriever
 from aiapp.runtime import SkillLoader, ToolRunner
 from aiapp.storage.base import KeyValueStore, ThreadStore
@@ -29,6 +31,14 @@ def get_store(request: Request) -> ThreadStore:
 
 def get_kv(request: Request) -> KeyValueStore:
     return request.app.state.kv
+
+
+def get_rate_limiter(request: Request) -> RateLimiter:
+    return request.app.state.rate_limiter
+
+
+def get_cost_ledger(request: Request) -> CostLedger:
+    return request.app.state.cost_ledger
 
 
 def get_retriever(request: Request) -> Retriever:

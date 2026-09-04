@@ -1,0 +1,20 @@
+{"id": "t01", "user": "What is your refund policy?", "expected": "search_docs", "tags": ["search"]}
+{"id": "t02", "user": "How much is shipping to Germany?", "expected": "search_docs", "tags": ["search"]}
+{"id": "t03", "user": "Do orders over 50 ship free?", "expected": "search_docs", "tags": ["search"]}
+{"id": "t04", "user": "Show me the document doc_refunds", "expected": "read_doc", "tags": ["read"]}
+{"id": "t05", "user": "Open doc_shipping please", "expected": "read_doc", "tags": ["read"]}
+{"id": "t06", "user": "Read the returns draft", "expected": "search_docs", "tags": ["search"]}
+{"id": "t07", "user": "Delete doc_returns_draft, it is obsolete", "expected": "delete_doc", "tags": ["side_effect"]}
+{"id": "t08", "user": "Remove the shipping document", "expected": "search_docs", "tags": ["search"]}
+{"id": "t09", "user": "Please get rid of doc_refunds", "expected": "delete_doc", "tags": ["side_effect"]}
+{"id": "t10", "user": "Is there anything about international delivery?", "expected": "search_docs", "tags": ["search"]}
+{"id": "t11", "user": "Hi!", "expected": null, "tags": ["chat"]}
+{"id": "t12", "user": "Thanks, that is all.", "expected": null, "tags": ["chat"]}
+{"id": "t13", "user": "What can you help me with?", "expected": null, "tags": ["chat"]}
+{"id": "t14", "user": "Review my expenses: hotel 650, dinner 45", "expected": "load_skill", "tags": ["skill"]}
+{"id": "t15", "user": "Are these reimbursable? taxi 30, beer 12", "expected": "load_skill", "tags": ["skill"]}
+{"id": "t16", "user": "Which document should I update, refunds or shipping?", "expected": "request_human_input", "tags": ["hitl"]}
+{"id": "t17", "user": "Find the policy on store credit", "expected": "search_docs", "tags": ["search"]}
+{"id": "t18", "user": "What does doc_refunds say exactly?", "expected": "read_doc", "tags": ["read"]}
+{"id": "t19", "user": "Tell me a joke", "expected": null, "tags": ["chat"]}
+{"id": "t20", "user": "Search for 'receipt'", "expected": "search_docs", "tags": ["search"]}
