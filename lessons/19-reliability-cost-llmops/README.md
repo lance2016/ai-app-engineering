@@ -8,6 +8,9 @@ estimated_time: 约 3 小时
 
 > 原型和生产跑的是同一个循环。不同的是循环外面那 80%：下游抖动时怎么不被拖死、配额怎么不被撞穿、钱怎么当场算清、坏了怎么回滚。这一课把这些包在循环外面的东西一个一个装上。
 
+## 为什么需要
+供应商抖动、突发流量和失控循环会把一次模型调用变成超时、重试和账单尖峰。可靠性是循环外的控制面，不是部署结束后才补的装饰。
+
 ## 学习目标
 
 - 能区分可重试和不可重试的失败，并实现带抖动的退避、单次超时和总次数上限
@@ -51,6 +54,20 @@ flowchart LR
 两个容易混的概念：**重试**处理的是"这次失败了，再试可能成功"；**熔断**处理的是"连续失败了，再试只会浪费时间"。重试在单个请求内部，熔断跨请求共享状态。两个都要有，顺序是熔断器包着重试。
 
 ai-agents-for-beginners 第 16 课有一张"原型 vs 生产"的对照表，结论是模型大概只占生产 Agent 的 20%，其余是运维骨架。这一课就是那 80% 里和可靠性、成本、部署相关的部分；可观测性在第 18 课，安全在第 20 课。
+
+### 生产请求的控制面
+
+```mermaid
+flowchart LR
+    R[请求] --> B[租户预算]
+    B --> L[限流]
+    L --> C{熔断器}
+    C -- open --> F[fallback / 快速失败]
+    C -- closed --> P[超时 + 重试]
+    P --> M[主模型]
+    M -- 连续失败 --> C
+```
+![本课核心关系：预算、限流、熔断、重试与 fallback 组成控制面](./images/19-reliability-control-plane.png)
 
 ## 最小可运行例子
 
@@ -150,6 +167,18 @@ SLO 是对用户的承诺，用可测量的指标表达。AI 服务常用的几�
 - **备用模型的质量。** 备用通常更便宜也更弱。切到备用后回答质量下降，用户是否能接受、是否要告知，是产品决定。降级率进 SLO 的原因就在这里。
 - **限流放在哪一层。** 按全局限保护下游配额，按租户限保护其他租户，按用户限防滥用。三层都要，但每层的参数来源不同。
 - **自建还是托管。** 容器、CI、灰度这套东西，云平台的托管服务都能替你做。托管省人力，自建省钱且不被锁定。团队小的时候托管几乎总是对的，这一点和第 21 课"API 还是自己的 GPU"是同一类判断。
+
+## 生产方案
+M5 的 [`ops`](../../project/src/aiapp/ops/) 提供 timeout、retry、rate limit、breaker、fallback 和 per-tenant budget，`scripts/chaos.py` 验证故障行为。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| retry / breaker / budget / fallback | runtime wrapper + graph retry policy | Runner config + max turns / model fallback | SDK options + external gateway |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

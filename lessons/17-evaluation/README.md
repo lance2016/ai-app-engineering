@@ -8,6 +8,9 @@ estimated_time: 约 3 小时
 
 > 改了 prompt，试了三个问题，感觉更好了。这门课要把这句话里的每个词换掉：三个问题换成带标签的评测集，"感觉"换成断言和校准过的 judge，"更好"换成和基线比的门禁。
 
+## 为什么需要
+“我感觉 prompt 变好了”不能阻止回归，也不能解释哪类用户被伤害。评测集、轨迹断言和门禁把主观判断变成可重复证据。
+
 ## 学习目标
 
 - 能为一个 AI 功能建一份带切片标签的 golden set，并用确定性断言在一秒内跑完
@@ -45,6 +48,19 @@ flowchart TB
 
 最后一件事是**门禁**。基线分数存下来，新版本按切片和基线比，任何切片跌破阈值就拒绝。阈值是产品决策，但必须写成代码而不是留在某个人的脑子里。
 
+### 评测反馈闭环
+
+```mermaid
+flowchart LR
+    R[代码 / prompt 改动] --> E[golden set]
+    E --> D{按 slice 对比基线}
+    D -- 退化 --> X[阻断合并 + 分析 trace]
+    D -- 通过 --> S[发布]
+    S --> P[线上失败案例]
+    P --> E
+```
+![本课核心关系：评测集、指标、发布门禁与回归用例闭环](./images/17-evaluation-regression-loop.png)
+
 ## 最小可运行例子
 
 | 文件 | 演示什么 | 运行 |
@@ -74,6 +90,18 @@ flowchart TB
 - **judge 的成本。** 每条案例一次模型调用，几百条案例就是几百次调用。所以 judge 不进每次提交的 CI，按天或按发版跑。断言进 CI。
 - **通过率目标。** Hamel 说得直接：通过率是产品决策，不需要 100%。对抗切片要求 100%，faq 切片 95% 可能就够。阈值按切片设，不设一个全局值。
 - **基线怎么更新。** 有意的改进会让分数上升，此时要更新基线；但更新基线的动作要显式、有人批准，否则"跑一次就覆盖基线"会让门禁形同虚设。
+
+## 生产方案
+M5 的 [`eval`](../../project/src/aiapp/eval/) 和 `scripts/eval_run.py` 按 slice 对比基线；CI 在合并前阻断退化。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| golden set / trajectory assertions | graph state assertions + evaluators | trace / final output graders | session transcript + custom evaluator |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

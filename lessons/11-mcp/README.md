@@ -8,6 +8,9 @@ estimated_time: 约 2.5 小时
 
 > 第 05 课的工具是你自己写在进程里的函数。MCP 解决的是另一个问题：工具在别的进程、别的机器、别人的代码里，怎么让运行时在启动时发现它们、按统一格式调用它们、并在它们消失时不被拖死。它是能力的"接入协议"，不替代第 05 课的任何一个守卫。
 
+## 为什么需要
+接入外部能力后，工具列表、权限和连接生命周期都不再由本进程完全控制。协议错误和工具业务错误必须分开处理，断连也要能恢复。
+
 ## 学习目标
 
 - 能画出 MCP 的生命周期（initialize、initialized、正常操作、关闭），并说清为什么 tools/list 必须发生在握手之后
@@ -47,6 +50,8 @@ sequenceDiagram
 
 规范本身还有很多这里没碰的部分：prompts、sampling、elicitation、resource 订阅、Streamable HTTP 传输、鉴权。它们都建在同一个生命周期上，学会 stdio 上的这一小圈，其余是查文档的事。
 
+![本课核心关系：Agent Host 通过协议桥接外部能力服务器](./images/11-mcp-capability-bridge.png)
+
 ## 最小可运行例子
 
 例子用一个 200 行的玩具 server 和 client（`code/toy_mcp/`），刻意不用官方 SDK，让每一条 JSON 消息都能看见。消息形状按规范 2026-07-28 版。
@@ -76,6 +81,18 @@ sequenceDiagram
 - **stdio vs HTTP。** stdio 简单、无网络、无鉴权问题，适合本地工具（文件、shell、本地数据库）。Streamable HTTP 适合远程共享的 server，但要处理鉴权、会话和重连。课程只做 stdio，因为协议层面两者一样，差别在传输和安全。
 - **每次请求重新发现 vs 缓存工具列表。** 每次 `tools/list` 多一个往返，但永远不会用错 schema。折中是缓存加订阅 `listChanged` 通知。对启动一次跑很久的 host，缓存加通知合理；对短命进程，每次发现更省心。
 - **一个大 server vs 多个小 server。** 一个 server 暴露 50 个工具，模型的上下文里就是 50 段描述。按领域拆成小 server，host 按任务挑选接哪几个，和第 06 课"一个 Agent 管 3～10 步"是同一个逻辑。第 12 课的 Skill 则是在这之上再加一层"什么时候用哪组工具"的说明。
+
+## 生产方案
+M3 的 [`MCP client`](../../project/src/aiapp/tools/) 只把白名单能力暴露给模型，并在 trace 中记录初始化、断连和重连。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| MCP lifecycle / tools list | custom MCP client or tool node | MCP servers / hosted tools | MCP server + permission callback |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

@@ -11,6 +11,7 @@ Expect: with one big chunk the target sentence is diluted and ranks lower;
 
 # %% imports
 import re
+import os
 import sys
 from importlib import import_module
 from pathlib import Path
@@ -45,6 +46,8 @@ def rank(chunks: list[str]) -> list[tuple[float, str]]:
 
 
 def main() -> None:
+    if os.environ.get("INJECT_OVERSIZED_CHUNK"):
+        print("injected failure: oversized chunk mixes unrelated topics; recall may drop")
     for label, chunker in [("one big chunk", one_chunk), ("sentence chunks", by_sentence)]:
         chunks = chunker(DOCUMENT) + [DISTRACTOR]
         print(f"== {label}: {len(chunks)} chunks ==")

@@ -1,6 +1,14 @@
-# 前置｜Python、算法、后端与 LLM 原理
+# Stage 0 Foundation｜Python、算法、后端与 LLM 原理
 
-> 主线课程默认你已经掌握这里的全部内容，不会在课里回头补 Python 语法、数据结构、asyncio 或 Transformer 是什么。四组模块：Python 语言、算法、后端工程、LLM 原理。零基础按顺序学；有经验的人做一遍自检，缺哪个补哪个。
+> 这里不是“零基础必修班”，而是主线的可选补给站。主线默认你能读 Python、HTTP、SQL、asyncio 和基础 LLM 原理；有经验的人做自检，缺哪个补哪个。四组模块彼此独立，完成自检后就去 [Stage 1 的第 00 课](../lessons/00-setup/README.md)。
+
+```mermaid
+flowchart LR
+    Q[自检] --> P[只补缺口]
+    P --> M0[M0 并发实验]
+    M0 --> L[主线 Stage 1]
+    Q -. 已经具备 .-> L
+```
 
 ## 自检
 
@@ -94,7 +102,15 @@
 2. 每个模块先跑 `code/`，再读正文，再做 `exercises.md`。
 3. 「它在 AI 应用里用在哪」这一节告诉你这个知识点将来在哪会用到。看不懂没关系，知道有这回事就行。
 4. 学到 P07 asyncio 时同步做 [project/m0](../project/m0-concurrency/README.md)，这是主项目的第一个里程碑。
-5. 有后端经验但没碰过 LLM 的人，只学 F 组就能进主线。
+5. 有后端经验但没碰过 LLM 的人，通常只学 F 组就能进主线；能解释自检条目就跳过对应模块。
+
+## 入口建议
+
+| 你的情况 | 建议 |
+|---|---|
+| Beginner / 基础不足 | 按 P → B → A → F 补齐，再做 M0 |
+| Backend Engineer | 优先检查 F 组、P07 和 B01/B02；然后从 00 开始 |
+| Existing AI / Agent Developer | 只补运行时会影响你的缺口，直接进入 05 或 19 |
 
 ## 不在这里讲的
 

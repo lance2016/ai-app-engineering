@@ -70,7 +70,7 @@ docker compose up -d --wait                             # 含 Phoenix
 export DATABASE_URL=postgresql+asyncpg://aiapp:aiapp@localhost:5432/aiapp REDIS_URL=redis://localhost:6379/0
 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:6006 AIAPP_FALLBACK_PROVIDER=fake AIAPP_DAILY_BUDGET_USD=1 \
   uv run uvicorn aiapp.api.app:create_app --factory
-open http://localhost:6006                              # Phoenix：一次请求 = POST → invoke_agent → chat / execute_tool → cost.charge
+# 在浏览器打开 http://localhost:6006                     # Phoenix：一次请求 = POST → invoke_agent → chat / execute_tool → cost.charge
 curl -s localhost:8000/readyz
 
 # 生产形态

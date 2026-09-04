@@ -10,6 +10,9 @@ estimated_time: 约 2.5 小时
 
 > 附：[Agent 框架对比与选型](../../project/framework-lab/00-landscape.md)，学完本课再看。
 
+## 为什么需要
+把所有需求都交给自治 Agent，会把可预测的业务流程变成难测的黑箱。先识别能固定的控制流，再为真正需要探索的分支保留自由度。
+
 ## 学习目标
 
 - 能用普通 Python 各写一个 prompt chaining、routing、parallelization、orchestrator-workers、evaluator-optimizer 的最小实现，并说出每种模式的适用条件
@@ -53,6 +56,20 @@ flowchart LR
 
 只有当路径无法预先枚举、必须让模型根据每一步的结果决定下一步时，才需要自治 Agent。那就是第 06 课的循环。代价是更高的成本、更长的延迟、错误会累积，所以要有沙箱、预算和评测。
 
+### 先选控制流，再决定是否自治
+
+```mermaid
+flowchart TD
+    Q[需求] --> F{步骤是否固定?}
+    F -- 是 --> W[Workflow]
+    F -- 否 --> E{需要探索和工具选择?}
+    E -- 否 --> R[Router / 简单链]
+    E -- 是 --> A[受预算约束的 Agent]
+    W --> T[测试每条边]
+    A --> G[测试轨迹与停止条件]
+```
+![本课核心关系：确定性 Workflow 与受约束 Agent 的控制流差异](./images/09-workflow-vs-agent.png)
+
 ## 最小可运行例子
 
 五个文件各实现一种模式，每个不到 80 行，都不依赖第 06 课的循环。
@@ -84,6 +101,18 @@ flowchart LR
 - **可预测性 vs 灵活性。** workflow 的路径可以画出来、测出来、在出问题时定位到某一步。Agent 的路径每次不同，只能靠 trace 事后看。对合规要求高、失败代价大的场景，这一条就足够决定用 workflow。
 - **延迟 vs 准确率。** chaining 把一次调用拆成三次，延迟翻三倍，但每次调用的任务更简单、更准。parallelization 反过来用并发换时间。选哪个看用户等得起多久。
 - **框架 vs 直接调 API。** Anthropic 的建议是先直接用 API，很多模式几行代码就够；用框架就要理解它底层做了什么。本课五个文件加起来不到 400 行，这是"够不够"的一个参照。选框架前先看 [bonus 里的对比](../../project/framework-lab/00-landscape.md)。
+
+## 生产方案
+M3 的选型记录保留在 [`project/m3-tool-workflow`](../../project/m3-tool-workflow/README.md)；主项目默认用可观测的显式 runtime，而不是把决策全部交给框架。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| workflow patterns / agent loop | StateGraph / subgraph | handoff / parallel agents | agent loop / tool orchestration |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

@@ -8,6 +8,9 @@ estimated_time: 约 2.5 小时
 
 > 模型是无状态函数：输入是"到现在为止发生了什么，下一步是什么"，输出是下一步。第 03 课讲怎么写好这段输入里的指令部分，这一课讲运行时每一轮怎么把指令、历史、检索结果、工具结果拼成一个窗口，以及怎么在窗口装不下的时候做决定。
 
+## 为什么需要
+上下文不是一个无限大的字符串：历史、工具结果和检索内容会互相挤占预算，最终让模型丢掉真正重要的约束。每轮都应有可解释的组装过程。
+
 ## 学习目标
 
 - 能写一个 ContextBuilder，把系统指令、参考资料、摘要、历史、工具结果按固定顺序组装进 token 预算内，并打印出发给模型的完整消息
@@ -44,6 +47,21 @@ Anthropic 把上下文叫作 **attention budget**：窗口里每多一个 token�
 
 **自己掌控最终的消息列表。** factor 03 的核心主张。框架帮你拼上下文时，你要能打印出最终发给模型的每一条消息。看不到就调不了。
 
+### 上下文窗口的装配顺序
+
+```mermaid
+flowchart LR
+    I[稳定指令] --> W[Context Builder]
+    H[历史] --> W
+    T[工具结果] --> W
+    K[检索 / 记忆] --> W
+    W --> B{预算够吗?}
+    B -- 否 --> C[裁剪 / 压缩 / 摘要]
+    C --> M[最终消息]
+    B -- 是 --> M
+```
+![本课核心关系：上下文窗口中的区块排序、压缩与裁剪](./images/08-context-window-composition.png)
+
 ## 最小可运行例子
 
 | 文件 | 演示什么 | 运行 |
@@ -70,6 +88,18 @@ Anthropic 把上下文叫作 **attention budget**：窗口里每多一个 token�
 - **压缩的激进程度。** 压得狠，窗口小、便宜、模型专注，但丢细节的风险大，而且丢的往往是"当时看起来不重要、后来才发现关键"的信息。Anthropic 的建议是先做保守压缩，用评测确认没有回归，再逐步加大。
 - **预检索 vs 运行时探索。** 把资料提前检索好塞进窗口，快但可能过期或不相关；让 Agent 用工具按需查，准但慢。变化快的内容适合按需，稳定的内容（法条、合同）适合预检索。多数系统是混合的。
 - **自定义格式 vs 标准消息格式。** factor 03 提到可以不用 system/user/assistant 的标准格式，把整段历史打包成一条消息以节省 token 和注意力。收益是真的，代价是失去供应商对标准格式的优化（比如对工具调用的特殊处理）。先用标准格式，测出瓶颈再改。
+
+## 生产方案
+M3 的 [`ContextBuilder`](../../project/src/aiapp/runtime/context.py) 负责排序、裁剪、压缩和工具结果整形，并可把最终消息写进 trace。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| context builder / compaction | state → messages in node | instructions + input / session history | system prompt + conversation history |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

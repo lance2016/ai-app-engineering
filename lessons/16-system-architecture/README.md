@@ -8,6 +8,9 @@ estimated_time: 约 2.5 小时
 
 > 前面十一课各讲一个部件。这一课把它们放回一条完整的请求链里：从客户端发出请求，经过网关、会话、上下文、模型、工具、检索，再回到客户端。看清每一跳做什么、耗时在哪、状态归谁，你就知道该往哪加东西、出了问题该去哪看。
 
+## 为什么需要
+部件单独看都能工作，组合后却常在边界处出问题：请求、流、状态、后台任务和数据存储的生命周期不同。端到端数据流是排障地图。
+
 ## 学习目标
 
 - 能画出一次 AI 应用请求的完整链路，标出每一跳的职责和它读写的状态
@@ -73,6 +76,8 @@ ai-agents-for-beginners 第 16 课有一句话值得记住：模型大概只占�
 
 判断标准只有一条：**这个东西丢了能不能重建**。能重建的放 Redis，不能的放 PostgreSQL。热拷贝可以同时放两边，但权威只有一个。
 
+![本课核心关系：生产级 AI 请求在系统各组件间的流动](./images/16-system-request-architecture.png)
+
 ## 最小可运行例子
 
 | 文件 | 演示什么 | 运行 |
@@ -98,6 +103,18 @@ ai-agents-for-beginners 第 16 课有一句话值得记住：模型大概只占�
 - **单体 vs 拆服务。** 一条链上的跳先放在一个 FastAPI 进程里，用模块边界隔开。等某一跳（通常是检索或工具执行）需要独立扩容或独立部署时再拆。过早拆服务换来的是网络调用和分布式状态，不是可维护性。
 - **SSE vs WebSocket。** SSE 单向、走普通 HTTP、浏览器原生支持自动重连，对话界面够用。WebSocket 双向，语音这类需要客户端持续上行的场景才需要。第 08 课的事件流和本课的 SSE 都是单向的。
 - **热拷贝放不放。** 每次都从 PostgreSQL 读线程，简单但慢；加 Redis 热拷贝快，但多一个要保持一致的地方。`03` 的做法是写时双写、读时先缓存后落库，缓存永远只是加速，不是权威。
+
+## 生产方案
+M1–M5 的 [`api`](../../project/src/aiapp/api/)、storage、runtime 和 ops 形成分层请求链；每一层都有健康检查或项目测试。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| request chain / service boundaries | graph + persistence + API wrapper | Runner + session + tracing | SDK client + application service |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

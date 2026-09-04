@@ -8,6 +8,9 @@ estimated_time: 约 3 小时
 
 > 前面的课教你怎么把每一层做对。这一课教你在还没动手之前做决定：自建还是买、检索还是微调、Workflow 还是 Agent、单体还是平台。决定的质量不取决于你知道多少方案，取决于你能不能把假设写出来、算出来、并给它一个退出条件。
 
+## 为什么需要
+技术选型不是列出最多方案，而是找出会改变结论的假设。没有容量、成本、威胁和退出条件的方案，无法被团队复盘或安全地替换。
+
 ## 学习目标
 
 - 能用同一套框架处理四类常见决策：Build vs Buy、模型 vs RAG vs 微调、Workflow vs Agent、单体 vs 平台，并写出可被推翻的假设
@@ -49,11 +52,24 @@ flowchart LR
 | Workflow vs Agent | 能枚举步骤就 Workflow | 路径是否真的不可枚举；失败代价是否允许探索 |
 | 单体 vs 平台 | 第二个团队出现之前是单体 | 有没有真实的第二个消费者；配额和隔离是否已经成为事故来源 |
 
+### 决策不是终点：验证与退出
+
+```mermaid
+flowchart LR
+    C[约束] --> O[候选方案]
+    O --> N[容量 / 成本 / 风险]
+    N --> H[找会翻盘的假设]
+    H --> V[验证]
+    V -- 失败 --> O
+    V -- 通过 --> ADR[ADR + 退出条件]
+```
+![本课核心关系：用权衡矩阵、假设与验证条件记录架构决策](./images/23-architecture-decision-adr.png)
+
 ## 最小可运行例子
 
 | 文件 | 演示什么 | 运行 |
 |---|---|---|
-| [`code/01_capacity_estimator.py`](./code/01_capacity_estimator.py) | 从十几个假设推出峰值 RPS、并发运行数、每日 token 与花费、事件写入速率；对比 prompt cache 和模型路由两个杠杆 | `uv run python lessons/23-system-design-decisions/code/01_capacity_estimator.py` |
+| [`code/01_capacity_estimator.py`](./code/01_capacity_estimator.py) | 从十几个假设推出峰值 RPS、并发运行数、每日 token 与花费、事件写入速率；对比 prompt cache 和模型路由两个杠杆 | `uv run python lessons/23-system-design-decisions/code/01_capacity_estimator.py`；加 `INJECT_TRAFFIC_SPIKE=1` 看容量假设翻倍 |
 | [`code/02_adr.py`](./code/02_adr.py) | ADR 作为数据结构渲染成 Markdown，含备选方案、后果、退出条件；示例是"租户知识用 RAG 不用微调" | 同上 |
 | [`code/03_decision_matrix.py`](./code/03_decision_matrix.py) | 加权决策矩阵，以及真正有用的部分：哪些权重变化会翻转结论 | 同上 |
 
@@ -74,6 +90,18 @@ flowchart LR
 - **精确 vs 及时。** 估算的目的是决策，误差在两倍以内就够用。花一周把误差压到 10%，往往不如先按两倍余量上线再用真实数据修正。
 - **可逆决策与不可逆决策。** 换一个 reranker 是可逆的，直接试；选数据库、选多租户隔离模型是不可逆的，值得写 ADR 和做验证。把精力花在不可逆的那几个上。
 - **自建的隐性成本。** 自建的账面成本是工程时间，隐性成本是维护、值班、安全补丁和"没人敢改"。Buy 的隐性成本是退出成本和数据出境。矩阵里两者都要有一列。
+
+## 生产方案
+M6 的 [`platform RFC`](../../project/m6-platform-design/README.md) 用 ADR、容量估算、威胁模型和迁移 / 退出条件收敛决策。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| decision matrix / ADR / capacity model | graph vs application boundary | SDK choice + provider constraints | SDK choice + platform constraints |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

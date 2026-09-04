@@ -8,6 +8,9 @@ estimated_time: 约 2.5 小时
 
 > 「工具调用成功」不是一件事，是三件事：模型选对了工具、参数是有效的、外部系统真的做了且只做了一次。运行时要分别保证这三件事，模型一件也保证不了。
 
+## 为什么需要
+工具调用的风险不在 JSON 能不能解析，而在模型一次错误选择就可能产生真实副作用。schema、白名单、确认和幂等必须在模型之外成立。
+
 ## 学习目标
 
 - 能画出一次工具调用从模型输出到结果回喂的完整链路，并指出每一步由谁负责
@@ -52,6 +55,21 @@ sequenceDiagram
 
 还有一条不在图里但同样重要：**动作只从工具调用通道取**。模型在正文里写的任何 JSON，哪怕格式完美，都只是文本。用正则从回答里捞"函数调用"出来执行，是最常见的事故来源之一。
 
+### 工具调用的安全边界
+
+```mermaid
+flowchart LR
+    M[模型 ToolCall] --> V{注册表 + Schema}
+    V -- 拒绝 --> E[is_error 回喂]
+    V -- 通过 --> A{有副作用?}
+    A -- 否 --> X[执行]
+    A -- 是 --> H{用户批准?}
+    H -- 否 --> R[拒绝并记录]
+    H -- 是 --> X
+    X --> K[幂等键 + 审计]
+```
+![本课核心关系：工具调用经过 schema、权限、审批与幂等门禁](./images/05-tool-calling-guardrails.png)
+
 ## 最小可运行例子
 
 四个文件各演示一个守卫。每个都能直接跑，带 `INJECT_*` 环境变量时注入对应的失败。
@@ -80,6 +98,18 @@ sequenceDiagram
 - **严格校验 vs 宽容解析。** 严格校验会让模型多跑一轮来修参数，多花一次调用的延迟和 token。宽容解析（比如自动把 `"kelvin"` 改成 `"celsius"`）省了这一轮，但运行时替模型做了决定，出错时没人知道为什么。默认严格，只对确定无歧义的归一化（去空格、大小写）放宽。
 - **确认门的粒度。** 每个副作用都问用户，Agent 会很烦人；一个都不问，风险不可控。常见做法是按可逆性分级：可撤销的直接做，不可撤销的问，涉及资金和删除的必须问。第 07 课会把"问"变成可以跨请求暂停和恢复的状态。
 - **幂等键放在哪一层。** 由运行时派生并传给外部系统，是最省事的做法，但要求外部系统支持幂等键。不支持时只能在运行时自己维护"已执行"记录，这就引入了状态持久化的问题，也是第 07 课的内容。
+
+## 生产方案
+M3 的 [`ToolRegistry`](../../project/src/aiapp/runtime/registry.py) 与 [`ToolRunner`](../../project/src/aiapp/runtime/runner.py) 把参数校验、allowlist、confirmation 和幂等放在运行时。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| tool schema / approval / idempotency | StateGraph tool node + interrupt | function tool + approval | MCP tool + permission callback |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

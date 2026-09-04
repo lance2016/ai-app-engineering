@@ -8,6 +8,9 @@ estimated_time: 约 3 小时
 
 > 一次回答背后是五次模型调用、三次工具调用、两次检索。没有 trace，你看到的只有最后那句话；出问题时在猜，没出问题时不知道花了多少钱。这一课用五十行 Python 自己造一个 tracer，属性名对齐 OpenTelemetry 的 GenAI 约定，最后把它按 OTLP 格式发给 Phoenix。
 
+## 为什么需要
+只记录最终答案，无法知道慢在模型、工具、检索还是重试，也无法把成本和失败归因到租户。Trace 要覆盖一次运行的因果链。
+
 ## 学习目标
 
 - 能把 print 换成带关联 id 的结构化日志，并解释为什么一行一个 JSON 比一行一句话有用
@@ -47,6 +50,19 @@ flowchart LR
 
 结构化日志和 trace 的关系：日志是线性的、每条独立、便于 grep 和聚合；trace 有父子关系、便于看一次运行的全貌。两者用同一个 `run_id` 关联，缺一个都不完整。
 
+### Trace 如何定位一次失败
+
+```mermaid
+flowchart TD
+    R[request span] --> L[agent loop]
+    L --> M[model span]
+    L --> T[tool span]
+    L --> K[retrieval span]
+    T -- timeout / error --> X[span status + exception]
+    X --> A[告警 / 失败案例 / eval]
+```
+![本课核心关系：一次请求展开为模型、检索、工具与审批 trace spans](./images/18-observability-trace-spans.png)
+
 ## 最小可运行例子
 
 | 文件 | 演示什么 | 运行 |
@@ -76,6 +92,18 @@ flowchart LR
 - **记多少内容。** `gen_ai.input.messages` 和 `gen_ai.output.messages` 可以把完整对话放进 span，排障极其方便，但涉及隐私、成本和后端存储。常见做法是默认只记 token 数和长度，按采样率或按用户开关记全文。
 - **Phoenix 还是 Langfuse。** 两者都吃 OTLP，都能自托管。Phoenix 一条命令起本地实例、和评测功能结合紧；Langfuse 团队协作和 prompt 管理更强。课程默认 Phoenix 是因为起得快。属性名标准化之后，换后端的成本是配置而不是代码。
 - **日志和 trace 二选一？** 不选。日志便宜、适合聚合和告警；trace 贵、适合看单次运行。用同一个 `run_id` 把两者连起来。
+
+## 生产方案
+M5 的 [`telemetry`](../../project/src/aiapp/ops/telemetry.py) 和日志模块输出结构化 span，OTLP 可送 Phoenix，失败注入有对应观测信号。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| span tree / trace attributes | callbacks + LangSmith / OTEL integration | built-in tracing + exporters | SDK messages + external tracing |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

@@ -8,6 +8,9 @@ estimated_time: 约 2.5 小时
 
 > 一个 Agent 管 3～10 步是可靠的上限。任务再大，就拆成几个小 Agent，让运行时把它们串起来或并起来。这一课讲三个具体问题：控制权怎么交接、交接时历史给多少、两个 Agent 并行时谁的输出算数。它们的共同答案是：由运行时决定，不由任何一个 Agent 决定。
 
+## 为什么需要
+多个 Agent 直接互传上下文会造成状态归属不明、权限扩大和失败无法回退。交接需要显式事件、最小视图和明确的控制权。
+
 ## 学习目标
 
 - 能实现 handoff：把"转交"做成工具调用，由运行时切换活跃 Agent，并按策略决定专家 Agent 看到多少历史
@@ -43,6 +46,8 @@ flowchart TB
 
 **状态归运行时，Agent 拿视图。** 所有 Agent 的输出都进同一个线程，带 `agent` 标签。每个 Agent 调模型时拿到的是运行时算出来的视图：用户消息共享，assistant 消息只看自己的。专家 Agent 抛异常，运行时记一条 `handoff_failed`，控制权回到 triage，它用手头信息给用户一个诚实的答复。
 
+![本课核心关系：多个 Agent 通过任务契约安全交接](./images/10-multi-agent-handoff.png)
+
 ## 最小可运行例子
 
 | 文件 | 演示什么 | 运行 |
@@ -68,6 +73,18 @@ flowchart TB
 - **拆成多个 Agent 还是一个大 Agent。** 拆的收益：每个 Agent 的上下文小、提示词专、能独立测试和替换。代价：交接策略、视图计算、失败回退都是新代码。经验是先用一个 Agent 加 routing，等某个分支的提示词长到互相打架了再拆。
 - **Handoff 还是 agents-as-tools。** 转移控制权适合"接下来的对话都归专家"（客服转接）；当工具调用适合"问一下专家再回来"（让翻译 Agent 翻一段）。前者专家直接面对用户，后者主 Agent 始终在场。别混用：一个专家既能被当工具调又能接管控制权，状态会很难讲清楚。
 - **Racing 的成本。** 并行意味着两次模型调用都要付钱，被取消的那次也常常已经计费。它换来的是延迟。只在延迟真的重要（语音、实时交互）时用，后台任务用第 09 课的串行 routing。
+
+## 生产方案
+M3 的 runtime 记录 handoff 事件并按 Agent 生成视图；M5 的 trace 和租户 guardrail 让交接可审计。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| handoff / isolated views / racing | subgraph / Command / parallel branches | handoff / agents as tools | subagents / sessions / permission modes |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

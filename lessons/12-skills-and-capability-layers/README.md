@@ -8,6 +8,9 @@ estimated_time: 约 2 小时
 
 > 到这一课，"能力"这个词已经有了好几层意思：进程里的函数（Tool）、别的进程暴露的接口（MCP）、一段教模型怎么用这些东西的说明（Skill）、宿主软件的扩展包（Plugin）、Agent 之间的通话协议（A2A）。它们经常被混着叫。这一课把它们各归各位，然后把 Skill 这一层做出来。
 
+## 为什么需要
+能力说明、工具实现和宿主插件混在一起，会让上下文膨胀，也会把第三方内容直接当成可信指令。渐进加载和来源校验是可维护性的边界。
+
 ## 学习目标
 
 - 能用一张表说清 Tool、MCP、Skill、Plugin、A2A 各自回答什么问题，以及一个能力从哪一层接入
@@ -46,6 +49,8 @@ flowchart LR
 
 **Skill 是你没写的代码，拿着你的工具在跑。** 它能指挥模型调用有副作用的工具，它的 `references/` 可以被替换，它的 `scripts/` 是真正会执行的程序。所以安装一个第三方 Skill 和安装一个依赖包是同一级别的事：校验格式、对账 `allowed-tools`、记录内容哈希、更新时重新审。
 
+![本课核心关系：Skill 的元数据、指令与工具执行分层](./images/12-skills-capability-layer.png)
+
 ## 最小可运行例子
 
 `code/skills/` 里有两个手写的 Skill 当教材。
@@ -72,6 +77,18 @@ flowchart LR
 - **Skill 说明 vs 硬编码流程。** 把步骤写进 Skill 让模型执行，灵活但不确定；写成第 09 课的 Workflow 代码，确定但改一步要发版。合规要求高的步骤走代码，需要理解自然语言的判断走 Skill。
 - **allowed-tools 是约束还是提示。** 规范里它主要是声明。本课把它当对账清单：Skill 要求的工具注册表里没有，就发警告。更严格的做法是运行时在该 Skill 激活期间把白名单收窄到 `allowed-tools`，代价是 Skill 之间切换时白名单也要切。
 - **哈希固定 vs 自动更新。** 固定住的 Skill 不会被悄悄改，也不会拿到修复。和依赖锁文件一样：固定，然后有意识地升级并重新审。
+
+## 生产方案
+M3 的 [`skills`](../../project/skills/) 使用元数据常驻、正文按需加载，并在安装时做哈希和 allowlist 校验。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| skill / capability metadata | prompt or tool description layer | instructions + tools | CLAUDE.md / skill-like project instructions |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

@@ -4,9 +4,11 @@ kind: lab
 depends_on: project/m3；lessons/05–12；回顾 18, 19
 ---
 
-# Framework & Architecture Lab
+# Stage 6｜Framework & Architecture Lab
 
 > 主线用普通 Python 把机制讲完，M3 用普通 Python 把一个能干活、能停、能续的 Agent 做出来。这个 Lab 拿同一个需求，在三个主流框架上各实现一遍，跑同一套一致性测试，然后按十二个维度逐格对照。目标不是选出最好的框架，是让你下次面对选型时知道该问什么、去哪找证据。
+
+**先读：** [共同规格](./spec.md) · [12 维评分卡](./scorecard.md) · [框架全景](./00-landscape.md)
 
 ## 为什么需要
 
@@ -14,7 +16,7 @@ depends_on: project/m3；lessons/05–12；回顾 18, 19
 
 ## 共同需求
 
-一个审批型任务 Agent，规格在 `spec.md`（待写）。它必须：
+一个审批型任务 Agent，正式规格在 [`spec.md`](./spec.md)。它必须：
 
 - 用同一批只读工具直接调用，副作用工具必须暂停等人批准后再执行
 - 进程被 `kill -9` 后能从断点续上，已执行的工具不重跑
@@ -28,12 +30,12 @@ depends_on: project/m3；lessons/05–12；回顾 18, 19
 
 | 目录 | 框架 | 为什么选它 | 离线怎么跑 |
 |---|---|---|---|
-| `baseline/` | 普通 Python，即 M3 的 `aiapp.runtime` | 参照物：不用框架要写多少、哪里最痛 | 本来就是 fake adapter |
-| `langgraph_impl/` | LangGraph | 显式图、内置 checkpointer、中断与 time travel，"持久化执行"路线的代表 | 包一个 `BaseChatModel` 子类回放 fake 剧本 |
+| [`baseline/`](./baseline/README.md) | 普通 Python，即 M3 的 `aiapp.runtime` | 参照物：不用框架要写多少、哪里最痛 | 本来就是 fake adapter |
+| [`langgraph_impl/`](./langgraph_impl/README.md) | LangGraph | 显式图、内置 checkpointer、中断与 time travel，"持久化执行"路线的代表 | 包一个 `BaseChatModel` 子类回放 fake 剧本 |
 | `openai_agents_impl/` | OpenAI Agents SDK | 厂商 SDK 的代表，handoff 原语最清晰；走 OpenAI 兼容协议所以 DeepSeek 也能接 | 实现 `Model` 接口回放 fake 剧本 |
 | `claude_agent_sdk_impl/` | Claude Agent SDK | 另一种厂商路线：内置循环、工具和权限模型与 Claude Code 同源，锁定最深也最省事 | mock SDK 的消息流 |
 
-每个实现目录固定四样东西：`README.md`（本课概念到框架概念的映射表、顺手的地方、别扭的地方、锁定点）、`agent.py`、`adapter.py`（实现 `labkit.protocol.LabRuntime` 协议让一致性测试能跑）、十二维度的自评。目录名是可导入的包名，`pyproject.toml` 把 `project/framework-lab` 加进了 pytest 的 `pythonpath`。
+每个实现目录固定四样东西：`README.md`（概念映射、顺手处、别扭处、锁定点）、`agent.py`、`adapter.py`（实现 `labkit.protocol.LabRuntime` 协议让一致性测试能跑）、十二维度的自评。目录名是可导入的包名，`pyproject.toml` 把 `project/framework-lab` 加进了 pytest 的 `pythonpath`。当前 baseline 和 LangGraph 已有离线实现；另外两个 SDK 的适配器仍在 TODO 中，不把空目录写成已完成。
 
 ## 十二个维度
 
@@ -52,7 +54,7 @@ depends_on: project/m3；lessons/05–12；回顾 18, 19
 | Debuggability | 出了问题读代码还是读 trace、能否单步 | 18 |
 | Vendor / Framework Lock-in | 换模型、换框架、换平台各要改多少 | 原则 12, 23 |
 
-评分卡在 `scorecard.md`（待写）。每格附代码行链接作为证据，不打总分，不排名。最后一页是一张给读者的选型工作表。
+评分卡在 [`scorecard.md`](./scorecard.md)。每格附代码行链接或明确的待实现标记作为证据，不打总分，不排名。最后一页是一张给读者的选型工作表。
 
 ## 一致性测试
 
@@ -71,12 +73,12 @@ M3 一做完就可以开始，那时你刚用普通 Python 写完同样的东西
 | # | 内容 | 状态 |
 |---|---|---|
 | 00 | [框架全景与选型标准](./00-landscape.md) | draft |
-| spec | 共同需求（待写） | outline |
+| spec | 共同需求、事件契约、测试与阅读评分边界 | draft |
 | baseline | M3 参照实现，8/8 场景 | draft |
 | langgraph_impl | 图 + interrupt + SQLite checkpoint，8/8 场景 | draft |
 | openai_agents_impl | （待写） | outline |
 | claude_agent_sdk_impl | （待写） | outline |
-| scorecard | 十二维评分卡（待写） | outline |
+| scorecard | 十二维评分卡、证据链接、选型工作表 | draft |
 
 ---
 

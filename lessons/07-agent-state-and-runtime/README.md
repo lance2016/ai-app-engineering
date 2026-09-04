@@ -8,6 +8,9 @@ estimated_time: 约 2.5 小时
 
 > 上一课的循环跑在一个进程里，停下就没了。这一课把状态从局部变量里拿出来，变成一份可以存盘、可以加载、可以从任意一点继续的事件记录。做到这一步，"等用户回来再继续"和"进程崩了接着跑"就成了同一件事。
 
+## 为什么需要
+把状态留在局部变量里，进程退出、用户晚点回复或网络重试都会让任务丢失或重复。事件、checkpoint 和恢复协议要先于框架抽象。
+
 ## 学习目标
 
 - 能把 Agent 的状态建模为一个 append-only 的事件线程，并从它推导出模型消息、运行状态和待处理的工具调用
@@ -43,6 +46,20 @@ flowchart LR
 
 **客户端看的是同一份事件。** 循环每 append 一条就 yield 一条，前端拿到的进度和存进数据库的记录是同一个对象。不需要再发明一套"progress"结构。
 
+### 生命周期与状态变化
+
+```mermaid
+stateDiagram-v2
+    [*] --> running
+    running --> paused: confirmation / question
+    paused --> running: resume
+    running --> checkpointed: each durable event
+    checkpointed --> running: process restart
+    running --> finished
+    running --> failed: budget / provider error
+```
+![本课核心关系：状态快照、人工暂停与 checkpoint resume](./images/07-agent-state-checkpoint-resume.png)
+
 ## 最小可运行例子
 
 | 文件 | 演示什么 | 运行 |
@@ -71,6 +88,18 @@ flowchart LR
 - **每步存盘 vs 只在暂停时存盘。** 每步存盘让任意点崩溃都能恢复，代价是每一步多一次写。对话类 Agent 步数少，每步存没问题；长任务可以按阶段存，但要接受阶段内崩溃会重做。
 - **interrupt vs enqueue。** interrupt 响应快，用户改主意时立刻生效，但已经花掉的模型调用作废；enqueue 不浪费，但用户要等第一轮跑完。聊天场景通常 interrupt，后台任务通常 enqueue。reject 最简单，适合"一次只能有一个操作在进行"的场景，比如支付。
 - **线程放多少东西。** factor 05 建议尽量把执行状态都放进线程，但 session id、密钥、大文件这类东西不该进模型上下文。`to_messages()` 是过滤器：线程里可以有运行时专用事件，模型看不到。第 08 课会在这个过滤器上做更多事。
+
+## 生产方案
+M2 的 [`storage`](../../project/src/aiapp/storage/) 与 runtime 保存事件线程、checkpoint 和 pause/resume；M3 的工具幂等保护恢复时的副作用。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| event log / checkpoint / pause-resume | checkpointer + interrupt | RunState / session / approval | session_id + permission callback |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

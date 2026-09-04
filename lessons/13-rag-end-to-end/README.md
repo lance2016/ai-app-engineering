@@ -8,6 +8,9 @@ estimated_time: 约 3 小时
 
 > RAG 是七个步骤串成的一条流水线：解析、切块、索引、检索、重排、生成、引用。每一步都有一种自己独有的坏法，而用户看到的永远只是"答错了"。这一课的目标不是把七步做得多好，而是让你能对任何一次答错说出"坏在第几步"，并且有数据证明。
 
+## 为什么需要
+用户只看到“答错了”，但原因可能是解析、切块、召回、重排、生成或引用任一步。把链路拆成可测的阶段，才能做有证据的优化。
+
 ## 学习目标
 
 - 能画出七步流水线，并为每一步说出一种典型失败和检测它的方法
@@ -48,6 +51,21 @@ flowchart LR
 
 **Agentic RAG 是这条流水线加上第 06 课的循环。** 模型看到检索结果觉得不够，改写查询再查一次，或者换一个数据源。它没有改变七步里任何一步的坏法，只是让流水线可以跑多轮。先把单轮做对。
 
+### 从回答反推失败位置
+
+```mermaid
+flowchart LR
+    S[源文档] --> I[索引]
+    I --> Q[检索]
+    Q --> C{候选相关?}
+    C -- 否 --> F1[召回失败]
+    C -- 是 --> G[生成]
+    G --> V{引用可验证?}
+    V -- 否 --> F2[生成 / 引用失败]
+    V -- 是 --> O[带来源回答]
+```
+![本课核心关系：文档切分、混合检索、重排与引用生成](./images/13-rag-pipeline-citations.png)
+
 ## 最小可运行例子
 
 `code/corpus/` 是四篇虚构的客服政策，`code/golden.json` 是 10 个问题和每个问题必须命中的短语。`code/ragkit.py` 放共用的切块、BM25、玩具向量、RRF，全部纯 Python。
@@ -86,6 +104,18 @@ flowchart LR
 - **BM25 还是向量还是都要。** 只有 BM25，同义改写会漏；只有向量，型号和数字会混。都要就多一套索引和一次融合。语料里精确标识符多的（法规、技术手册）BM25 权重要高。
 - **重排的代价。** 交叉编码器重排器把候选数从几十压到几个，质量提升明显，但每个候选都要过一次模型。候选取多少是延迟和召回的直接权衡，通常 20～50。
 - **pgvector 还是专用向量库。** 主项目用 pgvector，一个库同时放业务数据和向量，少一个组件，权限过滤可以用 SQL 的 WHERE。到千万级向量或者需要复杂的过滤加近邻组合时再评估专用库。
+
+## 生产方案
+M4 的 [`knowledge`](../../project/src/aiapp/knowledge/) 和 [`eval`](../../project/src/aiapp/eval/) 分别记录检索证据和 Recall@k；API 只返回经过校验的引用。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| retrieval pipeline / citations | retriever + tool node + generation node | file search / retrieval tool | MCP or custom retrieval tool |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

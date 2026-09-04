@@ -8,6 +8,9 @@ estimated_time: 约 2 小时
 
 > Prompt 是代码。它由有类型的输入渲染出来，可以 diff、可以测试、有版本号。这一课只讲一次调用：系统指令怎么写，示例怎么给，输出怎么约束，数据和指令怎么分开，以及改了 prompt 之后怎么知道没有变差。Agent 多轮的上下文组装在第 08 课。
 
+## 为什么需要
+提示词一旦散落在路由、工具和测试里，任何小修改都会改变线上行为，却没有版本、回归样例或回滚点。
+
 ## 学习目标
 
 - 能把一段系统指令拆成角色、风格、禁区、输出契约、示例几个区段，用函数从类型化输入渲染出来，并能打印出发给模型的完整消息
@@ -44,6 +47,8 @@ flowchart LR
 
 一次调用的上下文里该放什么：这轮任务需要的指令、能让格式稳定的示例、回答所依赖的数据、问题本身。不该放什么：和本轮无关的历史、"以防万一"的工具定义、没人会读的免责声明。每一段都是 attention 预算，第 08 课会把这个判断做成可配置的组装器。
 
+![本课核心关系：不同上下文区块被组装成一次模型请求](./images/03-prompt-context-sections.png)
+
 ## 最小可运行例子
 
 | 文件 | 演示什么 | 运行 |
@@ -72,6 +77,18 @@ flowchart LR
 - **示例数量。** 一到三个示例通常够定格式；再多收益递减，成本线性涨。示例要覆盖边界情况（一个正常、一个拒答），不是同一类型重复。
 - **门禁严格度。** 太严，任何改动都过不了，团队会绕过它；太松，退化会上线。起点是"新版本严格优于旧版本，且不低于绝对阈值"，样本量大了再谈置信区间。
 - **分隔符的选择。** XML 风格标签、Markdown 围栏、明显的分隔线都行，重点是一致，且标签名要说明内容性质（`<document>`、`<tool_result>`），不要用泛泛的 `<data>`。
+
+## 生产方案
+M1 把 system prompt 放在 [`project/src/aiapp/prompts/`](../../project/src/aiapp/prompts/)，通过配置选择版本，并在响应头留下版本证据。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| prompt + message assembly | system message / prompt template | instructions + input items | system prompt + options |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

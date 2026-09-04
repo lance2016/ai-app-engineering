@@ -3,6 +3,42 @@
 > 一个不绑定模型供应商的 AI 应用后端，从 asyncio 实验开始，每个里程碑聚焦一个能力簇并有明确的最小验收目标，最终长成带工具、RAG、Memory、评测和可观测性的生产级服务。
 > 每一课学到的概念都在这里落地。实现型里程碑要留下代码、测试和一次失败注入；设计型里程碑要留下设计文档、估算、决策记录和失败推演。
 
+## 这就是课程的 Hero Demo
+
+打开 Playground，你看到的是一条真实的 Agent 请求链，而不是一个孤立的聊天框：
+
+```mermaid
+sequenceDiagram
+    participant U as 用户
+    participant API as FastAPI / SSE
+    participant RT as Agent Runtime
+    participant T as Tool / MCP
+    participant H as Human
+    participant K as RAG / Memory
+    U->>API: 发消息
+    API->>RT: 启动 thread
+    RT->>K: 组装上下文
+    RT->>T: 选择工具
+    T-->>RT: 需要副作用确认
+    RT-->>API: human_input_requested
+    API-->>H: 展示批准按钮
+    H->>API: approved
+    API->>RT: resume from checkpoint
+    RT->>T: 幂等执行
+    RT-->>API: tool_result + assistant_delta
+    API-->>U: SSE 事件流
+```
+
+完成 M5 后，系统具备 FastAPI、streaming、Agent Runtime、Tool Calling、HITL、checkpoint / resume、MCP、RAG、Memory、PostgreSQL + pgvector、Redis、Evaluation、OpenTelemetry、Phoenix、fallback、cost budget、security 和 deployment。它们不是一张愿望清单：代码在 `src/aiapp/`，验收在 `tests/project/m1` 到 `m5`，失败行为由 `INJECT_` 和 `scripts/chaos.py` 留证。
+
+### 三条可展示的证据链
+
+| 证据链 | 怎么看 | 你能说明什么 |
+|---|---|---|
+| 运行 | [Playground](../README.md#完整运行方式) → 对话 → 工具确认 → 继续 | 流式、人机介入、状态恢复不是 PPT 概念 |
+| 观测 | 启动 Phoenix 后打开 `http://localhost:6006` | 一次请求每一跳的耗时、错误和成本可以追溯 |
+| 验收 | `uv run pytest -q`、`scripts/eval_run.py`、`scripts/chaos.py --all` | 系统不仅能成功，也能在故障下按设计失败 |
+
 ## 架构目标
 
 ```mermaid
@@ -32,6 +68,10 @@ flowchart LR
 | M5 | [生产化](./m5-production/README.md) | Golden set 回归、OpenTelemetry + Phoenix、限流、Fallback、成本统计、故障演练、容器化与部署 | 实现 | complete |
 | M6 | [综合设计](./m6-platform-design/README.md) | 多租户知识库 + 任务 Agent 平台的 RFC：容量、威胁模型、模型与推理选型、迁移与退出；Capstone 4 的设计阶段 | 设计 | draft |
 
+### 里程碑的学习节奏
+
+每个里程碑都按同一条证据链推进：**读对应课程 → 跑现有代码 → 打开一个失败注入 → 改一小块 → 跑该里程碑测试 → 把结果写进自己的项目记录**。主项目中的状态和接口是后续课程的共同语言，尽量不要跳过 M2 的存储边界直接复制 M5 的部署文件。
+
 ## Framework & Architecture Lab
 
 M3 之后可以开始，默认在 Part 5 学完后一次做完。[Framework Lab](./framework-lab/README.md) 用同一个审批型任务 Agent 的需求，在 LangGraph、OpenAI Agents SDK、Claude Agent SDK 上各实现一遍，跑同一套一致性测试，按十二个维度逐格对照。产出是选型的判断力，不是排名。
@@ -47,7 +87,7 @@ M3 之后可以开始，默认在 Part 5 学完后一次做完。[Framework Lab]
 
 | # | Capstone | 前置 | 状态 |
 |---|---|---|---|
-| 1 | [Production Agent Service](./capstones/01-production-agent-service/README.md) | M5 | outline |
+| 1 | [Production Agent Service](./capstones/01-production-agent-service/README.md) | M5 | complete |
 | 2 | [RAG + Memory Agent](./capstones/02-rag-memory-agent/README.md) | M4, 17 | outline |
 | 3 | [Long-running Durable Agent](./capstones/03-durable-agent/README.md) | M3, Framework Lab | outline |
 | 4 | [Multi-tenant AI Platform](./capstones/04-multi-tenant-platform/README.md) | M6 | outline |

@@ -1,7 +1,7 @@
 [project]
 name = "ai-app-engineering"
 version = "0.0.1"
-description = "AI application engineering course: from calling an LLM to shipping an agent system"
+description = "Production-grade AI Application Engineering course covering LLMs, Agents, RAG, MCP, Evaluation, Observability and Agent Frameworks"
 requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.19.1",

@@ -8,6 +8,9 @@ estimated_time: 约 45 分钟
 
 > 搭好 uv + Python 3.12 环境，跑通 fake adapter，再用同一段代码接一次真实模型（默认 DeepSeek）。后面每一课的代码都能离线运行，需要看真实行为时换一个环境变量。
 
+## 为什么需要
+环境没对齐时，读者会把依赖、路径或模型供应商的问题误判成课程代码的问题。先让同一份脚本在离线 fake adapter 上稳定运行，后面的实验才有可比性。
+
 ## 学习目标
 
 - 能用 uv 建好环境并运行仓库里任意一课的代码
@@ -42,6 +45,8 @@ fake adapter 按剧本回答。你告诉它"第一次回一个工具调用，第
 
 真实供应商走的是 OpenAI 兼容协议。课程默认用 **DeepSeek**，原因只有一个：国内能直接访问。DashScope（通义千问）和 OpenAI 用同一个 adapter，差别只在 base URL、key 和模型名。第 02 课会拆开这个 adapter 讲消息格式、结构化输出、流式和重试。
 
+![本课核心关系：可替换的模型适配器与离线回放](./images/00-adapter-offline-replay.png)
+
 ## 最小可运行例子
 
 ### 安装
@@ -52,7 +57,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh        # macOS / Linux
 # Windows: powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 # 2. 拉仓库并装依赖。uv 会自己下载 Python 3.12，不依赖系统 Python
-git clone <本仓库>
+git clone https://github.com/lance2016/ai-app-engineering.git
 cd ai-app-engineering
 uv sync
 
@@ -78,7 +83,7 @@ MODEL_PROVIDER=deepseek uv run python lessons/00-setup/code/02_real_model_tool_c
 
 | 文件 | 演示什么 |
 |---|---|
-| [`code/01_hello_fake_adapter.py`](./code/01_hello_fake_adapter.py) | 拿到 adapter，发一条消息，读响应和用量 |
+| [`code/01_hello_fake_adapter.py`](./code/01_hello_fake_adapter.py) | 拿到 adapter，发一条消息，读响应和用量；加 `INJECT_MISSING_PROVIDER=1` 观察启动配置失败如何被明确提示 |
 | [`code/02_real_model_tool_call.py`](./code/02_real_model_tool_call.py) | 同一个循环接真实模型，完成一次工具调用往返；没有 key 时提示后退出 |
 
 `aiapp` 包在 [`project/src/aiapp/`](../../project/src/aiapp/)。这一课只需要读 `adapters/` 下的四个文件，加起来两百多行；`api/`、`runtime/`、`storage/` 是主项目 M1 起才用到的，先不用看：
@@ -102,6 +107,18 @@ MODEL_PROVIDER=deepseek uv run python lessons/00-setup/code/02_real_model_tool_c
 用 fake adapter 换来的是确定性和零成本，失去的是真实模型行为。课程的原则是：讲机制用 fake，看效果用真模型。每课的「最小可运行例子」默认 fake，「对照真实项目」小节才需要真模型。
 
 选 DeepSeek 做默认是可访问性的取舍，不是能力判断。不同供应商在工具调用上的行为有差异，比如参数 JSON 偶尔不合法、是否支持并行调用。adapter 里 `_parse_arguments()` 把不合法的参数包成 `{"_raw": ...}` 而不是抛异常，就是为第 05 课的校验守卫留的口子。
+
+## 生产方案
+课程服务把模型调用收进 adapter，把配置、超时和供应商切换留在边界；主项目的 [`aiapp/adapters`](../../project/src/aiapp/adapters/) 与 M1 验收覆盖这条边界。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| adapter / fake replay | model adapter + scripted model | model provider / transport mock | 本课概念在框架层没有对应 |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

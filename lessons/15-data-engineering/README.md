@@ -8,6 +8,9 @@ estimated_time: 约 2 小时
 
 > RAG 的上限不是模型定的，是数据定的。检索不到、检索错、引用了过期版本、把别人不该看的内容放进上下文，这些故障没有一个能靠换模型解决。这一课讲文档从进来到被删掉的整个生命周期，以及怎么证明每一步做对了。
 
+## 为什么需要
+RAG 的数据会更新、重复、过期和被删除。只写一个 ingest 脚本无法证明旧版本不会继续被召回，也无法证明租户权限没有泄露。
+
 ## 学习目标
 
 - 能把一份文档变成带来源、版本、权限标签和内容哈希的 chunk，并在入库前拦住空块、重复块和编码错误
@@ -46,6 +49,8 @@ flowchart LR
 
 解析这一步本课用纯 Python 处理 markdown 示意。真实项目里 PDF、扫描件、PPT 要用专门的解析器：Docling 和 Unstructured 都能把多种格式转成带结构的元素（标题、段落、表格），输出形状和本课的 `parse_sections()` 一样，后面的流程不变。
 
+![本课核心关系：知识数据从摄取、版本化到删除的生命周期](./images/15-data-quality-lifecycle.png)
+
 ## 最小可运行例子
 
 | 文件 | 演示什么 | 运行 |
@@ -71,6 +76,18 @@ flowchart LR
 - **chunk 大小。** 小 chunk 检索精确但上下文碎，大 chunk 上下文完整但容易混入无关内容。没有通用值，按文档类型调：FAQ 类小，长篇说明类大。先按章节边界切，再在节内按大小切，是一个稳妥的起点。
 - **增量更新的粒度。** 按 chunk 哈希 diff 最省，但一段话改一个词整段重做。可以接受，因为一段就是最小的语义单位，再细分不值得。
 - **删除的彻底程度 vs 成本。** 派生物越多，删除越贵。答案缓存加个"来源文档列表"字段，删除时按它反查，比全量扫描便宜。设计派生物的时候就要想好怎么删。
+
+## 生产方案
+M4 的 ingest 与 [`postgres_store`](../../project/src/aiapp/knowledge/postgres_store.py) 保存版本、ACL、hash 和 source_id，并有删除演练测试。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| versioned chunks / delete propagation | document loader + vector store | file search indexing | external data source / MCP resource |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

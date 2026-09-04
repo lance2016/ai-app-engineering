@@ -5,6 +5,8 @@
 - 补全某一课：按 [AGENTS.md](./AGENTS.md) 第 3 节的流程，把一课从 `outline` 推到 `draft` 或 `complete`。
 - 修正错误：概念错、代码跑不通、链接断。
 - 加反例和练习：这两样最缺。
+- 改进学习入口、路径图、Demo 录制规范或项目展示，但不要用不存在的截图声称功能已经完成。
+- 完善 Framework Lab 的规格、评分证据和 Capstone 验收；优先补可运行证据，不扩张主线课程数量。
 
 ## 不接受什么
 
@@ -15,9 +17,9 @@
 
 ## 流程
 
-1. 一个 PR 只动一课或一条原则。
+1. 一个 PR 尽量只动一课、一条原则或一个明确的产品化单元（例如 README onboarding、Framework Lab、Capstone 1）。
 2. 写完把 frontmatter 和 `README.md` 总表的状态改成一致。
-3. `code/` 下的文件在没有 API Key 时也要能跑通。提交前跑 `uv run pytest`、`scripts/check_links.py`、`scripts/check_lesson_template.py`，CI 会跑同样的检查。
+3. `code/` 下的文件在没有 API Key 时也要能跑通。提交前跑 `uv run pytest -q`、`scripts/check_links.py`、`scripts/check_lesson_template.py` 和 `scripts/sync_status.py --check`，CI 会跑同样的检查。
 4. 中文正文说人话，代码全英文。具体规范见 AGENTS.md 第 4 节。
 
 ## 提交信息

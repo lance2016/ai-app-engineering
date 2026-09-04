@@ -2,43 +2,132 @@
   <img src=".github/assets/banner.png" alt="AI Application Engineering：From LLM Calls to Production Agent Systems" width="100%">
 </p>
 
-# AI 应用开发工程师：从入门到精通
+# AI Application Engineering
 
-> 面向有后端开发经验的工程师。用一个贯穿全程的真实项目，讲清楚怎样把 LLM 从「能调用」做成「可上线的 Agent 系统」。
-> 中文写作。主线不绑定任何 Agent 框架，先用普通 Python 看清机制，再在 Framework Lab 里用三个主流框架对照。正文里的事故案例，一部分来自作者的语音机器人生产项目。
+## 从模型调用，到生产级 Agent 系统
 
-**状态：第一版正文已就位，正在补实践闭环。** 各部分的完成度见 [进展与待办](#进展与待办)，具体待办见 [TODO.md](./TODO.md)。
+面向开发者的中文开源系统课程：用普通 Python 看清 LLM、Tool、Runtime、RAG、Memory 和框架的机制，再把它们装进一个可测试、可观测、可恢复的 AI 应用服务。
 
-## 快速上手
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![CI](https://github.com/lance2016/ai-app-engineering/actions/workflows/ci.yml/badge.svg)](https://github.com/lance2016/ai-app-engineering/actions/workflows/ci.yml)
+[![Lessons](https://img.shields.io/badge/lessons-24-0EA5E9)](./lessons/)
+[![中文](https://img.shields.io/badge/language-中文-8B5CF6)](./README.md)
+[![License](https://img.shields.io/github/license/lance2016/ai-app-engineering)](./LICENSE)
 
-四种跑法，由浅到深。前三种不需要任何 API Key。
+**Models · Agents · RAG · MCP · Evaluation · Observability · Production**
 
-**1. 五分钟离线跑通**：只要 uv 和 Python 3.12，所有课程代码和主项目都用内置的 fake 模型。
+- **先看机制，再做选型**：主线不绑定 Agent 框架，代码默认走 fake model，离线即可运行。
+- **一条项目线贯穿到底**：从 FastAPI 和 SSE，到状态、工具、MCP、RAG、Memory、评测、trace、可靠性和安全。
+- **把失败当成课程内容**：每个关键能力都配有测试、evaluation gate、failure injection 或 chaos drill。
+- **学习结果可展示**：最终不是一组 notebook，而是一套可以在 Playground 里运行、在 Phoenix 里解释、在 GitHub 上交付的服务。
 
-```bash
-git clone <this-repo> && cd ai-app-engineering
-uv sync
-uv run python lessons/00-setup/code/01_hello_fake_adapter.py   # 第一课的第一个例子
-uv run pytest tests/project/m1 -q                               # 主项目 M1 的验收测试，16 passed
-uv run pytest -q                                                # 全部课程代码 + 项目测试，不需要数据库的部分
+## 最后你会做出什么
+
+一个带真实工程边界的 Production Agent Service：
+
+```text
+用户 → FastAPI / SSE → Agent Runtime → Context Builder → Model Adapter
+                         ├─ Tool Calling / MCP → approval → idempotent side effect
+                         ├─ RAG + citations / Memory lifecycle
+                         ├─ checkpoint / resume / human-in-the-loop
+                         └─ Evaluation / OpenTelemetry → Phoenix
+
+PostgreSQL + pgvector · Redis · fallback · cost budget · security · deployment
 ```
 
-**2. 一条命令起 Playground**：只想点点看效果、不改代码，用这条。Docker 把 PostgreSQL、Redis、Phoenix 和服务本身一起起来，数据落在真实数据库里，重启不丢。
+主项目的入口是 [project/README.md](./project/README.md)，可以直接打开 Playground；完整 Demo 录制清单和媒体命名规范见 [reference/demo-recording.md](./reference/demo-recording.md)。当前仓库只提交真实存在的图片，`.github/assets/demo/` 预留给后续录制，不用占位截图冒充成品。
+
+## 你应该从哪里开始
+
+| 入口 | 适合谁 | 第一站 |
+|---|---|---|
+| **Beginner / 基础不足** | Python、HTTP、SQL 或 asyncio 还不熟 | [Prerequisites 自检](./prerequisites/README.md)，按缺口补 P / B / A / F |
+| **Backend Engineer** | 会写后端服务，想系统进入 AI 应用工程 | 做 [Prerequisites 自检](./prerequisites/README.md#自检)，然后从 [00 环境与模型接入](./lessons/00-setup/README.md) 开始 |
+| **Existing AI / Agent Developer** | 已经调过模型或写过 Agent | 从 [05 Tool Calling](./lessons/05-tool-calling/README.md)、[19 生产工程](./lessons/19-reliability-cost-llmops/README.md) 或 [Framework Lab](./project/framework-lab/README.md) 选入口 |
+
+## 最短 Quick Start
+
+默认不需要 API Key；四步后应看到 fake adapter 的输出。
+
+如果还没有 `uv`：macOS / Linux 运行 `curl -LsSf https://astral.sh/uv/install.sh | sh`，Windows PowerShell 运行 `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"`，然后重新打开终端。
+
+```bash
+git clone https://github.com/lance2016/ai-app-engineering.git
+cd ai-app-engineering
+uv sync
+uv run python lessons/00-setup/code/01_hello_fake_adapter.py
+```
+
+接着可以运行 `uv run pytest tests/project/m1 -q` 看主项目验收，或查看 [第 00 课](./lessons/00-setup/README.md) 了解如何切换真实模型。完整 Docker / 本机开发 / 生产形态见[完整运行方式](#完整运行方式)。
+
+## 学习路径：八个 Stage
+
+```mermaid
+flowchart LR
+    S0[Stage 0<br/>Foundation] --> S1[Stage 1<br/>LLM Application]
+    S1 --> S2[Stage 2<br/>Agent]
+    S2 --> S3[Stage 3<br/>Knowledge & Memory]
+    S3 --> S4[Stage 4<br/>Production]
+    S4 --> S5[Stage 5<br/>Architecture & Product]
+    S5 --> S6[Stage 6<br/>Framework Lab]
+    S6 --> S7[Stage 7<br/>Capstone]
+    S2 -. M3 后可提前 .-> S6
+```
+
+| Stage | 学什么 | 做什么 | 完成信号 |
+|---|---|---|---|
+| 0 Foundation | Prerequisites + 00 | P / B / A / F 自检，M0 并发实验 | 能独立跑代码，理解 token、窗口、async 和 HTTP |
+| 1 LLM Application | 01–04 | M1 API 骨架 | 有 schema、流式、错误、成本和模型适配器 |
+| 2 Agent | 05–12 | M2 状态、M3 Tool Workflow | 能暂停、恢复、批准工具，处理失败和重复消息 |
+| 3 Knowledge & Memory | 13–15 | M4 RAG 与 Memory | 有引用、Recall@k、版本更新和可审计删除 |
+| 4 Production | 16–21 | M5 生产化 | 有评测门禁、trace、限流、fallback、预算、部署和安全护栏 |
+| 5 Architecture & Product | 22–23 | M6 综合设计 | 能把交互、容量、威胁模型和退出条件写进 RFC |
+| 6 Framework Lab | 同一需求的 baseline / 三框架对照 | 跑一致性测试，填 12 维评分卡 | 能用证据解释框架适配度和 lock-in |
+| 7 Capstone | 一个完整交付题 | 先做 Production Agent Service reference capstone | 有代码、测试、eval、trace、runbook 和 demo |
+
+### 两种学习模式
+
+**📖 阅读模式**：心智模型 → 核心机制 → 常见失败 → 生产方案 → 框架映射 → 真实项目。适合已有开发经验、想先搭建全局理解的人。
+
+**🛠 实战模式**：code → failure injection → exercises → project milestone → tests。适合希望留下运行证据、把每课变成项目增量的人。两种模式可以随时切换，不要求做完练习才继续阅读。
+
+后面的每一课都保留这两条路径的提示；课程正文的固定结构见 [templates/lesson-README.md](./templates/lesson-README.md)。
+
+## Playground / Architecture / Trace
+
+主项目已经提供可操作的 Playground：对话、SSE 事件流、工具确认、文档导入、检索和 Memory 都通过同一套 `/v1` 接口完成。架构图见下方，Phoenix trace 在本地启动 full profile 后可查看。
+
+| 你想看什么 | 入口 |
+|---|---|
+| 可运行的服务与 UI | [project/README.md](./project/README.md) |
+| 主项目架构 | [.github/assets/architecture.png](./.github/assets/architecture.png) |
+| 课程与能力路径 | [ROADMAP.md](./ROADMAP.md) |
+| Demo 录制计划 | [reference/demo-recording.md](./reference/demo-recording.md) |
+
+## 完整运行方式
+
+四种跑法，由浅到深；前三种不需要任何 API Key。
+
+**1. 五分钟离线验收**：
+
+```bash
+uv run pytest tests/project/m1 -q
+uv run pytest -q
+```
+
+**2. 一条命令起 Playground**：Docker 会启动 PostgreSQL、Redis、Phoenix 和服务本身。默认仍是 fake model，Token 是开发模式默认值 `dev-token`。
 
 ```bash
 docker compose --profile full up -d --build --wait
-open http://localhost:8000/playground        # 新建对话、看事件流、批准工具、导入文档、查记忆
-open http://localhost:6006                   # Phoenix：看这次请求的 trace
-docker compose --profile full down           # 用完清理；加 -v 连数据卷一起删
 ```
 
-默认用离线的 fake 模型，Token 用开发模式默认值 `dev-token`。要接真实模型，`cp .env.example .env` 填好 `DEEPSEEK_API_KEY` 后再执行第一条命令，`MODEL_PROVIDER=deepseek` 会从 `.env` 里读到。这个 profile 默认不随 `docker compose up` 启动，不会和下面第 3 种跑法抢 8000 端口。
+打开 [http://localhost:8000/playground](http://localhost:8000/playground) 操作服务，[http://localhost:6006](http://localhost:6006) 查看 Phoenix。结束时运行 `docker compose --profile full down`；只有确认不要保留本地数据时才加 `-v`。
 
-**3. 起依赖，本机跑代码**：要改 `project/src/` 就用这种，改完直接重启本机进程，不用重新 build 镜像。
+**3. 起依赖，本机跑代码**：适合修改 `project/src/`。
 
 ```bash
-cp .env.example .env                       # MODEL_PROVIDER 默认 fake；要接真实模型就填 DEEPSEEK_API_KEY
-docker compose up -d --wait                # postgres(pgvector) + redis + phoenix
+cp .env.example .env
+docker compose up -d --wait
 export DATABASE_URL=postgresql+asyncpg://aiapp:aiapp@localhost:5432/aiapp
 export REDIS_URL=redis://localhost:6379/0
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:6006
@@ -46,23 +135,15 @@ uv run alembic -c project/src/aiapp/storage/alembic.ini upgrade head
 uv run uvicorn aiapp.api.app:create_app --factory --port 8000
 ```
 
-打开 [http://localhost:8000/playground](http://localhost:8000/playground) 用页面对话，或者另开一个终端用 curl：
+然后打开 Playground，或按 [project/README.md](./project/README.md) 的 curl 示例调用 SSE 接口。Linux、macOS 和 Windows 的 shell 差异只在 `export` / `open` 这类命令；使用 `.env` 或 PowerShell 环境变量时不影响代码本身。
 
-```bash
-curl -s -X POST localhost:8000/v1/threads -H "Authorization: Bearer dev-token" -H "Content-Type: application/json" -d '{}'
-curl -N -X POST localhost:8000/v1/threads/<thread_id>/messages -H "Authorization: Bearer dev-token" \
-     -H "Content-Type: application/json" -d '{"content": "hello"}'          # SSE 事件流
-```
-
-完整接口和每个里程碑的运行步骤见 [project/README.md](./project/README.md)。
-
-**4. 一条命令起生产形态**：镜像里没有密钥，token 从环境变量来，生产模式拒绝默认 token 和内存存储。
+**4. 生产形态：** 镜像不带密钥，生产模式拒绝默认 token 和内存存储。
 
 ```bash
 AIAPP_TOKENS=mytoken:tenant-a docker compose -f docker-compose.prod.yml up --build
 ```
 
-想看生产工程那几课的效果，有两个现成脚本：`uv run python scripts/eval_run.py` 跑评测门禁，`uv run python scripts/chaos.py --all` 跑六个故障演练。都不需要 key。
+评测门禁和六个故障演练不需要 key：`uv run python scripts/eval_run.py --report eval-report.md`、`uv run python scripts/chaos.py --all`。
 
 ## 这门课和别的有什么不同
 
@@ -74,41 +155,11 @@ AIAPP_TOKENS=mytoken:tenant-a docker compose -f docker-compose.prod.yml up --bui
 | [generative-ai-for-beginners](https://github.com/microsoft/generative-ai-for-beginners) | GenAI 应用通识 | 通识压进前置，主线直接从应用工程切入 |
 | [llm-course](https://github.com/mlabonne/llm-course)、[LLMs-from-scratch](https://github.com/rasbt/LLMs-from-scratch) | 模型原理与训练 | 只取应用工程师需要的那一层，作为前置 F 组 |
 
-## 学习路线
+## 课程编排与内部编号
 
-<p align="center">
-  <img src=".github/assets/roadmap.png" alt="AI Application Engineering 学习路线图：前置基础、AI 应用主线、生产工程、架构与决策、框架与选型、实战项目" width="100%">
-</p>
+普通学习者按上面的 Stage 走；`Part 0–5`、`P / B / A / F`、`M0–M6` 和 `L0–L5` 是为了查找、验收和维护保留的内部编号。它们不代表额外课程，也不会在末尾追加新主题。
 
-整门课就是一条线：**学一段课，往同一个项目里加一块能力**。六个阶段按顺序走，每个阶段学什么、做什么、做完的标志是什么，都在这一张表里。
-
-| 阶段 | 学（课程） | 做（主项目） | 做完的标志 |
-|---|---|---|---|
-| 1 前置基础 | [prerequisites/](./prerequisites/README.md)：Python 语言与后端工程 P00～P07、B00～B04、算法 A00～A06、LLM 原理 F00～F07 | M0 并发实验（学到 P07 asyncio 时做） | 前置 README 里的自检全部能打勾 |
-| 2 AI 应用主线 | 第 00～04 课 模型与上下文 | M1 API 骨架 | 服务能接一个模型，流式返回，错误有结构 |
-|  | 第 05～12 课 Tool 与 Agent | M2 数据与状态、M3 Tool Workflow | Agent 能调工具、能停下等人确认、kill 掉能续跑 |
-|  | 第 13～15 课 知识与记忆 | M4 RAG 与 Memory | 回答带引用，Recall@k 有数字，记忆能提取能删除 |
-| 3 生产工程 | 第 16～21 课 | M5 生产化 | 评测门禁、trace、限流与 fallback、容器化全部就位 |
-| 4 架构与决策 | 第 22～23 课 | M6 综合设计 | 写出一份多租户平台的 RFC |
-| 5 框架与选型 | [Framework Lab](./project/framework-lab/README.md)：同一需求用纯 Python、LangGraph、OpenAI Agents SDK、Claude Agent SDK 各做一遍 | 三个框架实现通过同一套一致性测试 | 十二维评分卡填满，能说清选某个框架的理由 |
-| 6 实战项目 | [Capstone](./project/capstones/README.md) 四选一 | 一个完整系统 | 过验收清单，评分量表拿到分 |
-
-几点说明：
-
-- 第 05～12 课和第 13～15 课没有硬依赖，可以先学任一段。阶段 3 需要两段都学完。
-- Framework Lab 在 M3 之后就能开始，那时你刚用普通 Python 写过同样的东西，对照最清楚。但评分卡里 Observability、Deployment 两格要学完第 18、19 课才打得出来，所以默认放在阶段 5 一次做完。
-- 评测、安全、可观测、成本四件事不是等到阶段 3 才碰，从 M1 起每个里程碑都带最小版本。
-- [principles/](./principles/README.md) 的 12 条原则不占阶段，它是贯穿全课的对照清单，每课的正文都会指回其中一两条。
-
-**三种起点**
-
-| 你是 | 从哪开始 |
-|---|---|
-| 零基础 | 阶段 1 从 P00 开始按顺序学 |
-| 有后端经验，没碰过 LLM | 做一遍 [前置自检](./prerequisites/README.md#自检)，通常只需要补 F 组，然后进第 00 课 |
-| 已经在做 Agent 项目 | 直接从第 05 课进，把 12 条原则当对照清单，主项目从 M2 开始补 |
-
-阶段依赖图和 L0～L5 能力阶梯的自评标准见 [ROADMAP.md](./ROADMAP.md)。
+主线 00–04、05–12、13–15 可以分别看作模型、Agent、知识三条能力段；17–20 的评测、观测、可靠性和安全从 M1 就开始以小版本出现。详细依赖和晋级门槛见 [ROADMAP.md](./ROADMAP.md)，每课状态见下面的课程总表。
 
 ## 仓库结构
 
@@ -129,8 +180,8 @@ AIAPP_TOKENS=mytoken:tenant-a docker compose -f docker-compose.prod.yml up --bui
 ├── project/                贯穿全程的主项目，一个 AI 应用服务
 │   ├── src/aiapp/          全部服务代码都在这里，按 adapters / runtime / tools / knowledge / storage / api / ops 分包
 │   ├── m0-concurrency/ … m6-platform-design/   七个里程碑，每个目录只有说明、运行步骤和验收证据
-│   ├── framework-lab/      阶段 5：baseline 与三个框架实现，加一致性测试
-│   ├── capstones/          阶段 6：四个实战题目
+│   ├── framework-lab/      Stage 6：baseline 与三个框架实现，加一致性测试
+│   ├── capstones/          Stage 7：四个实战题目
 │   ├── eval/               评测数据：golden set、判分校准、阈值与基线
 │   └── skills/             项目用到的 Skill 示例
 │
@@ -146,7 +197,7 @@ AIAPP_TOKENS=mytoken:tenant-a docker compose -f docker-compose.prod.yml up --bui
 └── .github/                CI 配置与 README 用到的图片
 ```
 
-编号只表示学习顺序：`P` / `B` / `A` / `F` 是四组前置模块，`00～23` 是主线课，`M0～M6` 是项目里程碑，课程总表里的 `Part 0～5` 只是把 24 课分成六组方便对照。它们都不会在末尾追加编号塞新主题。
+编号只表示学习顺序：`P` / `B` / `A` / `F` 是四组前置模块，`00～23` 是主线课，`M0～M6` 是项目里程碑，课程总表里的 `Part 0～5` 只是把 24 课分成六组方便对照。普通学习者优先看 Stage 0–7；这些内部编号都不会在末尾追加编号塞新主题。
 
 本地跑起来只需要 uv 和 Python 3.12，依赖 PostgreSQL 与 Redis 的部分用 `docker compose up -d` 起。所有示例默认走离线的 fake 模型，接真实模型的方法见 [第 00 课](./lessons/00-setup/README.md)。
 
@@ -219,9 +270,10 @@ AIAPP_TOKENS=mytoken:tenant-a docker compose -f docker-compose.prod.yml up --bui
 
 ## 学每一课的固定动作
 
-1. 先跑 `code/`，再读正文。代码默认用离线的 fake 模型，需要真实模型时按第 00 课配一个 DeepSeek key。
-2. 做练习，做完再看 `exercises.md` 里折叠的答案。
-3. 看「对照真实项目」小节，去 `project/` 里落一个增量。不动手不算学完。
+- **阅读模式**：先看心智模型和失败案例，再读生产方案、框架映射和项目落点；适合先建立全局理解，不要求马上做练习。
+- **实战模式**：先跑 `code/`（默认 fake model），打开 `INJECT_` 失败开关，做练习并对照折叠答案，再把一个增量落进 `project/`，最后跑对应测试。
+
+需要真实模型时按第 00 课配置 DeepSeek；没有 API Key 也能完成所有离线课程和项目验收。
 
 ## 参考资料
 
@@ -239,10 +291,10 @@ AIAPP_TOKENS=mytoken:tenant-a docker compose -f docker-compose.prod.yml up --bui
 | 前置 LLM 原理 F00～F07 | 6 篇带实验的 `draft`，F02、F07 还是大纲 |
 | 前置算法 A00～A06 | 全部大纲 |
 | 主项目 M0～M6 | M0～M5 有代码和 `tests/project/mN` 验收测试；M6 是设计型里程碑，`draft` |
-| Framework Lab | baseline 和 LangGraph 实现通过 8 个一致性场景；OpenAI Agents SDK、Claude Agent SDK、spec、评分卡待做 |
-| Capstone | 四个题目只有大纲 |
+| Framework Lab | baseline 和 LangGraph 实现通过 8 个一致性场景；spec 与评分卡已完成，OpenAI Agents SDK、Claude Agent SDK 适配器待做 |
+| Capstone | Production Agent Service 已有 reference-grade 交付标准；其他三个题目保持 outline |
 
-下一步按优先级排在 [TODO.md](./TODO.md)：先补完 Framework Lab，再补 Capstone，然后是前置新内容和模板回填。做完一项删一项。
+下一步按优先级排在 [TODO.md](./TODO.md)：先完成 Framework Lab 的两个 SDK 适配器和真实 Demo，再补 Capstone 其余题目与前置内容。做完一项删一项。
 
 CI 在每次提交上跑七件事：相对链接检查、`complete` 单元的模板检查、状态列与 frontmatter 一致性、数据库迁移的升级回滚、所有示例代码离线运行加项目验收测试、评测门禁、故障演练；最后构建生产镜像并验证启动守卫。配置见 [.github/workflows/ci.yml](./.github/workflows/ci.yml)。
 

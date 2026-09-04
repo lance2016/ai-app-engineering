@@ -8,6 +8,9 @@ estimated_time: 约 2.5 小时
 
 > 一次模型调用只有四样东西：一串消息、几个参数、一段返回、一份用量。这一课把它们拆开看清楚，再补上生产环境没人替你做的两件事：解析失败怎么修，钱怎么记。
 
+## 为什么需要
+模型返回的不只是文字：格式可能坏、流可能中断、重试可能重复计费。把消息、schema、增量和用量拆开，才能知道故障发生在协议、解析还是供应商。
+
 ## 学习目标
 
 - 能画出一次调用在线上的形状：消息列表怎么变成 JSON、工具结果靠什么和调用对上、temperature 和 max_tokens 各改变什么
@@ -46,6 +49,19 @@ sequenceDiagram
 
 还有两件 SDK 不替你做的事：**重试**要区分能重试的（429 限流、超时）和不能重试的（400 请求错误，重发一百次结果一样），退避要指数增长并有上限；**成本**要按用量乘单价逐次记账，单价随时会变，放配置不放代码。
 
+### 正常路径与失败路径
+
+```mermaid
+flowchart LR
+    A[请求] --> B{首块到达?}
+    B -- 是 --> C[流式输出]
+    C --> D{最终 schema 合法?}
+    D -- 是 --> E[保存结果与用量]
+    D -- 否 --> F[回喂校验错误]
+    B -- 否 --> G[504 / fallback]
+```
+![本课核心关系：请求、结构化输出、流式事件与用量的生命周期](./images/02-request-lifecycle.png)
+
 ## 最小可运行例子
 
 | 文件 | 演示什么 | 运行 |
@@ -80,6 +96,18 @@ sequenceDiagram
 - **流式 vs 一次返回。** 流式让首 token 快，代价是客户端逻辑复杂：要处理半截文本、断线重连、以及"工具调用要等最后"。后台任务、结构化抽取、评测跑批不需要流式，别为不需要的东西付复杂度。
 - **重试次数与延迟。** 面向用户的实时调用，一次重试可能就超出可接受等待；后台任务可以多试。退避的上限和总次数应该是调用方的参数，不是写死的常量。第 19 课把它扩展成限流和熔断。
 - **temperature 设多少。** 抽取、分类、工具选择用 0 或接近 0，要的是稳定；创作类任务才调高。0 不保证正确，只保证每次一样，评测时这一点很重要。
+
+## 生产方案
+M1 的 [`run_turn`](../../project/src/aiapp/runtime/turn.py) 负责首块前后的错误边界，M5 的成本与 resilience 代码负责预算、重试和 fallback。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| structured output / streaming | response schema + streaming events | output types + streamed events | content blocks + message stream |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 

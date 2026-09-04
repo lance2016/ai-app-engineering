@@ -11,6 +11,7 @@ Expect: a table of derived numbers for a baseline and two scenarios.
 
 # %% imports
 from dataclasses import dataclass, replace
+import os
 
 
 # %% assumptions
@@ -67,8 +68,9 @@ def show(label: str, e: Estimate) -> None:
 def main() -> None:
     base = Assumptions(
         daily_active_users=50_000, turns_per_user_per_day=6, input_tokens_per_turn=6_000,
-        output_tokens_per_turn=300, tool_calls_per_turn=1.2, peak_factor=4, p95_turn_seconds=8,
+        output_tokens_per_turn=300, tool_calls_per_turn=1.2, p95_turn_seconds=8,
         price_in_per_mtok=0.5, price_out_per_mtok=1.5,
+        peak_factor=20 if os.environ.get("INJECT_TRAFFIC_SPIKE") else 4,
     )
     with_cache = replace(base, cache_hit_ratio=0.6)
     with_routing = replace(with_cache, cheap_route_share=0.5)

@@ -8,6 +8,9 @@ estimated_time: 约 1.5 小时
 
 > 前置 F02 讲了 embedding 是什么、余弦为什么先归一化。这一课只讲工程：怎么选模型和维度、暴力检索到什么规模要换索引、切块怎样改变召回、pgvector 怎么建表建索引。为第 13 课 RAG 和第 14 课 Memory 打底。
 
+## 为什么需要
+检索质量先受 embedding、切块和索引影响，换模型并不能修复错误的粒度或过时的向量。先把召回指标和索引边界测出来，才知道该优化哪一层。
+
 ## 学习目标
 
 - 能为一个场景选 embedding 模型和维度，说出托管与自部署的取舍，以及换模型的迁移成本
@@ -41,6 +44,8 @@ F02 讲了向量为什么能比较。这里只补三个工程事实：
 
 一个经常被忽略的事实：查询和文档必须用**同一个** embedding 模型。换了模型，整个索引要重建。这是选型时要提前想清楚的迁移成本。
 
+![本课核心关系：向量空间中的相似度、检索邻域与误召回](./images/04-embedding-vector-space.png)
+
 ## 最小可运行例子
 
 前三个纯 Python，第四个需要一个有 embedding 接口的供应商。
@@ -49,7 +54,7 @@ F02 讲了向量为什么能比较。这里只补三个工程事实：
 |---|---|---|
 | [`code/01_toy_embeddings_and_cosine.py`](./code/01_toy_embeddings_and_cosine.py) | hashing 词袋向量 + 余弦；共享词得分高，换了说法得分低，正好暴露玩具向量的局限 | `uv run python lessons/04-embeddings-and-vector-search/code/01_toy_embeddings_and_cosine.py` |
 | [`code/02_topk_search.py`](./code/02_topk_search.py) | 暴力索引，top-k，统计比较次数 | 同上，`K=1` |
-| [`code/03_chunking_changes_recall.py`](./code/03_chunking_changes_recall.py) | 同一份文档整块和按句切两种方式，目标句子的排名不同 | 同上 |
+| [`code/03_chunking_changes_recall.py`](./code/03_chunking_changes_recall.py) | 同一份文档整块和按句切两种方式，目标句子的排名不同 | 同上，加 `INJECT_OVERSIZED_CHUNK=1` 标记大块导致的召回风险 |
 | [`code/04_real_embeddings.py`](./code/04_real_embeddings.py) | 用真实模型重跑 `01` 的表，改写换说法的那条排到前面 | `MODEL_PROVIDER=dashscope uv run python ...`，DeepSeek 没有 embedding 接口 |
 
 ### pgvector 最小用法
@@ -93,6 +98,18 @@ LIMIT 5;
 - **托管 embedding 还是自部署。** 托管接口按 token 计费、零运维，但数据要出境到供应商；自部署开源模型（如 bge、gte 系列）数据不出门，要自己管 GPU 和版本。对多数中文场景，先用 DashScope 这类托管接口起步，数据敏感再迁。
 - **维度大小。** 高维更准也更贵：存储、索引内存、比较时间都随维度线性增长。很多模型支持在调用时指定较低维度，用 5% 的精度换一半的存储，值得实测。
 - **精确还是近似。** 十万条以内暴力扫描几十毫秒，先别建索引。上了 HNSW 要接受召回率不是 100%，并且写入变慢。索引参数（`m`、`ef_construction`）要在自己的数据上调。
+
+## 生产方案
+M4 的 [`knowledge`](../../project/src/aiapp/knowledge/) 负责 chunk、混合检索和引用；模型定型后再选择有维度的 pgvector 索引。
+
+## 框架映射
+
+| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
+|---|---|---|---|
+| embedding + vector store | Retriever / vector store | 自定义 embedding + retrieval tool | 外部检索工具或自定义 provider |
+
+*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+
 
 ## 练习
 
