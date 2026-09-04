@@ -83,7 +83,7 @@ sequenceDiagram
 
 ## 对照真实项目
 
-主项目 [M3.3](../../project/m3-tool-workflow/README.md) 要求接入一个只读 MCP server。做法就是本课 `02` 的 `specs_from_server` 加 `dispatch`，接到 M3.1 的 `ToolRunner` 上，让 MCP 工具和本地工具走同一套校验、白名单和幂等。M5 的可观测性要给每次 `tools/call` 打一个 span，记录 server 名、工具名、耗时和 `isError`。
+主项目 [M3.3](../../project/m3-tool-workflow/README.md) 的 [`aiapp/runtime/mcp_source.py`](../../project/src/aiapp/runtime/mcp_source.py) 就是本课 `02` 的 `specs_from_server` 加 `dispatch`：`tools/list` 的每个工具注册成普通 `Tool`，`annotations.readOnlyHint` 决定要不要过确认门，所以 MCP 工具和本地工具走同一套校验、白名单和幂等。`03` 的断连处理变成了"服务器死了算 `TransientToolError`，处理器重连一次，交给 runner 重试"。客户端在 [`aiapp/mcp/client.py`](../../project/src/aiapp/mcp/client.py)，服务端 `AIAPP_MCP_COMMAND` 指定。`tests/project/m3/test_mcp.py` 覆盖只读注册、确认、重连和持续崩溃。M5 的可观测性要给每次 `tools/call` 打一个 span，记录 server 名、工具名、耗时和 `isError`。
 
 ## 延伸阅读
 

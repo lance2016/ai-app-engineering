@@ -8,6 +8,7 @@ from fastapi import Depends, Header, Request
 from aiapp.adapters.base import ModelAdapter
 from aiapp.api.errors import Unauthorized
 from aiapp.config import Settings
+from aiapp.runtime import SkillLoader, ToolRunner
 from aiapp.storage.base import KeyValueStore, ThreadStore
 
 
@@ -26,6 +27,14 @@ def get_store(request: Request) -> ThreadStore:
 
 def get_kv(request: Request) -> KeyValueStore:
     return request.app.state.kv
+
+
+def get_runner(request: Request) -> ToolRunner:
+    return request.app.state.runner
+
+
+def get_skills(request: Request) -> SkillLoader:
+    return request.app.state.skills
 
 
 def get_model(request: Request) -> ModelAdapter:

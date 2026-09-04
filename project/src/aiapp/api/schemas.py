@@ -15,6 +15,17 @@ class CreateThreadRequest(BaseModel):
 class MessageRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     content: str = Field(min_length=1, max_length=20_000)
+    allowed_tools: list[str] | None = Field(default=None, description="Narrow this request's tools; never widens the server allowlist")
+
+
+class HumanInputRequest(BaseModel):
+    """Either answer a question (tool_call_id + content) or decide on a confirmation (confirm_tool_call_id + approved)."""
+
+    model_config = ConfigDict(extra="forbid")
+    tool_call_id: str | None = None
+    content: str | None = Field(default=None, max_length=20_000)
+    confirm_tool_call_id: str | None = None
+    approved: bool | None = None
 
 
 class EventView(BaseModel):

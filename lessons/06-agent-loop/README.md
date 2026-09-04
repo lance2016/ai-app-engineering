@@ -77,7 +77,7 @@ flowchart LR
 
 ## 对照真实项目
 
-主项目 [M2](../../project/m2-state-and-storage/README.md) 把这一课的 `RunResult` 和 `Budget` 变成可以落库的记录，[M3](../../project/m3-tool-workflow/README.md) 把 `run_agent` 和第 05 课的四个守卫合成一个 `ToolRunner`。
+主项目 [M3](../../project/m3-tool-workflow/README.md) 的 [`aiapp/runtime/loop.py`](../../project/src/aiapp/runtime/loop.py) 就是本课的 `run_agent`：`01` 的步数上限、`02` 的 `Budget` 和 `StopReason` 原样进了 [`budget.py`](../../project/src/aiapp/runtime/budget.py)，每条 `run_finished` / `run_failed` 事件带一份预算快照落库；`03` 的失败路由拆成两处，瞬时重试和参数回喂在 `ToolRunner`，跑偏的一次警告和升级在循环里。`tests/project/m3/test_loop.py` 里 `test_step_limit_stops_an_endless_model` 和 `test_repeating_the_same_call_gets_one_warning_then_escalates` 对应本课两个注入。
 
 语音机器人项目的一个经验：早期依赖模型"聊完自己停"，结果是模型倾向于一直找话说，用户想结束对话时要反复说"不聊了"。后来加了一个显式的退出工具，模型判断用户想结束时调用它，运行时收到后静默终止，比在提示词里写"用户说再见时停止"稳定得多。这就是"停止条件由运行时持有"的一个具体形态：给模型一个表达"我想停"的结构化出口，但停不停由代码决定。另一个经验是任务型 Agent 的步数上限要比聊天型小得多，因为每一步都伴随一次设备动作，跑偏的代价是物理的。
 

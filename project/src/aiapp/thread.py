@@ -47,8 +47,9 @@ class Thread:
                 messages.append(Message(role="assistant", content=e.data.get("content", ""), tool_calls=calls))
             elif e.type == "tool_result":
                 messages.append(Message(role="tool", tool_call_id=e.data["tool_call_id"], content=e.data["content"], is_error=e.data.get("is_error", False)))
-            elif e.type == "human_input":
+            elif e.type == "human_input" and e.data.get("tool_call_id"):
                 # The human's answer *is* the result of the request_human_input call.
+                # A confirmation (confirm_tool_call_id, no tool_call_id) is not a message: the tool still runs.
                 messages.append(Message(role="tool", tool_call_id=e.data["tool_call_id"], content=e.data["content"]))
         return messages
 
@@ -66,7 +67,7 @@ class Thread:
 
     def pending_tool_calls(self) -> list[ToolCall]:
         """Tool calls the model asked for that have no recorded result yet."""
-        answered = {e.data["tool_call_id"] for e in self.events if e.type in ("tool_result", "human_input")}
+        answered = {e.data.get("tool_call_id") for e in self.events if e.type in ("tool_result", "human_input")}
         pending: list[ToolCall] = []
         for e in self.events:
             if e.type == "assistant_message":

@@ -14,6 +14,8 @@ from aiapp.api.errors import install_error_handlers
 from aiapp.api.routes import health, threads
 from aiapp.config import Settings
 from aiapp.prompts import load_prompt
+from aiapp.runtime import SkillLoader, ToolRegistry, ToolRunner
+from aiapp.runtime.mcp_source import MCPToolSource
 from aiapp.storage import InMemoryKeyValueStore, InMemoryThreadStore
 from aiapp.storage.base import KeyValueStore, ThreadStore
 
@@ -37,11 +39,27 @@ def build_stores(settings: Settings) -> tuple[ThreadStore, KeyValueStore]:
     return store, kv
 
 
+def build_registry(settings: Settings, registry: ToolRegistry | None = None) -> tuple[ToolRegistry, SkillLoader, MCPToolSource | None]:
+    """Local tools, then MCP tools, then the skill tools. All end up in one registry the runner guards the same way."""
+    if registry is None:
+        from aiapp.tools.demo import build_default_registry
+
+        registry, _ = build_default_registry()
+    mcp = None
+    if settings.mcp_command:
+        mcp = MCPToolSource.from_command_line(settings.mcp_command)
+        mcp.register_into(registry)
+    skills = SkillLoader(settings.skills_dir).discover(registry.names())
+    skills.register_into(registry)
+    return registry, skills, mcp
+
+
 def create_app(
     settings: Settings | None = None,
     model: ModelAdapter | None = None,
     store: ThreadStore | None = None,
     kv: KeyValueStore | None = None,
+    registry: ToolRegistry | None = None,
 ) -> FastAPI:
     settings = settings or Settings.from_env()
     model = apply_injection(model or get_adapter(), settings.inject)
@@ -49,21 +67,28 @@ def create_app(
     default_store, default_kv = build_stores(settings)
     store = store or default_store
     kv = kv or default_kv
+    registry, skills, mcp = build_registry(settings, registry)
+    runner = ToolRunner(registry, kv, result_ttl_s=settings.idempotency_ttl_s)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         yield
+        if mcp:
+            mcp.close()
         for resource in (store, kv):
             closer = getattr(resource, "dispose", None) or getattr(resource, "close", None)
             if closer:
                 await closer()
 
-    app = FastAPI(title="aiapp", version="0.2.0-m2", lifespan=lifespan)
+    app = FastAPI(title="aiapp", version="0.3.0-m3", lifespan=lifespan)
     app.state.settings = settings
     app.state.model = model
     app.state.store = store
     app.state.kv = kv
     app.state.system_prompt = system_prompt
+    app.state.registry = registry
+    app.state.runner = runner
+    app.state.skills = skills
 
     @app.middleware("http")
     async def request_id(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
@@ -76,7 +101,8 @@ def create_app(
     app.include_router(health.router)
     app.include_router(threads.router)
     log.info(
-        "app ready model=%s prompt_version=%s inject=%s store=%s kv=%s",
+        "app ready model=%s prompt_version=%s inject=%s store=%s kv=%s tools=%s skills=%s",
         model.name, settings.prompt_version, settings.inject, type(store).__name__, type(kv).__name__,
+        sorted(registry.names()), sorted(skills.skills),
     )
     return app

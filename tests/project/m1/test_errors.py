@@ -45,7 +45,7 @@ def test_slow_model_becomes_504_before_any_bytes_are_streamed() -> None:
     assert r.json()["code"] == "model_timeout"
     stored = client.get(f"/v1/threads/{tid}", headers=AUTH_A).json()
     assert stored["status"] == "failed"
-    assert stored["events"][-1]["data"] == {"reason": "model_timeout", "stage": "first_chunk"}
+    assert stored["events"][-1]["data"].items() >= {"reason": "model_timeout", "stage": "first_chunk"}.items()
 
 
 def test_provider_outage_becomes_502() -> None:

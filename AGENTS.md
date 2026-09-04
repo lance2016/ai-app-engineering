@@ -108,13 +108,12 @@ frontmatter 是唯一事实来源，各总表的状态列由 `scripts/sync_statu
 
 24 课正文已经齐了，当前最大的缺口是实现。建议顺序：
 
-1. `project/m1, m2, m3` 按顺序落代码，每个配 `tests/project/mN` 验收测试和一次失败注入。做完一个里程碑，就把依赖它的课的「对照真实项目」改成具体文件和测试。
-2. `project/m4, m5`，M5 含 M5.4 部署。
-3. `project/framework-lab/`：先 `spec.md` 和一致性测试，再三个实现，最后评分卡。同步给 05～14 课补「框架映射」。
-4. `project/capstones/` 四个 README 补全，能自动化的验收进 `tests/capstones/`。
-5. 前置新内容：`algorithms/` A00～A06、`python/12-redis`、`llm-foundations/` 的 F02、F04、F07 正文与代码，其余 F 模块补练习。
-6. `tracks/robotics-voice/` 加 `code/`（回放音频加假设备）和具身章节。
-7. 24 课回填「为什么需要」「生产方案」，然后做一次状态审计。
+1. `project/m4, m5`，M5 含 M5.4 部署。M1～M3 已落地（2026-09-04），每个有 `tests/project/mN`。做完一个里程碑，就把依赖它的课的「对照真实项目」改成具体文件和测试。
+2. `project/framework-lab/`：先 `spec.md` 和一致性测试，再三个实现，最后评分卡。同步给 05～14 课补「框架映射」。
+3. `project/capstones/` 四个 README 补全，能自动化的验收进 `tests/capstones/`。
+4. 前置新内容：`algorithms/` A00～A06、`python/12-redis`、`llm-foundations/` 的 F02、F04、F07 正文与代码，其余 F 模块补练习。
+5. `tracks/robotics-voice/` 加 `code/`（回放音频加假设备）和具身章节。
+6. 24 课回填「为什么需要」「生产方案」，然后做一次状态审计。
 
 维护者说了具体要做哪一课，以维护者为准。
 

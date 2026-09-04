@@ -48,7 +48,7 @@ def test_model_sees_versioned_system_prompt_then_history(client: TestClient, thr
     client.post(f"/v1/threads/{thread_id}/messages", json={"content": "first"}, headers=AUTH_A).read()
     client.post(f"/v1/threads/{thread_id}/messages", json={"content": "second"}, headers=AUTH_A).read()
     calls = client.model.calls  # type: ignore[attr-defined]
-    assert calls[0][0].role == "system" and calls[0][0].content == load_prompt("assistant", "v1")
+    assert calls[0][0].role == "system" and calls[0][0].content.startswith(load_prompt("assistant", "v1"))  # M3 appends the skill catalog
     assert [m.role for m in calls[1]] == ["system", "user", "assistant", "user"]
     assert calls[1][-1].content == "second"
 
@@ -59,5 +59,5 @@ def test_switching_prompt_version_changes_header_and_prompt() -> None:
     r = client.post(f"/v1/threads/{tid}/messages", json={"content": "hi"}, headers=AUTH_A)
     r.read()
     assert r.headers["X-Prompt-Version"] == "v2"
-    assert client.model.calls[0][0].content == load_prompt("assistant", "v2")  # type: ignore[attr-defined]
+    assert client.model.calls[0][0].content.startswith(load_prompt("assistant", "v2"))  # type: ignore[attr-defined]
     assert load_prompt("assistant", "v1") != load_prompt("assistant", "v2")

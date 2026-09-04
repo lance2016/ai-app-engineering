@@ -77,7 +77,7 @@ Anthropic 把上下文叫作 **attention budget**：窗口里每多一个 token�
 
 ## 对照真实项目
 
-主项目 [M3](../../project/m3-tool-workflow/README.md) 的 `ToolRunner` 把工具结果先经过 `shape()` 再进线程；`ContextBuilder` 在 M4 接上检索结果后成为每轮调用模型前的固定一步。
+主项目 [M3](../../project/m3-tool-workflow/README.md) 的 [`aiapp/runtime/context.py`](../../project/src/aiapp/runtime/context.py) 是本课 `01` 的 `ContextBuilder`：system prompt 加 Skill 目录放最前面（`04` 的稳定前缀），历史按整轮从最早裁到预算内，超长工具结果只给模型看头尾（`03` 的整形），线程保留全文。每条 `assistant_message` 事件带一份 `context` 报告，`tests/project/m3/test_loop.py` 的 `test_context_drops_oldest_turns_and_shapes_big_tool_results` 验证两件事。`02` 的压缩在 M4 接上检索后再加。
 
 语音机器人项目的一个具体经验：设备端每轮都会上报一段环境状态（时间、位置、正在播放什么），早期把它放在系统提示词的开头，结果前缀缓存几乎从不命中。挪到最后一条用户消息里之后，同样的对话成本降了一大截，模型行为没有变化。另一个教训是长对话的历史裁剪一度只按条数，用户说过的一条关键约束被裁掉后模型反复违反它，后来做法就是本课 `02` 的思路：确定重要的约束由运行时单独维护，不依赖它恰好还在窗口里。
 

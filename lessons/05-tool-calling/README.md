@@ -87,7 +87,7 @@ sequenceDiagram
 
 ## 对照真实项目
 
-幂等键的存储在 [M2](../../project/m2-state-and-storage/README.md) 已经落地：`Idempotency-Key` 请求头经 Redis `SET NX EX` 认领，重复请求重放第一次的结果而不再调模型，见 [`api/routes/threads.py`](../../project/src/aiapp/api/routes/threads.py)。工具级的幂等键派生在 M3。
+本课的四个守卫在 [M3](../../project/m3-tool-workflow/README.md) 合成了 [`aiapp/runtime/runner.py`](../../project/src/aiapp/runtime/runner.py) 的 `ToolRunner.run()`：`01` 的校验是 `Tool.validate()`，`02` 的注册表和白名单是 `ToolRegistry` 加 `RunContext.allowlist`，`03` 的幂等键是 `idempotency_key()` 加 `KeyValueStore.claim()`，`04` 的确认门是 `NeedsConfirmation` 和线程里的 `human_input(confirm_tool_call_id, approved)` 事件。`tests/project/m3/test_runner.py` 一个守卫一个用例。请求级的 `Idempotency-Key` 在 [M2](../../project/m2-state-and-storage/README.md) 的路由里，工具级的在 runner 里，两层各管一件事。
 
 这一课直接对应主项目 [M3.1 Tool contract](../../project/m3-tool-workflow/README.md) 和 M3.2 确认与幂等。M3 会把这四个文件里的守卫合并成一个 `ToolRunner`，接到 M2 的状态存储上。
 

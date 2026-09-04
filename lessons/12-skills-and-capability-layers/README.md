@@ -79,7 +79,7 @@ flowchart LR
 
 ## 对照真实项目
 
-主项目 [M3.3](../../project/m3-tool-workflow/README.md) 要求封装一个 Skill。建议把 M3.1 到 M3.2 做出来的工具组合写成一个 Skill：什么场景用、按什么顺序调、哪一步要确认。然后用本课的 `02` 校验它，用 `01` 的三级加载接进 M3 的上下文组装里。评测在 M5：Skill 的触发准确率（该加载时加载了、不该时没加载）是一个可以量化的指标。
+主项目 [M3.3](../../project/m3-tool-workflow/README.md) 的 [`aiapp/runtime/skills.py`](../../project/src/aiapp/runtime/skills.py) 是本课两个文件的合体：`01` 的三级加载变成 `SkillLoader.catalog()` 进 system prompt、`load_skill` 和 `read_skill_reference` 两个只读工具；`02` 的校验变成 `validate_skill()`，安装前跑，不合格的 Skill 进 `rejected` 不进目录。Skill 本身在 [`project/skills/expense-report/`](../../project/skills/expense-report/SKILL.md)。加载成功会追加 `skill_loaded(name, tokens)` 事件，M5 用它算触发准确率。内容哈希钉版本还没做，是 M5 供应链检查的一项。
 
 语音机器人项目里有类似的一层：每种玩法有一份"剧本"，包含触发条件、流程、离场判断，运行时先只给模型所有玩法的名字和一句话描述，模型选定后再加载完整剧本。踩过的坑和本课说的一样：描述写成了功能介绍，导致模型在闲聊时也去加载玩法；后来把描述改写成"用户表现出 X 意图时"的判断条件，误触发才降下来。
 

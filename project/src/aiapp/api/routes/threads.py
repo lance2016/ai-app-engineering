@@ -1,10 +1,9 @@
-"""Threads: create one, read it back, send a message and watch the run as server-sent events.
+"""Threads: create one, read it back, send a message, answer the agent's question or approve a side effect.
 
-M2 additions: every event is persisted as soon as it exists (checkpoint per step),
-a per-thread run lock rejects a second message while a run is in progress
-(the *reject* double-texting strategy from lesson 07), and an ``Idempotency-Key``
-header makes a retried request replay the first run's events instead of
-calling the model again.
+The run itself is ``aiapp.runtime.run_agent``. This module owns everything
+around it: per-step checkpoints (M2), the per-thread run lock and idempotent
+replays (M2), the request-level tool allowlist and the resume path after a
+human answers (M3).
 """
 
 import asyncio
@@ -18,11 +17,11 @@ from fastapi import APIRouter, Depends, Header, Request
 from fastapi.responses import StreamingResponse
 
 from aiapp.adapters.base import ModelAdapter
-from aiapp.api.deps import Tenant, get_kv, get_model, get_settings, get_store, get_system_prompt, get_tenant
-from aiapp.api.errors import Conflict, ModelTimeout, NotFound, ProviderError, request_id_of
-from aiapp.api.schemas import CreateThreadRequest, MessageRequest, ThreadView
+from aiapp.api.deps import Tenant, get_kv, get_model, get_runner, get_settings, get_skills, get_store, get_system_prompt, get_tenant
+from aiapp.api.errors import Conflict, InvalidRequest, ModelTimeout, NotFound, ProviderError, request_id_of
+from aiapp.api.schemas import CreateThreadRequest, HumanInputRequest, MessageRequest, ThreadView
 from aiapp.config import Settings
-from aiapp.runtime import Delta, run_turn
+from aiapp.runtime import Budget, ContextBuilder, Delta, RunContext, SkillLoader, ToolRunner, run_agent
 from aiapp.storage.base import KeyValueStore, SeqConflict, ThreadNotFound, ThreadStore, flush
 from aiapp.thread import Event, Thread
 
@@ -78,21 +77,36 @@ async def _replay(thread: Thread, from_seq: int, to_seq: int) -> AsyncIterator[s
         yield sse_frame(event)
 
 
-@router.post("/{thread_id}/messages")
-async def send_message(
-    thread_id: str,
-    body: MessageRequest,
+def _allowlist(settings: Settings, runner: ToolRunner, requested: list[str] | None) -> frozenset[str]:
+    """Server policy first, then the request may narrow it. It can never widen it."""
+    allowed = settings.tool_allowlist if settings.tool_allowlist is not None else runner.registry.names()
+    if requested is None:
+        return frozenset(allowed)
+    unknown = set(requested) - runner.registry.names()
+    if unknown:
+        raise InvalidRequest(f"allowed_tools: unknown tools {sorted(unknown)}")
+    return frozenset(requested) & frozenset(allowed)
+
+
+async def _run_and_stream(
+    *,
     request: Request,
-    tenant: Annotated[Tenant, Depends(get_tenant)],
-    store: Annotated[ThreadStore, Depends(get_store)],
-    kv: Annotated[KeyValueStore, Depends(get_kv)],
-    model: Annotated[ModelAdapter, Depends(get_model)],
-    settings: Annotated[Settings, Depends(get_settings)],
-    system_prompt: Annotated[str, Depends(get_system_prompt)],
-    idempotency_key: Annotated[str | None, Header()] = None,
+    thread: Thread,
+    tenant: Tenant,
+    store: ThreadStore,
+    kv: KeyValueStore,
+    model: ModelAdapter,
+    runner: ToolRunner,
+    skills: SkillLoader,
+    settings: Settings,
+    system_prompt: str,
+    allowlist: frozenset[str],
+    user_content: str | None,
+    idempotency_key: str | None,
+    prelude: tuple[str, dict] | None = None,
 ) -> StreamingResponse:
-    thread = await _load(store, thread_id, tenant)
-    request_id = request_id_of(request)
+    """Run the agent and stream its events. ``prelude`` is an event to record and stream before the run (the human's answer)."""
+    thread_id, request_id = thread.thread_id, request_id_of(request)
 
     # 1. Idempotency: a retried request replays the events the first one produced. No second model call.
     idem_key = f"idem:{tenant.id}:{thread_id}:{idempotency_key}" if idempotency_key else None
@@ -112,8 +126,12 @@ async def send_message(
             await kv.release(idem_key, "claimed")
         raise Conflict("a run is already in progress on this thread")
 
-    persisted = len(thread.events)
-    turn = run_turn(thread, model, system_prompt=system_prompt, user_content=body.content, timeout_s=settings.model_timeout_s)
+    persisted = from_seq = len(thread.events)
+    prelude_event = thread.append(prelude[0], **prelude[1]) if prelude else None
+    ctx = RunContext(tenant_id=tenant.id, thread_id=thread_id, allowlist=allowlist)
+    budget = Budget(max_steps=settings.max_steps, max_tokens=settings.max_tokens, max_seconds=settings.max_seconds)
+    context = ContextBuilder(system_prompt, budget_tokens=settings.context_budget_tokens, skill_catalog=skills.catalog())
+    run = run_agent(thread, model, runner, ctx=ctx, budget=budget, context=context, skills=skills, timeout_s=settings.model_timeout_s, user_content=user_content)
 
     async def checkpoint() -> None:
         nonlocal persisted
@@ -127,10 +145,11 @@ async def send_message(
             else:
                 await kv.release(idem_key, "claimed")
 
-    from_seq = persisted
-    # 3. Reach the model's first chunk before committing to a 200: a timeout or outage here is a real status code.
+    # 3. Reach the first event before committing to a 200: a model timeout or outage here is a real status code.
     try:
-        first = await anext(turn)
+        first = await anext(run)
+    except StopAsyncIteration:
+        first = None
     except TimeoutError:
         await checkpoint()
         await finish(record=False)
@@ -144,12 +163,15 @@ async def send_message(
     async def events() -> AsyncIterator[str]:
         completed = False
         try:
-            yield sse_frame(first)
-            await checkpoint()
-            async for item in turn:
-                yield sse_frame(item)
-                if isinstance(item, Event):
-                    await checkpoint()  # every step is durable before the next one starts
+            if prelude_event is not None:
+                yield sse_frame(prelude_event)
+            if first is not None:
+                yield sse_frame(first)
+                await checkpoint()
+                async for item in run:
+                    yield sse_frame(item)
+                    if isinstance(item, Event):
+                        await checkpoint()  # every step is durable before the next one starts
             completed = True
         except asyncio.CancelledError:
             log.warning("stream cancelled by client request_id=%s thread=%s", request_id, thread_id)
@@ -159,7 +181,7 @@ async def send_message(
             log.error("lost the write race request_id=%s thread=%s: %s", request_id, thread_id, exc)
             yield sse_frame(Event(type="run_failed", data={"reason": "seq_conflict"}))
         finally:
-            await turn.aclose()
+            await run.aclose()
             try:
                 await checkpoint()
             except SeqConflict:
@@ -167,3 +189,64 @@ async def send_message(
             await finish(record=completed)
 
     return _sse_response(events(), settings)
+
+
+@router.post("/{thread_id}/messages")
+async def send_message(
+    thread_id: str,
+    body: MessageRequest,
+    request: Request,
+    tenant: Annotated[Tenant, Depends(get_tenant)],
+    store: Annotated[ThreadStore, Depends(get_store)],
+    kv: Annotated[KeyValueStore, Depends(get_kv)],
+    model: Annotated[ModelAdapter, Depends(get_model)],
+    runner: Annotated[ToolRunner, Depends(get_runner)],
+    skills: Annotated[SkillLoader, Depends(get_skills)],
+    settings: Annotated[Settings, Depends(get_settings)],
+    system_prompt: Annotated[str, Depends(get_system_prompt)],
+    idempotency_key: Annotated[str | None, Header()] = None,
+) -> StreamingResponse:
+    thread = await _load(store, thread_id, tenant)
+    if thread.status() == "paused":
+        raise Conflict("the agent is waiting for human input; answer it via /human-input first")
+    return await _run_and_stream(
+        request=request, thread=thread, tenant=tenant, store=store, kv=kv, model=model, runner=runner, skills=skills,
+        settings=settings, system_prompt=system_prompt, allowlist=_allowlist(settings, runner, body.allowed_tools),
+        user_content=body.content, idempotency_key=idempotency_key,
+    )
+
+
+@router.post("/{thread_id}/human-input")
+async def human_input(
+    thread_id: str,
+    body: HumanInputRequest,
+    request: Request,
+    tenant: Annotated[Tenant, Depends(get_tenant)],
+    store: Annotated[ThreadStore, Depends(get_store)],
+    kv: Annotated[KeyValueStore, Depends(get_kv)],
+    model: Annotated[ModelAdapter, Depends(get_model)],
+    runner: Annotated[ToolRunner, Depends(get_runner)],
+    skills: Annotated[SkillLoader, Depends(get_skills)],
+    settings: Annotated[Settings, Depends(get_settings)],
+    system_prompt: Annotated[str, Depends(get_system_prompt)],
+    idempotency_key: Annotated[str | None, Header()] = None,
+) -> StreamingResponse:
+    """Answer the agent's question or decide on a confirmation, then resume the run from the checkpoint."""
+    thread = await _load(store, thread_id, tenant)
+    if thread.status() != "paused":
+        raise Conflict("the agent is not waiting for human input")
+    pending = next(e for e in reversed(thread.events) if e.type == "human_input_requested")
+    if pending.data.get("kind") == "confirmation":
+        if body.confirm_tool_call_id != pending.data["confirm_tool_call_id"] or body.approved is None:
+            raise InvalidRequest(f"expected confirm_tool_call_id={pending.data['confirm_tool_call_id']!r} and approved=true|false")
+        prelude = ("human_input", {"confirm_tool_call_id": body.confirm_tool_call_id, "approved": body.approved})
+    else:
+        if body.tool_call_id != pending.data["tool_call_id"] or body.content is None:
+            raise InvalidRequest(f"expected tool_call_id={pending.data['tool_call_id']!r} and content")
+        prelude = ("human_input", {"tool_call_id": body.tool_call_id, "content": body.content})
+    allowlist = frozenset(next(e for e in reversed(thread.events) if e.type == "run_started").data.get("allowlist", []))
+    return await _run_and_stream(
+        request=request, thread=thread, tenant=tenant, store=store, kv=kv, model=model, runner=runner, skills=skills,
+        settings=settings, system_prompt=system_prompt, allowlist=allowlist, user_content=None, idempotency_key=idempotency_key,
+        prelude=prelude,
+    )
