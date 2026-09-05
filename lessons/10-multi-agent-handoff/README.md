@@ -46,7 +46,7 @@ flowchart TB
 
 **状态归运行时，Agent 拿视图。** 所有 Agent 的输出都进同一个线程，带 `agent` 标签。每个 Agent 调模型时拿到的是运行时算出来的视图：用户消息共享，assistant 消息只看自己的。专家 Agent 抛异常，运行时记一条 `handoff_failed`，控制权回到 triage，它用手头信息给用户一个诚实的答复。
 
-![本课核心关系：多个 Agent 通过任务契约安全交接](./images/10-multi-agent-handoff.png)
+![本课核心关系：多个 Agent 通过任务契约安全交接](./images/10-multi-agent-handoff.svg)
 
 ## 最小可运行例子
 

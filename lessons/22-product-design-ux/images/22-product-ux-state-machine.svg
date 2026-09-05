@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+<title>PRODUCT STATE MACHINE</title><desc>用户体验要表达运行状态、人工介入、失败和恢复</desc>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#061329"/><stop offset="1" stop-color="#0a1d3b"/></linearGradient>
+<pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#1c3960" stroke-width="1" opacity=".42"/></pattern>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#42d9ff"/></marker>
+</defs>
+<rect width="1200" height="675" fill="url(#bg)"/><rect width="1200" height="675" fill="url(#grid)" opacity=".55"/>
+<text x="54" y="54" fill="#eef7ff" font-size="27" font-family="Arial, sans-serif" font-weight="700">22 · PRODUCT STATE MACHINE</text>
+<text x="54" y="84" fill="#9fb3ce" font-size="17" font-family="Arial, sans-serif">用户体验要表达运行状态、人工介入、失败和恢复</text>
+<g><rect x="45" y="295" width="145" height="82" rx="14" fill="#0d2343" stroke="#9fb3ce" stroke-width="2"/>
+<text x="63" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Waiting</text>
+<text x="63" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">submit</text></g><line x1="190" y1="336" x2="285" y2="336" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="285" y="295" width="145" height="82" rx="14" fill="#0d2343" stroke="#42d9ff" stroke-width="2"/>
+<text x="303" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Streaming</text>
+<text x="303" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">tokens</text></g><line x1="430" y1="336" x2="525" y2="336" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="525" y="295" width="145" height="82" rx="14" fill="#0d2343" stroke="#ffbb66" stroke-width="2"/>
+<text x="543" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Tool run</text>
+<text x="543" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">progress</text></g><line x1="670" y1="336" x2="765" y2="336" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="765" y="295" width="145" height="82" rx="14" fill="#0d2343" stroke="#9c7bff" stroke-width="2"/>
+<text x="783" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Approval</text>
+<text x="783" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">human</text></g><line x1="910" y1="336" x2="1005" y2="336" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="1005" y="295" width="145" height="82" rx="14" fill="#0d2343" stroke="#63e6be" stroke-width="2"/>
+<text x="1023" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Done</text>
+<text x="1023" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">answer</text></g><line x1="430" y1="377" x2="430" y2="500" stroke="#ff5f7a" stroke-width="4" marker-end="url(#arrow)" stroke-dasharray="10 8"/><line x1="430" y1="500" x2="285" y2="500" stroke="#ff5f7a" stroke-width="4" marker-end="url(#arrow)" stroke-dasharray="10 8"/><g><rect x="115" y="460" width="170" height="82" rx="14" fill="#0d2343" stroke="#ff5f7a" stroke-width="2"/>
+<text x="133" y="494" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Error / retry</text>
+<text x="133" y="524" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">recover</text></g><line x1="840" y1="377" x2="840" y2="500" stroke="#ffbb66" stroke-width="4" marker-end="url(#arrow)" stroke-dasharray="10 8"/><line x1="840" y1="500" x2="1005" y2="500" stroke="#63e6be" stroke-width="4" marker-end="url(#arrow)" stroke-dasharray="10 8"/><text x="620" y="545" fill="#63e6be" font-size="18" font-family="Arial, sans-serif">resume after approval</text>
+</svg>

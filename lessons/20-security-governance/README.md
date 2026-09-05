@@ -81,7 +81,7 @@ flowchart LR
     H -- 是 --> A[确认门]
     H -- 否 --> X[执行]
 ```
-![本课核心关系：不可信输入穿过运行时安全护栏](./images/20-security-runtime-guardrails.png)
+![本课核心关系：不可信输入穿过运行时安全护栏](./images/20-security-runtime-guardrails.svg)
 
 ## 最小可运行例子
 

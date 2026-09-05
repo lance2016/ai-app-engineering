@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+<title>SECURITY BOUNDARY</title><desc>不可信内容可以进入上下文，但不能直接获得工具权限</desc>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#061329"/><stop offset="1" stop-color="#0a1d3b"/></linearGradient>
+<pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#1c3960" stroke-width="1" opacity=".42"/></pattern>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#42d9ff"/></marker>
+</defs>
+<rect width="1200" height="675" fill="url(#bg)"/><rect width="1200" height="675" fill="url(#grid)" opacity=".55"/>
+<text x="54" y="54" fill="#eef7ff" font-size="27" font-family="Arial, sans-serif" font-weight="700">20 · SECURITY BOUNDARY</text>
+<text x="54" y="84" fill="#9fb3ce" font-size="17" font-family="Arial, sans-serif">不可信内容可以进入上下文，但不能直接获得工具权限</text>
+<g><rect x="45" y="295" width="155" height="90" rx="14" fill="#0d2343" stroke="#ff5f7a" stroke-width="2"/>
+<text x="63" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">User / RAG</text>
+<text x="63" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">untrusted</text></g><line x1="200" y1="340" x2="310" y2="340" stroke="#ff5f7a" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="310" y="275" width="165" height="130" rx="14" fill="#0d2343" stroke="#ffbb66" stroke-width="2"/>
+<text x="328" y="309" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Sanitize</text>
+<text x="328" y="339" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">redact + mark</text></g><line x1="475" y1="340" x2="585" y2="340" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="585" y="275" width="165" height="130" rx="14" fill="#0d2343" stroke="#9c7bff" stroke-width="2"/>
+<text x="603" y="309" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Policy</text>
+<text x="603" y="339" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">trust boundary</text></g><line x1="750" y1="340" x2="860" y2="340" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="860" y="275" width="165" height="130" rx="14" fill="#0d2343" stroke="#42d9ff" stroke-width="2"/>
+<text x="878" y="309" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Model</text>
+<text x="878" y="339" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">propose only</text></g><line x1="1025" y1="340" x2="1135" y2="340" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="1135" y="295" width="55" height="90" rx="14" fill="#0d2343" stroke="#63e6be" stroke-width="2"/>
+<text x="1153" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Tool</text>
+<text x="1153" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">gate</text></g><line x1="665" y1="405" x2="665" y2="500" stroke="#ff5f7a" stroke-width="4" marker-end="url(#arrow)" stroke-dasharray="10 8"/><g><rect x="570" y="500" width="190" height="70" rx="14" fill="#0d2343" stroke="#ff5f7a" stroke-width="2"/>
+<text x="588" y="534" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Deny + audit</text>
+<text x="588" y="564" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">blocked path</text></g><text x="55" y="475" fill="#ff5f7a" font-size="18" font-family="Arial, sans-serif">data plane is not control plane</text>
+</svg>

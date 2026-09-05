@@ -58,7 +58,7 @@ stateDiagram-v2
     running --> finished
     running --> failed: budget / provider error
 ```
-![本课核心关系：状态快照、人工暂停与 checkpoint resume](./images/07-agent-state-checkpoint-resume.png)
+![本课核心关系：状态快照、人工暂停与 checkpoint resume](./images/07-agent-state-checkpoint-resume.svg)
 
 ## 最小可运行例子
 

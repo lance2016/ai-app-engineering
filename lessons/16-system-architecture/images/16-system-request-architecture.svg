@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+<title>SYSTEM ARCHITECTURE</title><desc>请求流过运行时；数据、控制和 telemetry 有不同职责</desc>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#061329"/><stop offset="1" stop-color="#0a1d3b"/></linearGradient>
+<pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#1c3960" stroke-width="1" opacity=".42"/></pattern>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#42d9ff"/></marker>
+</defs>
+<rect width="1200" height="675" fill="url(#bg)"/><rect width="1200" height="675" fill="url(#grid)" opacity=".55"/>
+<text x="54" y="54" fill="#eef7ff" font-size="27" font-family="Arial, sans-serif" font-weight="700">16 · SYSTEM ARCHITECTURE</text>
+<text x="54" y="84" fill="#9fb3ce" font-size="17" font-family="Arial, sans-serif">请求流过运行时；数据、控制和 telemetry 有不同职责</text>
+<g><rect x="40" y="295" width="140" height="82" rx="14" fill="#0d2343" stroke="#63e6be" stroke-width="2"/>
+<text x="58" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Client</text>
+<text x="58" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">request</text></g><line x1="180" y1="336" x2="260" y2="336" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="260" y="295" width="150" height="82" rx="14" fill="#0d2343" stroke="#42d9ff" stroke-width="2"/>
+<text x="278" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">API</text>
+<text x="278" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">auth + limits</text></g><line x1="410" y1="336" x2="490" y2="336" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="490" y="260" width="170" height="150" rx="14" fill="#0d2343" stroke="#9c7bff" stroke-width="2"/>
+<text x="508" y="294" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Runtime</text>
+<text x="508" y="324" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">state + policy</text></g><line x1="660" y1="290" x2="770" y2="195" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><line x1="660" y1="335" x2="770" y2="335" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><line x1="660" y1="380" x2="770" y2="475" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="770" y="150" width="200" height="90" rx="14" fill="#0d2343" stroke="#42d9ff" stroke-width="2"/>
+<text x="788" y="184" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Model</text>
+<text x="788" y="214" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">generation</text></g><g><rect x="770" y="290" width="200" height="90" rx="14" fill="#0d2343" stroke="#ffbb66" stroke-width="2"/>
+<text x="788" y="324" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Tools / MCP</text>
+<text x="788" y="354" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">side effects</text></g><g><rect x="770" y="430" width="200" height="90" rx="14" fill="#0d2343" stroke="#63e6be" stroke-width="2"/>
+<text x="788" y="464" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">RAG / Memory</text>
+<text x="788" y="494" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">knowledge</text></g><line x1="660" y1="410" x2="1030" y2="565" stroke="#9fb3ce" stroke-width="4" marker-end="url(#arrow)" stroke-dasharray="8 7"/><g><rect x="1010" y="525" width="145" height="70" rx="14" fill="#0d2343" stroke="#9fb3ce" stroke-width="2"/>
+<text x="1028" y="559" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Storage + Trace</text>
+<text x="1028" y="589" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">evidence</text></g><text x="45" y="480" fill="#ff5f7a" font-size="17" font-family="Arial, sans-serif">one runtime boundary governs all downstream effects</text>
+</svg>

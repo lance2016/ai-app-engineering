@@ -49,7 +49,7 @@ flowchart LR
 
 **Skill 是你没写的代码，拿着你的工具在跑。** 它能指挥模型调用有副作用的工具，它的 `references/` 可以被替换，它的 `scripts/` 是真正会执行的程序。所以安装一个第三方 Skill 和安装一个依赖包是同一级别的事：校验格式、对账 `allowed-tools`、记录内容哈希、更新时重新审。
 
-![本课核心关系：Skill 的元数据、指令与工具执行分层](./images/12-skills-capability-layer.png)
+![本课核心关系：Skill 的元数据、指令与工具执行分层](./images/12-skills-capability-layer.svg)
 
 ## 最小可运行例子
 

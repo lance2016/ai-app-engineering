@@ -60,7 +60,7 @@ flowchart TD
     G -- 允许 --> Act[执行工具]
     Act --> O
 ```
-![本课核心关系：Agent 的观察、决策、行动与验证闭环](./images/06-agent-loop-control.png)
+![本课核心关系：Agent 的观察、决策、行动与验证闭环](./images/06-agent-loop-control.svg)
 
 ## 最小可运行例子
 

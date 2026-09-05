@@ -61,7 +61,7 @@ flowchart TD
     T -- timeout / error --> X[span status + exception]
     X --> A[告警 / 失败案例 / eval]
 ```
-![本课核心关系：一次请求展开为模型、检索、工具与审批 trace spans](./images/18-observability-trace-spans.png)
+![本课核心关系：一次请求展开为模型、检索、工具与审批 trace spans](./images/18-observability-trace-spans.svg)
 
 ## 最小可运行例子
 

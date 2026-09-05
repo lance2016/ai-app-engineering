@@ -67,7 +67,7 @@ F06 讲了机制，这里只留结论。**首 token 延迟**由 prefill 决定�
 
 两者都提供 OpenAI 兼容接口，所以第 00 课的 adapter 换个 base URL 就能接。这也是为什么课程一直强调协议兼容：换推理后端不该改业务代码。
 
-![本课核心关系：根据质量缺口选择 Prompt、RAG、微调或推理优化](./images/21-model-adaptation-decision.png)
+![本课核心关系：根据质量缺口选择 Prompt、RAG、微调或推理优化](./images/21-model-adaptation-decision.svg)
 
 ## 最小可运行例子
 

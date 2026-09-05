@@ -67,7 +67,7 @@ flowchart LR
     P --> M[主模型]
     M -- 连续失败 --> C
 ```
-![本课核心关系：预算、限流、熔断、重试与 fallback 组成控制面](./images/19-reliability-control-plane.png)
+![本课核心关系：预算、限流、熔断、重试与 fallback 组成控制面](./images/19-reliability-control-plane.svg)
 
 ## 最小可运行例子
 

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+<title>MODEL ADAPTER</title><desc>同一个调用接口，后端可以切换为离线回放或真实模型</desc>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#061329"/><stop offset="1" stop-color="#0a1d3b"/></linearGradient>
+<pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#1c3960" stroke-width="1" opacity=".42"/></pattern>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#42d9ff"/></marker>
+</defs>
+<rect width="1200" height="675" fill="url(#bg)"/><rect width="1200" height="675" fill="url(#grid)" opacity=".55"/>
+<text x="54" y="54" fill="#eef7ff" font-size="27" font-family="Arial, sans-serif" font-weight="700">00 · MODEL ADAPTER</text>
+<text x="54" y="84" fill="#9fb3ce" font-size="17" font-family="Arial, sans-serif">同一个调用接口，后端可以切换为离线回放或真实模型</text>
+<g><rect x="60" y="260" width="190" height="90" rx="14" fill="#0d2343" stroke="#63e6be" stroke-width="2"/>
+<text x="78" y="294" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Caller</text>
+<text x="78" y="324" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">same application API</text></g><line x1="250" y1="305" x2="400" y2="305" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="400" y="245" width="220" height="120" rx="14" fill="#0d2343" stroke="#42d9ff" stroke-width="2"/>
+<text x="418" y="279" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Adapter</text>
+<text x="418" y="309" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">stable boundary</text></g><line x1="620" y1="280" x2="790" y2="205" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><line x1="620" y1="330" x2="790" y2="405" stroke="#9c7bff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="790" y="150" width="270" height="110" rx="14" fill="#0d2343" stroke="#63e6be" stroke-width="2"/>
+<text x="808" y="184" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Fake replay</text>
+<text x="808" y="214" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">deterministic · offline</text></g><g><rect x="790" y="350" width="270" height="110" rx="14" fill="#0d2343" stroke="#9c7bff" stroke-width="2"/>
+<text x="808" y="384" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Cloud model</text>
+<text x="808" y="414" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">replaceable backend</text></g><text x="430" y="430" fill="#ffbb66" font-size="18" font-family="Arial, sans-serif">Tests and lessons stay reproducible</text>
+</svg>

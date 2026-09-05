@@ -68,7 +68,7 @@ flowchart TD
     W --> T[测试每条边]
     A --> G[测试轨迹与停止条件]
 ```
-![本课核心关系：确定性 Workflow 与受约束 Agent 的控制流差异](./images/09-workflow-vs-agent.png)
+![本课核心关系：确定性 Workflow 与受约束 Agent 的控制流差异](./images/09-workflow-vs-agent.svg)
 
 ## 最小可运行例子
 

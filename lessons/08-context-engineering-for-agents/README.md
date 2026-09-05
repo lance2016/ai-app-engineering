@@ -60,7 +60,7 @@ flowchart LR
     C --> M[最终消息]
     B -- 是 --> M
 ```
-![本课核心关系：上下文窗口中的区块排序、压缩与裁剪](./images/08-context-window-composition.png)
+![本课核心关系：上下文窗口中的区块排序、压缩与裁剪](./images/08-context-window-composition.svg)
 
 ## 最小可运行例子
 

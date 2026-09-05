@@ -50,7 +50,7 @@ sequenceDiagram
 
 规范本身还有很多这里没碰的部分：prompts、sampling、elicitation、resource 订阅、Streamable HTTP 传输、鉴权。它们都建在同一个生命周期上，学会 stdio 上的这一小圈，其余是查文档的事。
 
-![本课核心关系：Agent Host 通过协议桥接外部能力服务器](./images/11-mcp-capability-bridge.png)
+![本课核心关系：Agent Host 通过协议桥接外部能力服务器](./images/11-mcp-capability-bridge.svg)
 
 ## 最小可运行例子
 

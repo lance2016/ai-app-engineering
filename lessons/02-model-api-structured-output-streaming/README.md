@@ -60,7 +60,7 @@ flowchart LR
     D -- 否 --> F[回喂校验错误]
     B -- 否 --> G[504 / fallback]
 ```
-![本课核心关系：请求、结构化输出、流式事件与用量的生命周期](./images/02-request-lifecycle.png)
+![本课核心关系：请求、结构化输出、流式事件与用量的生命周期](./images/02-request-lifecycle.svg)
 
 ## 最小可运行例子
 

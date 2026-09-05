@@ -45,7 +45,7 @@ fake adapter 按剧本回答。你告诉它"第一次回一个工具调用，第
 
 真实供应商走的是 OpenAI 兼容协议。课程默认用 **DeepSeek**，原因只有一个：国内能直接访问。DashScope（通义千问）和 OpenAI 用同一个 adapter，差别只在 base URL、key 和模型名。第 02 课会拆开这个 adapter 讲消息格式、结构化输出、流式和重试。
 
-![本课核心关系：可替换的模型适配器与离线回放](./images/00-adapter-offline-replay.png)
+![本课核心关系：可替换的模型适配器与离线回放](./images/00-adapter-offline-replay.svg)
 
 ## 最小可运行例子
 

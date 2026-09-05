@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+<title>WORKFLOW OR AGENT</title><desc>先判断控制流是否已知，再选择自由度和治理成本</desc>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#061329"/><stop offset="1" stop-color="#0a1d3b"/></linearGradient>
+<pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#1c3960" stroke-width="1" opacity=".42"/></pattern>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#42d9ff"/></marker>
+</defs>
+<rect width="1200" height="675" fill="url(#bg)"/><rect width="1200" height="675" fill="url(#grid)" opacity=".55"/>
+<text x="54" y="54" fill="#eef7ff" font-size="27" font-family="Arial, sans-serif" font-weight="700">09 · WORKFLOW OR AGENT</text>
+<text x="54" y="84" fill="#9fb3ce" font-size="17" font-family="Arial, sans-serif">先判断控制流是否已知，再选择自由度和治理成本</text>
+<text x="65" y="150" fill="#42d9ff" font-size="20" font-family="Arial, sans-serif">DETERMINISTIC WORKFLOW</text><g><rect x="60" y="205" width="145" height="80" rx="14" fill="#0d2343" stroke="#42d9ff" stroke-width="2"/>
+<text x="78" y="239" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Step A</text>
+<text x="78" y="269" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">fixed</text></g><line x1="205" y1="245" x2="300" y2="245" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="300" y="205" width="145" height="80" rx="14" fill="#0d2343" stroke="#42d9ff" stroke-width="2"/>
+<text x="318" y="239" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Step B</text>
+<text x="318" y="269" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">fixed</text></g><line x1="445" y1="245" x2="540" y2="245" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="540" y="205" width="145" height="80" rx="14" fill="#0d2343" stroke="#42d9ff" stroke-width="2"/>
+<text x="558" y="239" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Step C</text>
+<text x="558" y="269" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">fixed</text></g><text x="65" y="360" fill="#9c7bff" font-size="20" font-family="Arial, sans-serif">BOUNDED AGENT</text><g><rect x="60" y="415" width="145" height="80" rx="14" fill="#0d2343" stroke="#9c7bff" stroke-width="2"/>
+<text x="78" y="449" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Observe</text>
+<text x="78" y="479" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">state</text></g><line x1="205" y1="455" x2="300" y2="455" stroke="#9c7bff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="300" y="415" width="145" height="80" rx="14" fill="#0d2343" stroke="#9c7bff" stroke-width="2"/>
+<text x="318" y="449" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Choose</text>
+<text x="318" y="479" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">bounded tools</text></g><line x1="445" y1="455" x2="540" y2="455" stroke="#9c7bff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="540" y="415" width="145" height="80" rx="14" fill="#0d2343" stroke="#63e6be" stroke-width="2"/>
+<text x="558" y="449" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Verify</text>
+<text x="558" y="479" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">stop</text></g><text x="760" y="250" fill="#63e6be" font-size="19" font-family="Arial, sans-serif">Known route</text><text x="760" y="455" fill="#9c7bff" font-size="19" font-family="Arial, sans-serif">Adaptive route</text><text x="60" y="575" fill="#ffbb66" font-size="18" font-family="Arial, sans-serif">More autonomy → more evaluation, limits and observability</text>
+</svg>

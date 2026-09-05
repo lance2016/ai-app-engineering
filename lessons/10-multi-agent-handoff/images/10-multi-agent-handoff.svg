@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+<title>HANDOFF</title><desc>交接的边界是任务契约；上下文不应无条件共享</desc>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#061329"/><stop offset="1" stop-color="#0a1d3b"/></linearGradient>
+<pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#1c3960" stroke-width="1" opacity=".42"/></pattern>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#42d9ff"/></marker>
+</defs>
+<rect width="1200" height="675" fill="url(#bg)"/><rect width="1200" height="675" fill="url(#grid)" opacity=".55"/>
+<text x="54" y="54" fill="#eef7ff" font-size="27" font-family="Arial, sans-serif" font-weight="700">10 · HANDOFF</text>
+<text x="54" y="84" fill="#9fb3ce" font-size="17" font-family="Arial, sans-serif">交接的边界是任务契约；上下文不应无条件共享</text>
+<g><rect x="55" y="280" width="165" height="100" rx="14" fill="#0d2343" stroke="#42d9ff" stroke-width="2"/>
+<text x="73" y="314" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Triage</text>
+<text x="73" y="344" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">route + scope</text></g><line x1="220" y1="330" x2="345" y2="330" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="345" y="280" width="165" height="100" rx="14" fill="#0d2343" stroke="#9c7bff" stroke-width="2"/>
+<text x="363" y="314" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Specialist</text>
+<text x="363" y="344" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">private context</text></g><line x1="510" y1="330" x2="635" y2="330" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="635" y="280" width="165" height="100" rx="14" fill="#0d2343" stroke="#ffbb66" stroke-width="2"/>
+<text x="653" y="314" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Reviewer</text>
+<text x="653" y="344" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">check result</text></g><line x1="800" y1="330" x2="925" y2="330" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="925" y="280" width="185" height="100" rx="14" fill="#0d2343" stroke="#63e6be" stroke-width="2"/>
+<text x="943" y="314" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Final</text>
+<text x="943" y="344" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">user response</text></g><rect x="260" y="420" width="590" height="70" rx="12" fill="#101e3a" stroke="#9fb3ce" stroke-width="2"/>
+  <text x="285" y="450" fill="#9fb3ce" font-size="17" font-family="Arial, sans-serif">handoff contract: task · inputs · constraints · expected output</text>
+  <text x="285" y="477" fill="#ff5f7a" font-size="17" font-family="Arial, sans-serif">private memory stays behind each boundary</text>
+  <line x1="800" y1="380" x2="700" y2="420" stroke="#ff5f7a" stroke-width="4" marker-end="url(#arrow)" stroke-dasharray="10 8"/>
+</svg>

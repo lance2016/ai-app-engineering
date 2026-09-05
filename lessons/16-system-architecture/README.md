@@ -76,7 +76,7 @@ ai-agents-for-beginners 第 16 课有一句话值得记住：模型大概只占�
 
 判断标准只有一条：**这个东西丢了能不能重建**。能重建的放 Redis，不能的放 PostgreSQL。热拷贝可以同时放两边，但权威只有一个。
 
-![本课核心关系：生产级 AI 请求在系统各组件间的流动](./images/16-system-request-architecture.png)
+![本课核心关系：生产级 AI 请求在系统各组件间的流动](./images/16-system-request-architecture.svg)
 
 ## 最小可运行例子
 

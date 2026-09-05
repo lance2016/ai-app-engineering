@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+<title>DATA LIFECYCLE</title><desc>新鲜度、权限和删除必须贯穿知识数据的整个生命周期</desc>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#061329"/><stop offset="1" stop-color="#0a1d3b"/></linearGradient>
+<pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#1c3960" stroke-width="1" opacity=".42"/></pattern>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#42d9ff"/></marker>
+</defs>
+<rect width="1200" height="675" fill="url(#bg)"/><rect width="1200" height="675" fill="url(#grid)" opacity=".55"/>
+<text x="54" y="54" fill="#eef7ff" font-size="27" font-family="Arial, sans-serif" font-weight="700">15 · DATA LIFECYCLE</text>
+<text x="54" y="84" fill="#9fb3ce" font-size="17" font-family="Arial, sans-serif">新鲜度、权限和删除必须贯穿知识数据的整个生命周期</text>
+<g><rect x="45" y="295" width="140" height="82" rx="14" fill="#0d2343" stroke="#63e6be" stroke-width="2"/>
+<text x="63" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Ingest</text>
+<text x="63" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">source</text></g><line x1="185" y1="336" x2="260" y2="336" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="260" y="295" width="140" height="82" rx="14" fill="#0d2343" stroke="#42d9ff" stroke-width="2"/>
+<text x="278" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Parse</text>
+<text x="278" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">normalize</text></g><line x1="400" y1="336" x2="475" y2="336" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="475" y="295" width="140" height="82" rx="14" fill="#0d2343" stroke="#9c7bff" stroke-width="2"/>
+<text x="493" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Version</text>
+<text x="493" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">hash</text></g><line x1="615" y1="336" x2="690" y2="336" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="690" y="295" width="140" height="82" rx="14" fill="#0d2343" stroke="#ffbb66" stroke-width="2"/>
+<text x="708" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Index</text>
+<text x="708" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">ACL</text></g><line x1="830" y1="336" x2="905" y2="336" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="905" y="295" width="140" height="82" rx="14" fill="#0d2343" stroke="#63e6be" stroke-width="2"/>
+<text x="923" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Serve</text>
+<text x="923" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">retrieval</text></g><line x1="760" y1="377" x2="760" y2="500" stroke="#ff5f7a" stroke-width="4" marker-end="url(#arrow)" stroke-dasharray="10 8"/><g><rect x="670" y="500" width="180" height="70" rx="14" fill="#0d2343" stroke="#ff5f7a" stroke-width="2"/>
+<text x="688" y="534" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Delete</text>
+<text x="688" y="564" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">tombstone + purge</text></g><text x="55" y="455" fill="#ff5f7a" font-size="17" font-family="Arial, sans-serif">stale or unauthorized data must not reach the model</text>
+</svg>

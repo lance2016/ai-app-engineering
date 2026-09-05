@@ -63,7 +63,7 @@ flowchart LR
     V -- 失败 --> O
     V -- 通过 --> ADR[ADR + 退出条件]
 ```
-![本课核心关系：用权衡矩阵、假设与验证条件记录架构决策](./images/23-architecture-decision-adr.png)
+![本课核心关系：用权衡矩阵、假设与验证条件记录架构决策](./images/23-architecture-decision-adr.svg)
 
 ## 最小可运行例子
 

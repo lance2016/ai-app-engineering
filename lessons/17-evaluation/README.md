@@ -59,7 +59,7 @@ flowchart LR
     S --> P[线上失败案例]
     P --> E
 ```
-![本课核心关系：评测集、指标、发布门禁与回归用例闭环](./images/17-evaluation-regression-loop.png)
+![本课核心关系：评测集、指标、发布门禁与回归用例闭环](./images/17-evaluation-regression-loop.svg)
 
 ## 最小可运行例子
 

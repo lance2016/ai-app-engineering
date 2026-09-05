@@ -68,7 +68,7 @@ flowchart LR
     H -- 是 --> X
     X --> K[幂等键 + 审计]
 ```
-![本课核心关系：工具调用经过 schema、权限、审批与幂等门禁](./images/05-tool-calling-guardrails.png)
+![本课核心关系：工具调用经过 schema、权限、审批与幂等门禁](./images/05-tool-calling-guardrails.svg)
 
 ## 最小可运行例子
 
