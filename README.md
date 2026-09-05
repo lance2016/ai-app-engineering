@@ -12,6 +12,8 @@
 [![中文](https://img.shields.io/badge/language-中文-8B5CF6)](./README.md)
 [![License](https://img.shields.io/github/license/lance2016/ai-app-engineering)](./LICENSE)
 
+**[在线阅读 →](https://lance2016.github.io/ai-app-engineering/)**（带搜索和上下课导航，比在 GitHub 上翻目录舒服）
+
 ## 这是一门什么课
 
 **这是理论课，不是项目教程。** 你不需要 clone 它、装依赖、跑起来。打开任何一课就能读。
