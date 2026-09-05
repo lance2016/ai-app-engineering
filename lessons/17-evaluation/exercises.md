@@ -2,7 +2,7 @@
 
 ## 练习 1：从一个线上失败补案例
 
-假设用户反馈：问"我上周五买的能退吗"，机器人回了退货政策全文，没有回答能不能。给 `01_golden_set_assertions.py` 的 golden set 加这条案例，写出断言和标签。
+假设用户反馈：问「我上周五买的能退吗」，机器人回了退货政策全文，没有回答能不能。给正文的 golden set 加这条案例，写出断言和标签。
 
 验收：v1 在这条上失败（它确实不会处理相对日期），然后你修改 `answer()` 让它通过，且其他 12 条不受影响。
 
@@ -18,7 +18,7 @@ Case("multi-3", "I bought it last Friday, can I still refund?", ("yes", "14 days
 
 ## 练习 2：算一下 kappa 为什么是 0
 
-`INJECT_LENIENT_JUDGE=1` 时一致率 58%、kappa 0.00。不看代码，手算：12 条里人判 pass 7 条，judge 全判 pass。
+一个全判 pass 的 judge，一致率 58%、kappa 0.00。不看代码，手算一遍：12 条里人判 pass 7 条，judge 全判 pass。
 
 <details><summary>答案</summary>
 
@@ -30,7 +30,7 @@ judge 的一致率完全来自"本来就有 58% 该 pass"，它自己没提供�
 
 ## 练习 3：给轨迹断言加"顺序"
 
-`03_trajectory_eval.py` 检查了工具集合，没检查顺序。加一条断言：`send_email` 如果出现，必须在 `lookup_order` 之后。
+正文的 `check_trajectory` 检查了工具集合，没检查顺序。加一条断言：`send_email` 如果出现，必须在 `lookup_order` 之后。
 
 验收：构造一个先发邮件再查订单的剧本，断言失败并说明原因。
 
@@ -48,7 +48,7 @@ if "send_email" in names and "lookup_order" in names and names.index("send_email
 
 ## 练习 4：基线更新的流程
 
-`04_regression_gate.py` 在没有基线时会自动记一份。这在真实仓库里是危险的。设计一个基线更新流程，回答：谁能更新、什么时候更新、怎么防止"跑一次就覆盖"。
+一个常见实现是「没有基线时自动记一份」。这在真实仓库里是危险的。设计一个基线更新流程，回答：谁能更新、什么时候更新、怎么防止「跑一次就覆盖」。
 
 <details><summary>参考答案</summary>
 

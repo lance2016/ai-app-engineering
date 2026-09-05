@@ -44,7 +44,7 @@ flowchart LR
 |---|---|---|
 | [`code/01_sampling_temperature.py`](./code/01_sampling_temperature.py) | 一组假 logits 抽样一千次，看 temperature 和 top-p 怎么改变分布 | `uv run python prerequisites/llm-foundations/04-context-window-and-sampling/code/01_sampling_temperature.py`，试 `TEMPERATURE=0`、`0.2`、`2.0`，`TOP_P=0.9` |
 
-窗口预算的逐轮计算在主线 [第 01 课的 `03_context_window_budget.py`](../../../lessons/01-how-llms-work/code/03_context_window_budget.py)，那里把它和价格连在一起。
+窗口预算的逐轮计算在主线 [第 01 课](../../../lessons/01-how-llms-work/README.md) 的成本模型那一节，那里把它和价格连在一起。
 
 ## 常见错误
 

@@ -2,7 +2,7 @@
 
 ## 练习 1：尊重 Retry-After
 
-`01_timeout_retry_jitter.py` 对 429 用的是和超时一样的退避。真实的 429 响应通常带 `Retry-After` 头。给 `RateLimited` 加一个 `retry_after: float | None` 字段，有值时直接等这个时间，没有才用抖动退避。
+正文的重试对 429 用的是和超时一样的退避。真实的 429 响应通常带 `Retry-After` 头。给 `RateLimited` 加一个 `retry_after: float | None` 字段，有值时直接等这个时间，没有才用抖动退避。
 
 验收：把 `FlakyModel` 的 429 改成带 `retry_after=0.03`，输出里那一次的等待时间正好是 0.03 秒而不是随机值。
 
@@ -23,7 +23,7 @@ delay = exc.retry_after if isinstance(exc, RateLimited) and exc.retry_after else
 
 ## 练习 2：令牌桶容量与滑动窗口
 
-把 `02_rate_limit_token_bucket.py` 的 `capacity` 改成 5 再跑。解释为什么会出现 429，以及在什么样的下游限流形态下 `capacity=5` 才是安全的。
+把正文令牌桶的 `capacity` 从 1 改成 5。解释为什么会出现 429，以及在什么样的下游限流形态下 `capacity=5` 才是安全的。
 
 <details><summary>答案</summary>
 
@@ -47,7 +47,7 @@ delay = exc.retry_after if isinstance(exc, RateLimited) and exc.retry_after else
 
 ## 练习 4：把预算检查挪到步后
 
-`04_cost_budget.py` 在每步开始前检查预算，所以会超出一步。改成每步计费后立刻检查，超了就停止并且**不把这一步的结果交给用户**。然后回答：哪种更合理？
+正文的预算在每步开始前检查，所以会超出一步。改成每步计费后立刻检查，超了就停止并且**不把这一步的结果交给用户**。然后回答：哪种更合理？
 
 <details><summary>答案</summary>
 

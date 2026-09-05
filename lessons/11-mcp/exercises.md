@@ -2,9 +2,9 @@
 
 ## 练习 1：加一个 resources/read 的权限边界
 
-玩具 server 的 `resources/read` 对任何 uri 都放行，只要存在。给 client 加一个资源白名单（比如只允许 `notes://todo`），在 host 侧拦截对 `notes://ideas` 的读取。
+假设一个 MCP server 的 `resources/read` 对任何存在的 uri 都放行。给 client 加一个资源白名单（比如只允许 `notes://todo`），在 host 侧拦截对 `notes://ideas` 的读取。
 
-验收：`01_capability_discovery.py` 里读 `notes://ideas` 得到一条 host 侧的错误，server 日志里没有收到这次请求。
+验收标准：读 `notes://ideas` 时得到一条 host 侧的错误，请求根本没发到 server。
 
 <details><summary>答案</summary>
 

@@ -32,7 +32,7 @@ description 是在替模型做分类，写法要像分类条件。
 
 ## 练习 3：激活期间收窄白名单
 
-改 `01_progressive_loading.py`：模型 `load_skill` 成功后，把后续给模型的工具列表收窄到该 Skill 的 `allowed-tools`（和注册表取交集）。
+在正文的三级加载上再加一层：模型 `load_skill` 成功后，把后续给模型的工具列表收窄到该 Skill 的 `allowed-tools`（和注册表取交集）。
 
 验收：加载 `expense-report` 后，模型看到的工具只剩 `search_notes`（`read_file` 不在注册表里）；加载 `meeting-notes` 后也是 `search_notes`。
 
@@ -44,7 +44,7 @@ description 是在替模型做分类，写法要像分类条件。
 
 ## 练习 4：哈希固定的盲区
 
-`02_validate_and_pin.py` 的哈希覆盖了 Skill 目录里的所有文件。还有什么它管不到？
+正文的 `digest()` 哈希覆盖了 Skill 目录里的所有文件。还有什么它管不到？
 
 <details><summary>答案</summary>
 

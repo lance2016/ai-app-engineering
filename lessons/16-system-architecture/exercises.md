@@ -2,7 +2,7 @@
 
 ## 练习 1：把工具调用加进请求链
 
-`01_request_chain.py` 的模型直接回答了。改剧本让模型先请求 `search_kb`，运行时执行工具（模拟 15 毫秒）并把结果记成事件，再调一次模型拿最终回答。
+正文的请求链里模型一次就给出了回答。把它扩成两轮：模型先请求 `search_kb`，运行时执行工具（假设 15 毫秒）并把结果记成事件，再调一次模型拿最终回答。
 
 验收：`hop` 事件里多出 `tool` 一跳和第二次 `model`；同步模式下客户端总等待时间相应增加，流式模式下首字节时间也推后了。
 
@@ -14,7 +14,7 @@
 
 ## 练习 2：给 SSE 端点加断线重连
 
-`02_sse_endpoint.py` 每帧带了 `id:`。浏览器的 `EventSource` 重连时会带 `Last-Event-ID` 请求头。让端点读这个头，从对应位置继续发，而不是从头再发。
+正文的 SSE 端点每帧带了 `id:`。浏览器的 `EventSource` 重连时会带 `Last-Event-ID` 请求头。让端点读这个头，从对应位置继续发，而不是从头再发。
 
 验收：用 `TestClient` 先请求一次，只读前两帧就关闭；再带 `Last-Event-ID: 1` 请求，收到的第一帧 id 是 2。
 
@@ -47,7 +47,7 @@ async def chat(q: str, request: Request) -> StreamingResponse:
 
 ## 练习 4：把限流计数器放错地方
 
-`03_storage_boundaries.py` 的边界表里限流计数器放 Redis。如果有人把它放进 PostgreSQL，会发生什么？反过来，如果把审计记录放进 Redis 呢？
+正文的边界表里限流计数器放 Redis。如果有人把它放进 PostgreSQL，会发生什么？反过来，如果把审计记录放进 Redis 呢？
 
 <details><summary>答案</summary>
 
@@ -61,7 +61,7 @@ async def chat(q: str, request: Request) -> StreamingResponse:
 
 ## 练习 5：在链上找出"每一跳都查一次数据库"
 
-读 `01_request_chain.py`，`gateway_auth` 返回了 `user_id`，后面的跳都收它。假设有人把 `retrieve()` 改成自己再根据 token 查一次用户拿权限标签。这样改的问题是什么？正确做法是什么？
+正文里 `gateway_auth` 返回了 `user_id`，后面的跳都收它。假设有人把 `retrieve()` 改成自己再根据 token 查一次用户拿权限标签。这样改的问题是什么？正确做法是什么？
 
 <details><summary>答案</summary>
 

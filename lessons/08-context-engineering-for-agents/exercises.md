@@ -2,9 +2,9 @@
 
 ## 练习 1：按轮裁剪而不是按条
 
-`01_context_builder.py` 从最近往前逐条保留历史，可能在一轮中间切断：保留了 assistant 的回答却丢了它回答的那个问题。改成按"一问一答"成对裁剪。
+正文的 `build()` 从最近往前逐条保留历史，可能在一轮中间切断：保留了 assistant 的回答却丢了它回答的那个问题。改成按「一问一答」成对裁剪。
 
-验收：`INJECT_OVERFLOW=1` 时，保留下来的历史第一条永远是 `user`。
+验收标准：历史被裁剪时，保留下来的第一条永远是 `user`。
 
 <details><summary>答案</summary>
 
@@ -14,7 +14,7 @@
 
 ## 练习 2：把受保护事实的提取交给模型，再评估
 
-`02_compaction.py` 的 `extract_protected` 是关键词匹配。改成用一次（fake）模型调用抽取"用户明确表达的约束"，然后设计一个包含五段对话的小测试集，比较关键词版和模型版各漏了什么。
+正文的 `extract_protected` 是关键词匹配。改成用一次模型调用抽取「用户明确表达的约束」，然后设计一个包含五段对话的小测试集，比较关键词版和模型版各漏了什么。
 
 验收：写出一张表，行是五段对话，列是两种方法各提取到的约束，标出漏抽和误抽。
 
@@ -26,7 +26,7 @@
 
 ## 练习 3：给 shape() 加"按需展开"的第二级
 
-`03_tool_result_shaping.py` 的 `fetch_rows` 按偏移取行。加一个 `describe_column(result_id, column)`，返回该列的去重值和计数，让模型能先看分布再决定取哪些行。
+正文的 `fetch_rows` 按偏移取行。加一个 `describe_column(result_id, column)`，返回该列的去重值和计数，让模型能先看分布再决定取哪些行。
 
 验收：模型调用 `describe_column(res, "status")` 得到 `{"shipped": 167, "pending": 167, "refunded": 166}`，不需要拉任何整行。
 

@@ -16,7 +16,6 @@ estimated_time: 约 40 分钟
 
 ## 前置
 
-- [P02 容器与迭代](../../python/02-collections-and-iteration/README.md)：本篇代码用 `Counter` 和字典
 
 ## 核心概念
 

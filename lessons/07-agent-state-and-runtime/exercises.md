@@ -2,7 +2,7 @@
 
 ## 练习 1：把崩溃点挪到危险的位置
 
-`02_pause_resume.py` 目前在 `save()` 之后崩溃，所以恢复是安全的。把 `sys.exit(1)` 挪到 `execute()` 之后、`append("tool_result")` 之前，跑一遍崩溃再恢复。
+正文的 `run()` 在 `save()` 之后才可能崩溃，所以恢复是安全的。设想进程崩在 `execute()` 之后、`append("tool_result")` 之前，恢复时会发生什么？
 
 验收：恢复后 `find_restaurants` 被执行了两次（两个进程各一次）。然后解释为什么运行时没法在这里做到"要么都发生要么都不发生"。
 
@@ -36,7 +36,7 @@ def tokens_used(thread: Thread) -> int:
 
 ## 练习 3：给事件流加客户端断线重连
 
-`03_event_stream.py` 的客户端从头听到尾。真实的浏览器会断线。给 `run_streaming` 加一个 `since: int` 参数，表示客户端已经收到了前几条事件，重连时只补发之后的。
+正文的事件流假设客户端从头听到尾。真实的浏览器会断线。给 `run_streaming` 加一个 `since: int` 参数，表示客户端已经收到了前几条事件，重连时只补发之后的。
 
 验收：模拟客户端在收到第 3 条后断开，重连时传 `since=3`，只收到后面的事件，且和线程剩余部分一致。
 
@@ -66,12 +66,12 @@ def tokens_used(thread: Thread) -> int:
 
 ## 练习 5：从 status() 的实现找一个 bug
 
-读 `thread.py` 的 `status()`。构造一个事件序列，让它返回错误的状态。
+看正文里 `status()` 的推导规则。构造一个事件序列，让它返回错误的状态。
 
 <details><summary>答案</summary>
 
 `human_input_requested` 之后如果模型又被调用并直接回答了（比如运行时代码有 bug，没有等 `human_input` 就继续了），事件序列是 `... human_input_requested, assistant_message, run_finished`，`status()` 返回 `finished`，掩盖了"没等用户就自己做决定"的问题。
 
-修法不在 `status()` 里，而是在 `run()` 里：`pending_tool_calls()` 有 `request_human_input` 时不允许调模型。推导函数只能忠实反映事件，事件的合法顺序要由写入方保证。这也是为什么 M2 要给写入加约束，而不是只把 JSON 文件换成数据库。
+修法不在 `status()` 里，而是在 `run()` 里：`pending_tool_calls()` 里有 `request_human_input` 时不允许调模型。推导函数只能忠实反映事件，事件的合法顺序要由写入方保证。这也是为什么换成数据库时光加一张表不够，还要给写入加约束。
 
 </details>

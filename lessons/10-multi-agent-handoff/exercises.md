@@ -2,7 +2,7 @@
 
 ## 练习 1：让专家能把控制权交回来
 
-`01_handoff.py` 只有 triage → billing 一个方向。给 billing 加一个 `transfer_back` 工具，billing 处理完后交回 triage，triage 用一句话收尾。运行时要记录两次交接。
+正文的交接只有 triage → billing 一个方向。给 billing 加一个 `transfer_back` 工具，billing 处理完后交回 triage，triage 用一句话收尾。运行时要记录两次交接。
 
 验收：输出里活跃 Agent 的序列是 triage → billing → triage，线程有两条 `handoff` 事件。
 
@@ -14,7 +14,7 @@
 
 ## 练习 2：三种历史策略的成本和效果
 
-用 `01_handoff.py` 的三种 `HANDOFF_HISTORY`，各构造一个 20 轮的对话历史（前 18 轮闲聊，第 19 轮提到订单号，第 20 轮说被重复扣费），统计专家 Agent 收到的 token 数，并回答：哪种策略让专家丢了订单号？
+用正文的三种历史策略，各套一个 20 轮的对话（前 18 轮闲聊，第 19 轮提到订单号，第 20 轮说被重复扣费），估算专家 Agent 收到的 token 数，并回答：哪种策略让专家丢了订单号？
 
 验收：一张三行表，列是策略、token 数、专家是否知道订单号。
 
@@ -26,7 +26,7 @@
 
 ## 练习 3：给 racing 加上"聊天模型也能调工具"的守卫
 
-`02_racing.py` 里聊天模型只产生文本。改成聊天模型也可能返回工具调用，然后处理这个情况：分类器说"指令"要取消聊天草稿时，如果草稿已经包含工具调用，该怎么办？
+正文的聊天模型只产生文本。设想它也可能返回工具调用：分类器说「指令」要取消聊天草稿时，如果草稿已经包含一个已执行的工具调用，该怎么办？
 
 验收：写出你的规则并实现。至少要保证同一个动作不会被执行两次。
 
@@ -38,7 +38,7 @@
 
 ## 练习 4：视图里要不要看到别人的失败
 
-`03_ownership_and_fallback.py` 的 `view_for()` 让 triage 看不到 billing 的失败事件，它只是被运行时用 `fallback_note` 告知了。另一种做法是把 `handoff_failed` 渲染成一条消息放进 triage 的视图。两种做法各有什么后果？
+正文的 `view_for()` 让 triage 看不到 billing 的失败事件，它只是被运行时用 `fallback_note` 告知了。另一种做法是把 `handoff_failed` 渲染成一条消息放进 triage 的视图。两种做法各有什么后果？
 
 <details><summary>讨论</summary>
 

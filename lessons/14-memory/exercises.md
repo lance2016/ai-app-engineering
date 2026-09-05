@@ -2,7 +2,7 @@
 
 ## 练习 1：让来源可以被验证
 
-`01_extract_with_provenance.py` 存下了 `source_event_ids`，但没有检查这些编号指向的事件里是否真的包含那条记忆的依据。加一个校验：记忆 `content` 里的关键词至少要在某个来源事件的文本里出现，否则标记为 `unverified`。
+正文的提取存下了 `source_event_ids`，但没有检查这些编号指向的事件里是否真的包含那条记忆的依据。加一个校验：记忆 `content` 里的关键词至少要在某个来源事件的文本里出现，否则标记为 `unverified`。
 
 验收：把某条记忆的 `source_event_ids` 改成指向一条不相关的 assistant 消息，运行后这条被标记，其余正常。
 
@@ -14,7 +14,7 @@
 
 ## 练习 2：整合时保留冲突的证据
 
-`02_consolidate.py` 里冲突的旧记忆进了 `history`，带 `superseded_by`。加一个 `explain(subject)` 函数，输出这个主题的完整变化链：什么时候说了什么、被什么替换。
+正文里冲突的旧记忆进了 `history`，带 `superseded_by`。加一个 `explain(subject)` 函数，输出这个主题的完整变化链：什么时候说了什么、被什么替换。
 
 验收：`explain("diet")` 输出两行，按时间排序，能看出从"素食"到"开始吃鱼"的变化和各自的来源事件。
 
@@ -33,7 +33,7 @@ def explain(self, subject: str) -> list[str]:
 
 ## 练习 3：按来源线程删除
 
-`03_retrieve_and_forget.py` 按 `subject` 删。用户有时会说"忘掉我们上周那次对话里说的所有事"。实现 `forget_thread(memories, user_id, thread_id)`。
+正文的 `forget()` 按 `subject` 删。用户有时会说「忘掉我们上周那次对话里说的所有事」。实现 `forget_thread(memories, user_id, thread_id)`。
 
 验收：删除 `thr_u42_01` 后，`m1` 和 `m2` 都没了，`m3`（来自另一个线程）保留，审计里记录了两条被删记忆的 id 和来源。
 

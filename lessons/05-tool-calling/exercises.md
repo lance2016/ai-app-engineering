@@ -4,7 +4,7 @@
 
 ## 练习 1：给校验加一个字段
 
-在 `01_schema_validation.py` 的 `GetWeatherArgs` 里加一个 `date: datetime.date` 字段，然后在剧本里注入一个 `"date": "yesterday"` 的调用。
+给正文的 `GetWeatherArgs` 加一个 `date: datetime.date` 字段，然后设想模型返回了 `"date": "yesterday"`。
 
 验收：运行输出里出现一条 `[ERROR] invalid arguments: ...` 的工具结果，紧接着模型用合法日期重新调用，最后正常回答。
 
@@ -18,7 +18,7 @@ Pydantic 会把 `"2026-09-04"` 解析成 `date`，把 `"yesterday"` 报成 `Inpu
 
 ## 练习 2：按角色的白名单
 
-把 `02_registry_and_allowlist.py` 的 `read_only` 改成一个函数 `allowlist_for(role: str) -> frozenset[str]`，`"viewer"` 只能 `search_docs`，`"editor"` 可以 `search_docs` 和 `delete_doc`。分别用两个角色跑一遍。
+把正文里写死的白名单改成一个函数 `allowlist_for(role: str) -> frozenset[str]`：`"viewer"` 只能 `search_docs`，`"editor"` 可以 `search_docs` 和 `delete_doc`。写出两个角色下模型分别看到什么、能调什么。
 
 验收：viewer 调 `delete_doc` 时拿到 `tool not allowed here` 的错误结果；editor 能正常删除。并且 viewer 的请求里，`registry.specs()` 返回的列表根本不包含 `delete_doc`。
 
@@ -37,7 +37,7 @@ def allowlist_for(role: str) -> frozenset[str]:
 
 ## 练习 3：模型换了 id 重发
 
-修改 `03_idempotency_key.py`：让 `idempotency_key` 只返回 `call.id`，然后在 `main` 里模拟模型超时后用一个新 id（比如 `call_7f3b`）重发同一笔转账。
+假设 `idempotency_key` 只返回 `call.id`，模型超时后用一个新 id（比如 `call_7f3b`）重发同一笔转账。账本里会有几笔？
 
 验收：账本出现两笔。然后把键改回混入工具名和参数的版本，账本回到一笔。
 
@@ -51,7 +51,7 @@ def allowlist_for(role: str) -> frozenset[str]:
 
 ## 练习 4：确认门超时怎么办
 
-`04_confirmation_gate.py` 里 `ask_user` 是同步等答案的。真实系统里用户可能十分钟不回。这段时间里 Agent 循环该做什么？三个方案里选一个并说理由：一直等、超时后视为拒绝、超时后把整个任务挂起。
+正文的 `ask_user` 是同步等答案的。真实系统里用户可能十分钟不回。这段时间里 Agent 循环该做什么？三个方案里选一个并说理由：一直等、超时后视为拒绝、超时后把整个任务挂起。
 
 <details><summary>答案</summary>
 

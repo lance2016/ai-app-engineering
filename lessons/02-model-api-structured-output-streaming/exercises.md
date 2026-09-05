@@ -2,7 +2,7 @@
 
 ## 练习 1：给 schema 加一个业务约束
 
-在 `02_structured_output.py` 的 `Invoice` 里加一个校验：`total` 必须大于 0，`currency` 必须是大写。然后在 `BAD` 里放一个 `"currency": "eur"`，跑 `INJECT_BAD_JSON=1`。
+给正文的 `Invoice` 加两条校验：`total` 必须大于 0，`currency` 必须全大写。然后想一下，模型返回 `"currency": "eur"` 时会发生什么。
 
 验收：第一次校验错误的原文里出现你新加的约束描述，第二次通过。你没有写任何"把小写转大写"的代码。
 
@@ -16,7 +16,7 @@
 
 ## 练习 2：两个消费者读一条流
 
-改 `03_streaming.py`：把消费逻辑拆成两个函数，`ui_consumer` 每收到含句号的 delta 就打印一整句，`tool_consumer` 只在 `done=True` 时打印工具调用。让 fake 的剧本改成一个带工具调用的响应（用 `tool_call_response`）。
+把正文的流式消费逻辑拆成两个独立的消费者：`ui_consumer` 每收到含句号的 delta 就输出一整句，`tool_consumer` 只在 `done=True` 时处理工具调用。写出这两个函数的签名和它们各自需要维护的状态。
 
 验收：文本部分（如果有）按句输出，工具名只在最后打印一次，两个消费者互不知道对方存在。
 
@@ -30,9 +30,9 @@
 
 ## 练习 3：让重试知道时间
 
-`04_retry_and_cost.py` 的重试只数次数。给 `complete_with_retry` 加一个 `deadline_seconds` 参数，总耗时超过它就放弃，哪怕次数没用完。
+正文的 `complete_with_retry` 只数次数。给它加一个 `deadline_seconds` 参数：总耗时超过它就放弃，哪怕次数还没用完。
 
-验收：`INJECT_RATE_LIMIT=1` 时把 `deadline_seconds` 设成 0.08，应该在第二次重试前放弃并抛出原始的 `RateLimited`。
+验收标准：`base_delay=0.05`、`deadline_seconds=0.08` 时，应该在第二次重试前就放弃，并抛出原始的 `RateLimited`，而不是一个新造的超时异常。
 
 <details><summary>答案</summary>
 
@@ -63,7 +63,7 @@ avg input per call = 3200   avg output per call = 80
 
 ## 练习 5：真模型上验证一个假设
 
-需要 key。用 `05_real_params_probe.py` 的写法，在 temperature 0 下把同一个抽取任务跑 5 次，比较返回是否完全一致。
+需要 key。用第 00 课那个最小例子的写法，在 temperature 0 下把同一个抽取任务跑 5 次，比较返回是否完全一致。
 
 验收：写下你观察到的结果，以及它是否支持"temperature 0 等于确定性"这个说法。
 

@@ -1,7 +1,7 @@
 ---
 status: complete
 part: Part 2 Tool 与 Agent
-estimated_time: 约 2.5 小时
+estimated_time: 约 2 小时
 ---
 
 # 05 Tool Calling：从 Schema 到副作用
@@ -9,6 +9,7 @@ estimated_time: 约 2.5 小时
 > 「工具调用成功」不是一件事，是三件事：模型选对了工具、参数是有效的、外部系统真的做了且只做了一次。运行时要分别保证这三件事，模型一件也保证不了。
 
 ## 为什么需要
+
 工具调用的风险不在 JSON 能不能解析，而在模型一次错误选择就可能产生真实副作用。schema、白名单、确认和幂等必须在模型之外成立。
 
 ## 学习目标
@@ -19,13 +20,11 @@ estimated_time: 约 2.5 小时
 
 ## 前置
 
-- [02 模型调用、结构化输出与流式](../02-model-api-structured-output-streaming/README.md)：知道 JSON Schema 怎么约束模型输出
-- [00 环境与模型接入](../00-setup/README.md)：会用 `aiapp` 里的 `ToolCall`、`ToolSpec`、`Message(role="tool")`
-- 前置模块 [P04 类与 dataclass](../../prerequisites/python/04-oop-and-dataclasses/README.md)、[P06 Pydantic](../../prerequisites/python/06-pydantic/README.md)
+- [02 模型调用、结构化输出与流式](../02-model-api-structured-output-streaming/README.md)：JSON Schema 怎么约束模型输出
 
 ## 心智模型
 
-模型看到的工具是一段 JSON Schema。它的输出是一段结构化 JSON，说"我想调这个工具，参数是这些"。到这里为止，世界上什么都没变。接下来每一步都是确定性代码：
+模型看到的工具是一段 JSON Schema。它的输出是一段结构化 JSON，说「我想调这个工具，参数是这些」。**到这里为止，世界上什么都没变。** 接下来每一步都是确定性代码：
 
 ```mermaid
 sequenceDiagram
@@ -38,7 +37,7 @@ sequenceDiagram
     R->>R: ③ 有副作用？走确认门
     R->>X: ④ 执行，带幂等键、超时、重试
     X-->>R: 结果 / 超时 / 错误
-    R->>M: Message(role="tool", content, is_error)
+    R->>M: 工具结果消息（成功或 is_error）
     M->>R: 继续调用，或回答用户
 ```
 
@@ -48,14 +47,12 @@ sequenceDiagram
 |---|---|---|
 | ① 注册表与白名单 | 模型编造了不存在的工具名，或调了这个场景不该碰的工具 | 回一个 `is_error` 结果，不抛异常 |
 | ② Schema 校验 | 参数缺字段、类型错、枚举值不在范围内 | 把校验错误原文回给模型，让它修 |
-| ③ 确认门 | 用户没明确要求的副作用被执行 | 暂停，问用户，拒绝也是一个正常结果 |
+| ③ 确认门 | 用户没明确要求的副作用被执行 | 暂停，问用户；拒绝也是一个正常结果 |
 | ④ 幂等键 | 超时重试导致副作用发生两次 | 同一个调用派生同一个键，外部系统识别重放 |
 
-注意第 ②、① 两步的错误都是**回给模型**而不是抛给用户。模型拿到"unknown tool: delete_user_data"之后，通常会换一个存在的工具；拿到"unit must be celsius or fahrenheit"之后，通常会改参数。运行时不替它猜。
+注意 ① ② 的错误都是**回给模型**而不是抛给用户。模型拿到「unknown tool: delete_user_data」之后，通常会换一个存在的工具；拿到「unit must be celsius or fahrenheit」之后，通常会改参数。运行时不替它猜。
 
-还有一条不在图里但同样重要：**动作只从工具调用通道取**。模型在正文里写的任何 JSON，哪怕格式完美，都只是文本。用正则从回答里捞"函数调用"出来执行，是最常见的事故来源之一。
-
-### 工具调用的安全边界
+还有一条不在图里但同样重要：**动作只从工具调用通道取**。模型在正文里写的任何 JSON，哪怕格式完美，都只是文本。用正则从回答里捞「函数调用」出来执行，是最常见的事故来源之一。
 
 ```mermaid
 flowchart LR
@@ -68,67 +65,152 @@ flowchart LR
     H -- 是 --> X
     X --> K[幂等键 + 审计]
 ```
+
 ![本课核心关系：工具调用经过 schema、权限、审批与幂等门禁](./images/05-tool-calling-guardrails.svg)
 
-## 最小可运行例子
+## 机制拆解
 
-四个文件各演示一个守卫。每个都能直接跑，带 `INJECT_*` 环境变量时注入对应的失败。
+四个守卫，四段代码。注意它们的返回值**永远是一条工具结果消息**，成功和失败只差一个 `is_error`——调用方不需要写 try/except。
 
-| 文件 | 演示什么 | 运行 |
-|---|---|---|
-| [`code/01_schema_validation.py`](./code/01_schema_validation.py) | Pydantic 模型同时生成 schema 和做校验；非法参数作为错误结果回喂 | `uv run python lessons/05-tool-calling/code/01_schema_validation.py`，加 `INJECT_BAD_ARGS=1` 看模型改参数 |
-| [`code/02_registry_and_allowlist.py`](./code/02_registry_and_allowlist.py) | 注册表 + 请求级白名单；只把允许的工具告诉模型，编造的名字被拒 | 同上，加 `INJECT_UNKNOWN_TOOL=1` |
-| [`code/03_idempotency_key.py`](./code/03_idempotency_key.py) | 从 `ToolCall` 派生幂等键；超时重试后账本仍然只有一笔 | 同上，加 `INJECT_TIMEOUT=1` |
-| [`code/04_confirmation_gate.py`](./code/04_confirmation_gate.py) | 有副作用的工具先问用户；拒绝作为正常结果回给模型 | 同上，加 `USER_DECISION=no` |
+### 守卫 ②：schema 校验，错误回喂
 
-读代码时留意两点。第一，`run_tool` / `dispatch` 的返回值永远是 `Message`，成功和失败只差一个 `is_error`，调用方不需要 try/except。第二，四个文件的主循环长得一样：调模型、没有工具调用就结束、有就执行并把结果追加进消息。这个循环第 06 课会正式展开。
+```python
+class GetWeatherArgs(BaseModel):
+    city: str
+    unit: Literal["celsius", "fahrenheit"] = "celsius"
 
-## 常见错误与失败注入
+WEATHER_SPEC = ToolSpec(
+    name="get_weather",
+    description="Current weather for a city.",
+    parameters=GetWeatherArgs.model_json_schema(),   # 一份 schema，给模型看
+)
 
-**只用 `tool_call.id` 做幂等键。** 模型重试时往往会生成一个新的 id，键就变了，副作用照样发生两次。`03_idempotency_key.py` 里的键混入了工具名和规范化后的参数，同样的意图会得到同样的键。可以自己试一下：把 `idempotency_key` 改成只返回 `call.id`，再在 `run_transfer` 里模拟模型第二次用新 id 重发同一笔转账。
+def run_tool(call: ToolCall) -> Message:
+    try:
+        args = GetWeatherArgs.model_validate(call.arguments)   # 同一份，做校验
+    except ValidationError as exc:
+        return Message(role="tool", tool_call_id=call.id, is_error=True,
+                       content=f"invalid arguments: {exc.errors()[0]['msg']}")
+    return Message(role="tool", tool_call_id=call.id, content=get_weather(args))
+```
 
-**把校验错误抛成异常。** `01_schema_validation.py` 里如果把 `except ValidationError` 删掉，`INJECT_BAD_ARGS=1` 会直接让程序崩掉。模型本来有能力在下一轮修正参数，现在它连知道自己错了的机会都没有。
+模型返回 `{"unit": "kelvin"}` 时，它收到的是 `"invalid arguments: Input should be 'celsius' or 'fahrenheit'"`，下一轮通常就改对了。和第 02 课结构化输出是同一个套路：**一份 schema 用两次**。
 
-**给模型看全部工具。** `02_registry_and_allowlist.py` 里 `registry.specs(allowlist)` 只把允许的工具放进请求。如果改成把所有已注册工具都传给模型，模型就有可能在只读场景里选到 `delete_doc`。白名单要在"告诉模型有什么"这一步就生效，而不是等它选完再拒绝。
+### 守卫 ①：注册表 + 请求级白名单
 
-**用正则从回答里提取"函数调用"。** 四个例子里没有任何一处解析 `reply.content`。这是故意的。一旦开了这个口子，模型在文本里的任何表演都会变成动作。
+```python
+class ToolRegistry:
+    def specs(self, allowlist: frozenset[str]) -> list[ToolSpec]:
+        """只把这次请求允许用的工具告诉模型。看不见的它选不了。"""
+        return [t.spec for name, t in self._tools.items() if name in allowlist]
+
+    def dispatch(self, call: ToolCall, allowlist: frozenset[str]) -> Message:
+        tool = self._tools.get(call.name)
+        if tool is None:
+            return error(call, f"unknown tool: {call.name}")        # 编造的名字
+        if call.name not in allowlist:
+            return error(call, f"tool not allowed here: {call.name}")  # 存在但这里不许用
+        return Message(role="tool", tool_call_id=call.id,
+                       content=tool.handler(call.arguments))
+```
+
+`specs(allowlist)` 那一步是关键：**白名单要在「告诉模型有什么」这一步就生效**，不是等它选完再拒绝。把全部工具都发给模型，等于让它在只读场景里也能看见 `delete_doc`。
+
+`dispatch` 里还是要再查一遍，因为模型可能凭训练记忆调出一个你从没发过的工具名。两层都要有。
+
+### 守卫 ④：幂等键从调用本身派生
+
+```python
+def idempotency_key(call: ToolCall) -> str:
+    """同样的调用 id + 同样的规范化参数 => 同样的键。"""
+    canonical = json.dumps(call.arguments, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(f"{call.id}:{call.name}:{canonical}".encode()).hexdigest()[:16]
+
+async def run_transfer(bank, call, attempts=2, timeout=0.1) -> Message:
+    key = idempotency_key(call)
+    for attempt in range(1, attempts + 1):
+        try:
+            result = await asyncio.wait_for(
+                bank.transfer(idempotency_key=key, **call.arguments), timeout)
+            return ok(call, result)
+        except TimeoutError:
+            pass          # 用同一个 key 重试；外部系统会识别出这是重放
+    return error(call, "transfer status unknown after retries")
+```
+
+`sort_keys=True` 不是洁癖：`{"a":1,"b":2}` 和 `{"b":2,"a":1}` 是同一个意图，必须得到同一个键。
+
+超时的语义是「不知道做没做」，不是「没做」。带幂等键重试，外部系统返回 `replayed: True`，账本里仍然只有一笔。
+
+### 守卫 ③：确认门
+
+```python
+SIDE_EFFECTING = frozenset({"delete_doc"})
+
+async def run_tool(store, call: ToolCall) -> Message:
+    if call.name in SIDE_EFFECTING and not await ask_user(call):
+        return Message(role="tool", tool_call_id=call.id, is_error=True,
+                       content="user declined; nothing was changed")
+    return Message(role="tool", tool_call_id=call.id,
+                   content=store.delete(call.arguments["doc_id"]))
+```
+
+拒绝是**正常结果**，回给模型让它体面回应（「好的，我把 doc_1 留着了」），而不是抛异常或者假装做了。
+
+这里的 `ask_user` 是个同进程的假占位。真实场景里用户可能十分钟后才点确认，那时 HTTP 请求早就断了——把它变成能跨请求暂停恢复的状态，是第 07 课的内容。
+
+## 常见错误
+
+**只用 `tool_call.id` 做幂等键。** 模型重试时往往会生成一个新的 id，键就变了，副作用照样发生两次。键里必须混入工具名和规范化后的参数：同样的意图得到同样的键。
+
+**把校验错误抛成异常。** 删掉那个 `except`，程序直接崩。模型本来有能力在下一轮修正参数，现在它连知道自己错了的机会都没有。
+
+**给模型看全部工具。** 模型选不了它看不见的东西。白名单在展示阶段就该生效。
+
+**用正则从回答里提取「函数调用」。** 一旦开了这个口子，模型在文本里的任何表演都会变成动作。上面四段代码没有任何一处解析 `reply.content`——这是刻意的。
 
 ## 取舍
 
-- **严格校验 vs 宽容解析。** 严格校验会让模型多跑一轮来修参数，多花一次调用的延迟和 token。宽容解析（比如自动把 `"kelvin"` 改成 `"celsius"`）省了这一轮，但运行时替模型做了决定，出错时没人知道为什么。默认严格，只对确定无歧义的归一化（去空格、大小写）放宽。
-- **确认门的粒度。** 每个副作用都问用户，Agent 会很烦人；一个都不问，风险不可控。常见做法是按可逆性分级：可撤销的直接做，不可撤销的问，涉及资金和删除的必须问。第 07 课会把"问"变成可以跨请求暂停和恢复的状态。
-- **幂等键放在哪一层。** 由运行时派生并传给外部系统，是最省事的做法，但要求外部系统支持幂等键。不支持时只能在运行时自己维护"已执行"记录，这就引入了状态持久化的问题，也是第 07 课的内容。
+- **严格校验 vs 宽容解析。** 严格校验让模型多跑一轮修参数，多花一次调用的延迟和 token。宽容解析（自动把 `"kelvin"` 改成 `"celsius"`）省了这一轮，但运行时替模型做了决定，出错时没人知道为什么。默认严格，只对确定无歧义的归一化（去空格、大小写）放宽。
+- **确认门的粒度。** 每个副作用都问，Agent 会很烦人；一个都不问，风险不可控。常见做法是按可逆性分级：可撤销的直接做，不可撤销的问，涉及资金和删除的必须问。
+- **幂等键放在哪一层。** 由运行时派生并传给外部系统最省事，但要求外部系统支持幂等键。不支持时只能在运行时自己维护「已执行」记录，这就引入了状态持久化的问题——第 07 课。
 
-## 生产方案
-M3 的 [`ToolRegistry`](../../project/src/aiapp/runtime/registry.py) 与 [`ToolRunner`](../../project/src/aiapp/runtime/runner.py) 把参数校验、allowlist、confirmation 和幂等放在运行时。
+## 工程落地
+
+- **请求级幂等和工具级幂等是两层**，各管一件事。请求级挡的是「用户点了两次发送」，工具级挡的是「一次运行里的重试」。两个都要有。
+- **确认状态必须持久化。** 用户可能关掉页面、十分钟后从手机上回来确认。存在内存里的 pending 状态一次重启就没了。
+- **每次工具执行落一条审计记录**：谁、什么时候、调了什么、参数是什么、结果是什么、幂等键是什么。出事时这张表是唯一的事实来源。
+- **白名单来自请求上下文**，不是全局配置。同一个 Agent 在不同租户、不同场景下能用的工具集合不同。
 
 ## 框架映射
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
-| tool schema / approval / idempotency | StateGraph tool node + interrupt | function tool + approval | MCP tool + permission callback |
+| 工具定义 | `@tool` 装饰器 + Pydantic schema | `function_tool` 自动推 schema | MCP 工具或内置工具 |
+| 参数校验 | LangChain 自动校验 | SDK 自动校验 | MCP server 侧校验 |
+| 审批门 | 节点里 `interrupt()` | `needs_approval=True` | `can_use_tool` 权限回调 |
+| 幂等 | 自己写 | 自己写 | 自己写 |
 
-*映射按 Framework Lab 的概念边界整理，框架行为以官方文档和 [Framework Lab](../../project/framework-lab/README.md) 在 2026-09-04 的实现证据为准。*
+三个框架都做了 schema 和校验，**都不管幂等**。幂等永远是你自己的代码。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
+## 一线经验
+
+语音机器人项目的模式（去掉了业务细节）：一个小模型专门做意图分类并输出工具调用，另一个大模型负责聊天。
+
+小模型偶尔会输出训练时见过、但当前没注册的工具名，也会漏掉必填参数。早期的修法是改提示词，效果不稳定。后来的修法就是守卫 ① 和 ②：注册表查不到就当作「没有命令」回喂，参数校验失败就把错误回给它重试一次。**提示词一个字没改，问题消失了。**
+
+另一个教训：大模型在聊天正文里偶尔会写出格式完美的函数调用 JSON，一度被运行时解析执行。修法是只认工具调用通道，正文一律当文本。
 
 ## 练习
 
 见 [exercises.md](./exercises.md)。
 
-## 对照真实项目
-
-本课的四个守卫在 [M3](../../project/m3-tool-workflow/README.md) 合成了 [`aiapp/runtime/runner.py`](../../project/src/aiapp/runtime/runner.py) 的 `ToolRunner.run()`：`01` 的校验是 `Tool.validate()`，`02` 的注册表和白名单是 `ToolRegistry` 加 `RunContext.allowlist`，`03` 的幂等键是 `idempotency_key()` 加 `KeyValueStore.claim()`，`04` 的确认门是 `NeedsConfirmation` 和线程里的 `human_input(confirm_tool_call_id, approved)` 事件。`tests/project/m3/test_runner.py` 一个守卫一个用例。请求级的 `Idempotency-Key` 在 [M2](../../project/m2-state-and-storage/README.md) 的路由里，工具级的在 runner 里，两层各管一件事。
-
-这一课直接对应主项目 [M3.1 Tool contract](../../project/m3-tool-workflow/README.md) 和 M3.2 确认与幂等。M3 会把这四个文件里的守卫合并成一个 `ToolRunner`，接到 M2 的状态存储上。
-
-一个来自语音机器人项目的模式，去掉了业务细节：系统用一个小模型专门做意图分类并输出工具调用，另一个大模型负责聊天。小模型偶尔会输出训练时见过但当前没注册的工具名，也会漏掉必填参数。早期的修法是改提示词，效果不稳定。后来的修法就是这一课的守卫①和②：注册表查不到就当作"没有命令"回喂，参数校验失败就把错误回给它重试一次。提示词一个字没改，问题消失了。另一个教训是大模型在聊天正文里偶尔会写出格式完美的函数调用 JSON，一度被运行时解析执行。修法是只认工具调用通道，正文一律当文本。
-
 ## 延伸阅读
 
-- [12-factor-agents · factor 01: Natural Language to Tool Calls](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-01-natural-language-to-tool-calls.md)（访问日期 2026-09-04）：一页讲清"工具调用只是把自然语言变成结构化对象"。
-- [12-factor-agents · factor 04: Tools are just structured outputs](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-04-tools-are-structured-outputs.md)（访问日期 2026-09-04）：模型决定做什么，代码决定怎么做，两者分离。文末链接了几篇 function calling、JSON mode、constrained generation 的对比。
-- [ai-agents-for-beginners · 04 Tool Use](https://github.com/microsoft/ai-agents-for-beginners/blob/main/04-tool-use/README.md)（访问日期 2026-09-04）：把工具调用系统拆成 schema、执行逻辑、消息处理、集成框架、错误校验、状态六个组件，适合对照检查自己漏了哪一块。后半部分绑定微软框架，可以跳过。
-- [Anthropic · Tool use overview](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview)（访问日期 2026-09-04）：`tool_use` → 执行 → `tool_result` 的完整往返，以及 `is_error` 字段。这就是 `aiapp` 里类型设计的来源。
+- [12-factor-agents · factor 01: Natural Language to Tool Calls](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-01-natural-language-to-tool-calls.md)（访问日期 2026-09-04）：一页讲清「工具调用只是把自然语言变成结构化对象」。
+- [12-factor-agents · factor 04: Tools are just structured outputs](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-04-tools-are-structured-outputs.md)（访问日期 2026-09-04）：模型决定做什么，代码决定怎么做。
+- [ai-agents-for-beginners · 04 Tool Use](https://github.com/microsoft/ai-agents-for-beginners/blob/main/04-tool-use/README.md)（访问日期 2026-09-04）：把工具调用系统拆成六个组件，适合对照检查自己漏了哪一块。后半部分绑微软框架，可跳过。
+- [Anthropic · Tool use overview](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview)（访问日期 2026-09-04）：`tool_use` → 执行 → `tool_result` 的完整往返，以及 `is_error` 字段的语义。
 
 ---
 

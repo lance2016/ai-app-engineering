@@ -2,7 +2,7 @@
 
 ## 练习 1：加一个"用户打断"状态
 
-给 `01_stream_ui_state_machine.py` 加 `INTERRUPTED` 状态：用户在 `STREAMING` 或 `TOOL_RUNNING` 时点了停止。要求：已显示文字保留；从 `INTERRUPTED` 只能进入 `WAITING`。
+给正文的状态机加一个 `INTERRUPTED` 状态：用户在 `STREAMING` 或 `TOOL_RUNNING` 时点了停止。要求：已显示文字保留；从 `INTERRUPTED` 只能进入 `WAITING`。
 
 验收：在事件流里插入一个 `user_stopped` 事件，渲染出的帧显示"已停止，以下为部分回答"，且从 `INTERRUPTED` 直接 `go(UIState.DONE)` 会抛 `illegal transition`。
 
@@ -16,9 +16,9 @@
 
 ## 练习 2：给撤销窗口加"延迟提交"
 
-`02_undo_window.py` 里可逆动作是先执行再等撤销。对"发邮件"这类动作，执行了就收不回。改成：窗口期间只显示"将在 N 秒后发送"，窗口结束才真正执行；窗口内撤销则什么都不发。
+正文的可逆动作是先执行再等撤销。对「发邮件」这类动作，执行了就收不回。改成：窗口期间只显示「将在 N 秒后发送」，窗口结束才真正执行；窗口内撤销则什么都不发。
 
-验收：`USER_UNDOES=1` 时输出里不出现"sent"；不撤销时窗口结束后才出现。
+验收标准：用户在窗口内撤销时，邮件根本没发出去；不撤销时窗口结束后才发。
 
 <details><summary>答案</summary>
 
@@ -30,7 +30,7 @@
 
 ## 练习 3：反馈切片再切一层
 
-`03_feedback_metrics.py` 按意图切片。加第二个切片键 `model_version`，构造数据让"新版本在 faq 上更好、在 refund 上更差"，然后打印二维表。
+正文的反馈按意图切片。加第二个切片键 `model_version`，构造一组数据让「新版本在 faq 上更好、在 refund 上更差」，然后打印二维表。
 
 验收：能从表里看出应该只在 faq 场景上线新版本。
 

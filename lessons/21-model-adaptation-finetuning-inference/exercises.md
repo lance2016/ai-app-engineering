@@ -2,7 +2,7 @@
 
 ## 练习 1：给估算器加一个真实模型
 
-去任意一个开源模型的 Hugging Face 页面找 `config.json`，读出 `num_hidden_layers`、`num_key_value_heads`、`hidden_size / num_attention_heads`（头维度）和参数量，加进 `01_memory_estimator.py` 的 `SHAPES`。
+去任意一个开源模型的 Hugging Face 页面找 `config.json`，读出 `num_hidden_layers`、`num_key_value_heads`、`hidden_size / num_attention_heads`（头维度）和参数量，套进正文的显存公式算一遍。
 
 验收：能回答"这个模型 int4 权重加 4 路 16k 上下文的 KV cache，一张 24G 消费卡够不够"。
 
@@ -26,7 +26,7 @@
 
 ## 练习 3：临界点的敏感性
 
-用 `02_cost_breakeven.py` 回答：在默认假设下，GPU 小时价降到多少时自建在 60% 利用率下开始比 API 便宜？吞吐提高到多少也能达到同样效果？
+用正文的成本公式回答：在默认假设下，GPU 小时价降到多少时，自建在 60% 利用率下开始比 API 便宜？吞吐提高到多少也能达到同样效果？
 
 <details><summary>答案</summary>
 

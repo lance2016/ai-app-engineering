@@ -2,7 +2,7 @@
 
 ## 练习 1：让关联 id 穿过 create_task
 
-把 `01_structured_logging.py` 里的工具调用改成 `asyncio.create_task(run_tool(...))` 并发执行，`run_id` 不再显式传参，而是放进一个 `contextvars.ContextVar`。
+把正文那套结构化日志里的工具调用改成 `asyncio.create_task(run_tool(...))` 并发执行，`run_id` 不再显式传参，而是放进一个 `contextvars.ContextVar`。
 
 验收：并发执行的工具日志仍然带正确的 `run_id`。然后把工具调用改成 `loop.run_in_executor` 跑在线程池里，观察 `run_id` 是否还在。
 
@@ -14,7 +14,7 @@
 
 ## 练习 2：给 tracer 加"记全文"的开关
 
-`02_minimal_tracer.py` 的 chat span 只记 token 数。加一个环境变量 `TRACE_CONTENT=1`，打开时把 `gen_ai.input.messages` 和 `gen_ai.output.messages` 也放进属性。
+正文的 chat span 只记 token 数。加一个开关 `TRACE_CONTENT=1`，打开时把 `gen_ai.input.messages` 和 `gen_ai.output.messages` 也放进属性。
 
 验收：默认输出里没有消息正文；打开后有。然后回答：为什么这个开关默认应该关。
 
@@ -26,7 +26,7 @@
 
 ## 练习 3：用 trace 做循环告警
 
-基于 `03_failure_experiments.py` 的 `loop` 场景，写一个函数 `detect_loops(spans) -> list[str]`，输入一棵 span 树，输出"同一父节点下相同 `aiapp.args_hash` 的 `execute_tool` 子 span 超过 2 个"的父 span 名字。
+基于正文的循环场景，写一个函数 `detect_loops(spans) -> list[str]`：输入一棵 span 树，输出「同一父节点下相同 `aiapp.args_hash` 的 `execute_tool` 子 span 超过 2 个」的父 span 名字。
 
 验收：`loop` 场景返回一个结果，其他四个场景返回空。
 
@@ -38,13 +38,13 @@
 
 ## 练习 4：把 04 的 payload 真的发出去
 
-本机装 Phoenix：`pip install arize-phoenix`（建议在另一个虚拟环境里）然后 `phoenix serve`。设 `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:6006` 跑 `04_otlp_export.py`，在 Phoenix 界面里找到 `aiapp-lesson18` 这个服务。
+本机装 Phoenix：`pip install arize-phoenix` 然后 `phoenix serve`。按正文的 OTLP 结构拼一个 payload，POST 到 `http://localhost:6006/v1/traces`，在 Phoenix 界面里找到你设的那个 `service.name`。
 
 验收：能看到三个 span 的树，`execute_tool search` 显示为错误状态。然后故意把 `status.code` 改成 0，再发一次，看 UI 里那个 span 的颜色变化。
 
 <details><summary>说明</summary>
 
-这题的目的是亲眼看到"状态码决定 UI 颜色"。`code: 2` 是 ERROR，`code: 1` 是 OK，`code: 0` 是 UNSET。第 02 课的 `INJECT_FORGET_STATUS` 对应的就是 UNSET。
+这题的目的是亲眼看到「状态码决定 UI 颜色」。`code: 2` 是 ERROR，`code: 1` 是 OK，`code: 0` 是 UNSET。「只 record_exception 不 set_status」得到的就是 UNSET —— 在界面上和绿色没区别。
 
 </details>
 
