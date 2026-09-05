@@ -16,6 +16,9 @@ exclude_docs: |
 theme:
   name: material
   language: zh
+  # Roboto is Material's signature and its Google Fonts request stalls for
+  # readers in mainland China. The skin uses system faces instead.
+  font: false
   icon:
     repo: fontawesome/brands/github
   features:
@@ -34,18 +37,27 @@ theme:
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: indigo
-      accent: indigo
+      primary: custom
+      accent: custom
       toggle:
         icon: material/weather-night
         name: 切换到暗色
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: custom
+      accent: custom
       toggle:
         icon: material/weather-sunny
         name: 切换到亮色
+
+extra:
+  # 37 篇 complete、6 篇 draft、2 篇 outline。只标未完成的那几篇，见 wabi.css。
+  status:
+    draft: 草稿，内容还会变
+    outline: 只有提纲
+
+extra_css:
+  - stylesheets/wabi.css
 
 plugins:
   # 装了 jieba 之后，Material 会在构建期对中文正文分词，搜索才能命中中文词。

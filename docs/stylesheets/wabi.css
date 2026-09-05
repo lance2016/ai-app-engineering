@@ -1,0 +1,531 @@
+/* ==========================================================================
+   Wabi-sabi skin for MkDocs Material.
+
+   Ground rules, so future edits stay coherent:
+   1. One paper tone across header, nav and content. Structure comes from
+      whitespace and hairlines, never from cards, shadows or fills.
+   2. No web fonts. The audience reads from mainland China, where Google
+      Fonts is unreachable; a blocked @import would stall first paint.
+      Headings borrow an old-style Latin serif and a system Song face.
+   3. Colour is spent in exactly one place: celadon, on links and on the
+      marks that say "you are here". Rust is reserved for warnings.
+   ========================================================================== */
+
+/* --- tokens ------------------------------------------------------------- */
+
+[data-md-color-scheme="default"] {
+  --ws-paper:      #eae7df;
+  --ws-paper-deep: #e3dfd5;
+  --ws-ink:        #2a2823;
+  --ws-ink-2:      #5c574d;
+  --ws-ink-3:      #857f72;
+  --ws-rule:       #d2cdc1;
+  --ws-rule-faint: #dfdace;
+  --ws-celadon:    #46685c;
+  --ws-celadon-2:  #6e8b7e;
+  --ws-rust:       #8a5334;
+
+  --md-default-bg-color:              var(--ws-paper);
+  --md-default-fg-color:              var(--ws-ink);
+  --md-default-fg-color--light:       var(--ws-ink-2);
+  --md-default-fg-color--lighter:     var(--ws-ink-3);
+  --md-default-fg-color--lightest:    var(--ws-rule);
+  --md-primary-fg-color:              var(--ws-paper);
+  --md-primary-bg-color:              var(--ws-ink);
+  --md-primary-bg-color--light:       var(--ws-ink-2);
+  --md-accent-fg-color:               var(--ws-celadon-2);
+  --md-typeset-color:                 var(--ws-ink);
+  --md-typeset-a-color:               var(--ws-celadon);
+  --md-typeset-mark-color:            #ded4b4;
+  --md-typeset-table-color:           var(--ws-rule);
+  --md-code-bg-color:                 var(--ws-paper-deep);
+  --md-code-fg-color:                 var(--ws-ink);
+  --md-footer-bg-color:               var(--ws-paper);
+  --md-footer-bg-color--dark:         var(--ws-paper);
+  --md-footer-fg-color:               var(--ws-ink);
+  --md-footer-fg-color--light:        var(--ws-ink-2);
+  --md-footer-fg-color--lighter:      var(--ws-ink-3);
+  --md-shadow-z1: none;
+  --md-shadow-z2: none;
+  --md-shadow-z3: none;
+
+  /* Syntax highlighting uses the page's own three colours -- ink, celadon,
+     rust -- so a code block reads as part of the page, not a pasted screen. */
+  --md-code-hl-keyword-color:      var(--ws-celadon);
+  --md-code-hl-operator-color:     var(--ws-ink-2);
+  --md-code-hl-punctuation-color:  var(--ws-ink-2);
+  --md-code-hl-string-color:       var(--ws-rust);
+  --md-code-hl-number-color:       var(--ws-rust);
+  --md-code-hl-constant-color:     var(--ws-rust);
+  --md-code-hl-special-color:      var(--ws-rust);
+  --md-code-hl-comment-color:      var(--ws-ink-3);
+  --md-code-hl-function-color:     var(--ws-ink);
+  --md-code-hl-name-color:         var(--ws-ink);
+  --md-code-hl-variable-color:     var(--ws-ink);
+  --md-code-hl-generic-color:      var(--ws-ink-2);
+  --md-code-hl-color:              var(--ws-celadon);
+}
+
+[data-md-color-scheme="slate"] {
+  --ws-paper:      #1e1d1a;
+  --ws-paper-deep: #26241f;
+  --ws-ink:        #e0dbd0;
+  --ws-ink-2:      #a39c8d;
+  --ws-ink-3:      #7c7567;
+  --ws-rule:       #3a372f;
+  --ws-rule-faint: #302e28;
+  --ws-celadon:    #9bbba9;
+  --ws-celadon-2:  #b9d2c3;
+  --ws-rust:       #c48a63;
+
+  --md-hue: 40;
+  --md-default-bg-color:              var(--ws-paper);
+  --md-default-fg-color:              var(--ws-ink);
+  --md-default-fg-color--light:       var(--ws-ink-2);
+  --md-default-fg-color--lighter:     var(--ws-ink-3);
+  --md-default-fg-color--lightest:    var(--ws-rule);
+  --md-primary-fg-color:              var(--ws-paper);
+  --md-primary-bg-color:              var(--ws-ink);
+  --md-primary-bg-color--light:       var(--ws-ink-2);
+  --md-accent-fg-color:               var(--ws-celadon-2);
+  --md-typeset-color:                 var(--ws-ink);
+  --md-typeset-a-color:               var(--ws-celadon);
+  --md-typeset-mark-color:            #4a4326;
+  --md-typeset-table-color:           var(--ws-rule);
+  --md-code-bg-color:                 var(--ws-paper-deep);
+  --md-code-fg-color:                 var(--ws-ink);
+  --md-footer-bg-color:               var(--ws-paper);
+  --md-footer-bg-color--dark:         var(--ws-paper);
+  --md-footer-fg-color:               var(--ws-ink);
+  --md-footer-fg-color--light:        var(--ws-ink-2);
+  --md-footer-fg-color--lighter:      var(--ws-ink-3);
+  --md-shadow-z1: none;
+  --md-shadow-z2: none;
+  --md-shadow-z3: none;
+
+  --md-code-hl-keyword-color:      var(--ws-celadon);
+  --md-code-hl-operator-color:     var(--ws-ink-2);
+  --md-code-hl-punctuation-color:  var(--ws-ink-2);
+  --md-code-hl-string-color:       var(--ws-rust);
+  --md-code-hl-number-color:       var(--ws-rust);
+  --md-code-hl-constant-color:     var(--ws-rust);
+  --md-code-hl-special-color:      var(--ws-rust);
+  --md-code-hl-comment-color:      var(--ws-ink-3);
+  --md-code-hl-function-color:     var(--ws-ink);
+  --md-code-hl-name-color:         var(--ws-ink);
+  --md-code-hl-variable-color:     var(--ws-ink);
+  --md-code-hl-generic-color:      var(--ws-ink-2);
+  --md-code-hl-color:              var(--ws-celadon);
+}
+
+/* --- type --------------------------------------------------------------- */
+
+:root {
+  /* Latin from an old-style face with calligraphic roots, CJK from a Song
+     face. Both traditions come from a cut or brushed stroke, so mixed
+     Chinese/English headings keep one voice. */
+  --ws-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+              Georgia, "Songti SC", "Source Han Serif SC", "Noto Serif CJK SC",
+              "Source Han Serif CN", STSong, SimSun, serif;
+  --ws-sans:  -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+              "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC",
+              "Noto Sans CJK SC", sans-serif;
+  --ws-mono:  ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+              "Liberation Mono", "PingFang SC", monospace;
+}
+
+body, input, .md-typeset { font-family: var(--ws-sans); }
+code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono); }
+
+/* CJK carries more ink per line than Latin, so it wants more leading and a
+   slightly larger body size than Material's default 16px/1.6. */
+.md-typeset {
+  font-size: .85rem;
+  line-height: 1.9;
+  letter-spacing: .01em;
+}
+
+.md-typeset h1, .md-typeset h2, .md-typeset h3,
+.md-typeset h4, .md-typeset h5, .md-typeset h6 {
+  font-family: var(--ws-serif);
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--ws-ink);
+}
+
+.md-typeset h1 {
+  font-size: 2rem;
+  line-height: 1.35;
+  margin: 0 0 1.6rem;
+  font-weight: 500;
+}
+.md-typeset h2 {
+  font-size: 1.35rem;
+  line-height: 1.4;
+  margin: 3.2rem 0 .9rem;
+  font-weight: 500;
+}
+.md-typeset h3 {
+  font-size: 1.05rem;
+  margin: 2rem 0 .6rem;
+  font-weight: 600;
+}
+.md-typeset h4 { font-size: .92rem; margin: 1.6rem 0 .5rem; }
+
+.md-typeset p, .md-typeset li { text-wrap: pretty; }
+.md-typeset p { margin: 0 0 1.1rem; }
+.md-typeset ul, .md-typeset ol { margin-bottom: 1.1rem; }
+.md-typeset li { margin-bottom: .35rem; }
+.md-typeset strong { font-weight: 600; color: var(--ws-ink); }
+
+/* --- measure and the empty margin --------------------------------------- */
+
+.md-grid { max-width: 68rem; }
+
+/* Material sets the root font at 125%, so 1rem is 20px here. 36rem is about
+   720px, roughly 40 full-width Chinese characters per line -- Material's
+   default 61rem grid puts 56 on a line, which is past comfortable.
+   The column stops well short of the table of contents. The gap is not
+   padding waiting to be filled; it is the page breathing. */
+.md-content__inner { max-width: 36rem; margin-bottom: 4rem; }
+.md-content__inner::before { display: none; }         /* Material's top spacer */
+.md-content__inner > :first-child { margin-top: 2.4rem; }
+
+/* Tables, code and diagrams are allowed to spill into that gap, but only on
+   screens wide enough that the spill cannot reach the table of contents. */
+@media screen and (min-width: 90em) {
+  .md-typeset .md-typeset__scrollwrap,
+  .md-typeset .highlight,
+  .md-typeset .highlighttable,
+  .md-typeset .mermaid,
+  .md-typeset > p > img {
+    width: calc(100% + 4rem);
+    max-width: none;
+  }
+}
+
+/* --- the opening line ---------------------------------------------------- */
+
+/* Every lesson opens with a one-sentence blockquote under the title. It is
+   the page's thesis, so it gets the page's one piece of scale. */
+[dir] .md-typeset h1 + blockquote {
+  margin: 0 0 3rem;
+  padding: 0 0 1.6rem;
+  border: 0;
+  border-bottom: 1px solid var(--ws-rule);
+  font-family: var(--ws-serif);
+  font-size: 1.05rem;
+  line-height: 1.95;
+  color: var(--ws-ink-2);
+}
+[dir] .md-typeset h1 + blockquote p { margin: 0; }
+
+[dir] .md-typeset blockquote {
+  margin: 1.6rem 0;
+  padding-left: 1.2rem;
+  border-left: 1px solid var(--ws-rule);
+  color: var(--ws-ink-2);
+}
+
+/* --- tables: the three-rule form used in Chinese technical writing ------- */
+
+.md-typeset table:not([class]) {
+  border: 0;
+  border-top: 1px solid var(--ws-ink);
+  border-bottom: 1px solid var(--ws-ink);
+  border-radius: 0;
+  box-shadow: none;
+  font-size: .78rem;
+  line-height: 1.75;
+}
+.md-typeset table:not([class]) th {
+  background: transparent;
+  border-bottom: 1px solid var(--ws-rule);
+  font-family: var(--ws-serif);
+  font-weight: 600;
+  color: var(--ws-ink);
+  padding: .7rem .9rem;
+}
+.md-typeset table:not([class]) td {
+  border: 0;
+  padding: .7rem .9rem;
+  vertical-align: top;
+}
+.md-typeset table:not([class]) tr:hover { background: transparent; }
+.md-typeset__scrollwrap { margin: 1.6rem 0; }
+
+/* --- code ---------------------------------------------------------------- */
+
+.md-typeset pre > code {
+  border-radius: 2px;
+  padding: 1.1rem 1.2rem;
+  line-height: 1.7;
+}
+.md-typeset .highlight { margin: 1.6rem 0; }
+.md-typeset code {
+  border-radius: 2px;
+  padding: .1em .35em;
+  font-size: .84em;
+  background: var(--ws-paper-deep);
+}
+.md-typeset a > code { color: inherit; }
+
+/* Line numbers should recede; they are addressing, not content. */
+.md-typeset .highlight [data-linenos]::before {
+  color: var(--ws-ink-3);
+  background: transparent;
+  box-shadow: none;
+}
+
+/* --- links --------------------------------------------------------------- */
+
+.md-typeset a {
+  color: var(--ws-celadon);
+  text-decoration: underline;
+  text-decoration-color: var(--ws-rule);
+  text-underline-offset: .22em;
+  text-decoration-thickness: 1px;
+}
+.md-typeset a:hover,
+.md-typeset a:focus-visible { text-decoration-color: currentColor; }
+
+/* --- buttons: an outline, not a slab ------------------------------------- */
+
+.md-typeset .md-button {
+  border: 1px solid var(--ws-rule);
+  border-radius: 2px;
+  padding: .5em 1.4em;
+  color: var(--ws-ink);
+  font-family: var(--ws-serif);
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color .2s, color .2s;
+}
+.md-typeset .md-button--primary {
+  background: transparent;
+  border-color: var(--ws-celadon);
+  color: var(--ws-celadon);
+}
+.md-typeset .md-button:hover,
+.md-typeset .md-button:focus-visible {
+  background: transparent;
+  border-color: var(--ws-ink);
+  color: var(--ws-ink);
+}
+
+/* --- header: paper all the way up ---------------------------------------- */
+
+.md-header {
+  background: var(--ws-paper);
+  color: var(--ws-ink);
+  box-shadow: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color .25s;
+}
+.md-header--shadow { border-bottom-color: var(--ws-rule); box-shadow: none; }
+.md-header__title { font-family: var(--ws-serif); font-weight: 500; }
+.md-header__topic:first-child { font-weight: 500; }
+.md-search__form {
+  background: var(--ws-paper-deep);
+  border-radius: 2px;
+  box-shadow: none;
+}
+.md-search__form:hover { background: var(--ws-rule-faint); }
+.md-search__input::placeholder { color: var(--ws-ink-3); }
+[data-md-toggle="search"]:checked ~ .md-header .md-search__form { border-radius: 2px 2px 0 0; }
+.md-search__output { border-radius: 0 0 2px 2px; }
+.md-search-result__meta { background: var(--ws-paper-deep); color: var(--ws-ink-2); }
+
+/* --- navigation: a mark in the margin, not a filled pill ----------------- */
+
+.md-nav { font-size: .68rem; line-height: 1.7; }
+.md-nav__title { font-family: var(--ws-serif); color: var(--ws-ink-2); font-weight: 500; }
+.md-nav__link { color: var(--ws-ink-2); transition: color .15s; }
+.md-nav__link:hover, .md-nav__link:focus { color: var(--ws-ink); }
+.md-nav__item .md-nav__link--active,
+.md-nav__item .md-nav__link--active:hover { color: var(--ws-celadon); font-weight: 600; }
+
+.md-sidebar--primary .md-nav__list .md-nav__link {
+  position: relative;
+  padding-left: .55rem;
+}
+.md-sidebar--primary .md-nav__link--active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: .45em;
+  bottom: .45em;
+  width: 2px;
+  background: var(--ws-celadon);
+}
+
+.md-sidebar__scrollwrap::-webkit-scrollbar-thumb { background: var(--ws-rule); }
+
+/* 37 of the 45 pages carry status: complete, so that badge marks the rule
+   rather than the exception and reads as noise. Only the unfinished pages
+   get a mark, and it stays a dot. */
+.md-status--complete { display: none; }
+.md-status { color: var(--ws-ink-3); }
+.md-status::after {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: .3em;
+  background: transparent;
+  border: 1px solid currentcolor;
+  border-radius: 50%;
+  vertical-align: .1em;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.md-status--draft::after { background: currentcolor; }
+
+/* Table of contents: quiet, with the active heading marked the same way. */
+.md-nav--secondary .md-nav__title { border-bottom: 1px solid var(--ws-rule); padding-bottom: .5rem; }
+.md-nav--secondary .md-nav__link--passed { color: var(--ws-ink-3); }
+
+/* --- footer -------------------------------------------------------------- */
+
+.md-footer { border-top: 1px solid var(--ws-rule); }
+.md-footer-meta { background: transparent; }
+.md-footer__link { opacity: 1; }
+.md-footer__title { font-family: var(--ws-serif); background: transparent; }
+.md-footer__direction { color: var(--ws-ink-3); }
+.md-copyright { color: var(--ws-ink-3); }
+.md-copyright__highlight { color: var(--ws-ink-2); }
+
+/* --- diagrams and figures ------------------------------------------------ */
+
+/* Material declares these on `:root > *`, i.e. on <body>, so a plain :root
+   block here loses to it. Match the selector and win on source order.
+   The 40 Mermaid diagrams stay entirely in ink and paper: colour is spent on
+   links and on the opening line, and nowhere else. */
+:root > * {
+  --md-mermaid-font-family: var(--ws-sans);
+  --md-mermaid-node-bg-color: transparent;
+  --md-mermaid-node-fg-color: var(--ws-ink-2);
+  --md-mermaid-label-bg-color: var(--ws-paper);
+  --md-mermaid-label-fg-color: var(--ws-ink);
+  --md-mermaid-edge-color: var(--ws-ink-2);
+
+  --md-mermaid-sequence-actor-bg-color: transparent;
+  --md-mermaid-sequence-actor-fg-color: var(--ws-ink);
+  --md-mermaid-sequence-actor-border-color: var(--ws-ink-2);
+  --md-mermaid-sequence-actor-line-color: var(--ws-rule);
+  --md-mermaid-sequence-actorman-bg-color: transparent;
+  --md-mermaid-sequence-actorman-line-color: var(--ws-ink-2);
+  --md-mermaid-sequence-box-bg-color: transparent;
+  --md-mermaid-sequence-box-fg-color: var(--ws-ink);
+  --md-mermaid-sequence-label-bg-color: var(--ws-paper-deep);
+  --md-mermaid-sequence-label-fg-color: var(--ws-ink);
+  --md-mermaid-sequence-loop-bg-color: transparent;
+  --md-mermaid-sequence-loop-border-color: var(--ws-rule);
+  --md-mermaid-sequence-loop-fg-color: var(--ws-ink);
+  --md-mermaid-sequence-message-fg-color: var(--ws-ink);
+  --md-mermaid-sequence-message-line-color: var(--ws-ink-2);
+  --md-mermaid-sequence-note-bg-color: var(--ws-paper-deep);
+  --md-mermaid-sequence-note-border-color: var(--ws-rule);
+  --md-mermaid-sequence-note-fg-color: var(--ws-ink);
+  --md-mermaid-sequence-number-bg-color: var(--ws-ink-2);
+  --md-mermaid-sequence-number-fg-color: var(--ws-paper);
+}
+.md-typeset .mermaid { margin: 2.4rem 0; }
+
+.md-typeset img { border-radius: 2px; }
+
+/* --- folded exercise answers --------------------------------------------- */
+
+[dir] .md-typeset details {
+  border: 0;
+  border-top: 1px solid var(--ws-rule);
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  font-size: inherit;
+  padding-bottom: .6rem;
+}
+[dir] .md-typeset details > summary {
+  background: transparent;
+  border-left-width: 0;
+  font-family: var(--ws-serif);
+  font-weight: 500;
+  color: var(--ws-ink-2);
+  padding: .7rem 0;
+}
+[dir] .md-typeset details > summary::before { display: none; }
+.md-typeset details > summary::after { color: var(--ws-ink-3); }
+[dir] .md-typeset details[open] > summary { color: var(--ws-ink); }
+
+/* --- rules and marks ------------------------------------------------------ */
+
+.md-typeset hr {
+  border-bottom: 1px solid var(--ws-rule);
+  margin: 3rem 0;
+}
+
+.md-typeset .headerlink {
+  color: var(--ws-rule);
+  text-decoration: none;
+}
+.md-typeset :target > .headerlink,
+.md-typeset :hover > .headerlink { color: var(--ws-celadon); }
+
+/* --- the front page ------------------------------------------------------- */
+
+/* index.md hides both sidebars, which is how we recognise it without a
+   template override. Its column runs wider and opens with more silence. */
+.md-main__inner:has(.md-sidebar--primary[hidden]) .md-content__inner {
+  max-width: 38rem;
+  margin-inline: auto;
+}
+
+/* The edit-this-page pencil has nothing to sit beside on the front page. */
+.md-main__inner:has(.md-sidebar--primary[hidden]) .md-content__button { display: none; }
+.md-main__inner:has(.md-sidebar--primary[hidden]) .md-content__inner > h1 {
+  font-size: 2.9rem;
+  line-height: 1.2;
+  margin-top: 5rem;
+  margin-bottom: 1.2rem;
+  font-weight: 400;
+}
+.md-main__inner:has(.md-sidebar--primary[hidden]) .md-content__inner > h1 + h2 {
+  margin-top: 0;
+  margin-bottom: 2.2rem;
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: var(--ws-ink-2);
+}
+.md-main__inner:has(.md-sidebar--primary[hidden]) .md-typeset .md-button {
+  margin-top: .8rem;
+}
+
+/* --- quality floor -------------------------------------------------------- */
+
+:focus-visible {
+  outline: 2px solid var(--ws-celadon);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media screen and (max-width: 76.1875em) {
+  .md-nav--primary .md-nav__title { background: var(--ws-paper); color: var(--ws-ink); }
+  .md-nav--primary .md-nav__title ~ .md-nav__list { box-shadow: none; }
+  .md-content__inner { max-width: none; }
+}
+
+@media screen and (max-width: 44.9375em) {
+  .md-typeset { font-size: .82rem; line-height: 1.85; }
+  .md-typeset h1 { font-size: 1.55rem; }
+  .md-main__inner:has(.md-sidebar--primary[hidden]) .md-content__inner > h1 {
+    font-size: 2rem;
+    margin-top: 2.4rem;
+  }
+}
