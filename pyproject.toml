@@ -1,48 +1,16 @@
 [project]
 name = "ai-app-engineering"
-version = "0.0.1"
-description = "Production-grade AI Application Engineering course covering LLMs, Agents, RAG, MCP, Evaluation, Observability and Agent Frameworks"
+version = "0.1.0"
+description = "A Chinese course on AI application engineering: LLMs, Agents, RAG, MCP, evaluation, observability and production concerns"
 requires-python = ">=3.12"
-dependencies = [
-    "alembic>=1.19.1",
-    "asyncpg>=0.31.0",
-    "fastapi>=0.141.1",
-    "httpx>=0.28.1",
-    "openai>=3.8.0",
-    "opentelemetry-api>=1.44.0",
-    "opentelemetry-exporter-otlp-proto-http>=1.44.0",
-    "opentelemetry-sdk>=1.44.0",
-    "pgvector>=0.5.0",
-    "pydantic>=2.7",
-    "python-dotenv>=1.2.3",
-    "redis>=8.1.0",
-    "sqlalchemy[asyncio]>=2.0",
-    "uvicorn>=0.52.4",
-]
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-packages = ["project/src/aiapp"]
+dependencies = []
 
 [dependency-groups]
+docs = [
+    "jieba>=0.42.1",
+    "mkdocs-glightbox>=0.5.2",
+    "mkdocs-material>=9.5",
+]
 dev = [
-    "pytest>=8.0",
     "pyyaml>=6.0.3",
 ]
-frameworks = [
-    "aiosqlite>=0.22.1",
-    "claude-agent-sdk>=0.2.152",
-    "langchain-core>=1.6.1",
-    "langgraph>=1.2.11",
-    "langgraph-checkpoint-sqlite>=3.1.1",
-    "openai-agents>=0.22.0",
-]
-prereq = []
-
-[tool.pytest.ini_options]
-addopts = "--import-mode=importlib"
-testpaths = ["tests"]
-pythonpath = ["project/framework-lab"]

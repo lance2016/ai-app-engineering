@@ -13,6 +13,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SKIP_DIRS = {".git", ".venv", "node_modules", ".pytest_cache", "templates"}
 LINK_RE = re.compile(r"\]\(([^)\s]+)\)")
+# Fenced code blocks contain regexes and shell that look like links; skip them.
+FENCE_RE = re.compile(r"^```", re.MULTILINE)
 
 
 def iter_markdown() -> list[Path]:
@@ -28,8 +30,14 @@ def is_local(target: str) -> bool:
     return not (target.startswith(("http://", "https://", "mailto:", "#")) or "://" in target)
 
 
+def strip_code_blocks(text: str) -> str:
+    """Drop fenced blocks so regexes and shell snippets are not read as links."""
+    parts = text.split("```")
+    return "".join(parts[::2])  # keep the segments outside the fences
+
+
 def broken_links(md: Path) -> list[str]:
-    text = md.read_text(encoding="utf-8")
+    text = strip_code_blocks(md.read_text(encoding="utf-8"))
     bad = []
     for target in LINK_RE.findall(text):
         if not is_local(target):

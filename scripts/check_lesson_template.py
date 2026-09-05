@@ -1,12 +1,11 @@
-"""Check that every `complete` lesson and prerequisite module actually meets the template.
+"""Check that every `complete` lesson and prerequisite module meets the template.
 
 Run:  uv run python scripts/check_lesson_template.py           # errors fail, warnings print
       uv run python scripts/check_lesson_template.py --strict  # warnings also fail
 
-`complete` in a README's frontmatter promises: every template section is
-present, `code/` has at least one runnable .py, `exercises.md` exists and has
-folded answers. Sections listed in FUTURE_SECTIONS are the template additions
-from the 2026-09 restructure; they are warnings until the retrofit is done.
+`complete` in a README's frontmatter promises: every required section is
+present and `exercises.md` exists with folded answers. Sections in
+OPTIONAL_SECTIONS are recommended but not every topic has them.
 """
 
 import argparse
@@ -16,10 +15,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-LESSON_SECTIONS = ["学习目标", "前置", "心智模型", "最小可运行例子", "常见错误与失败注入", "取舍", "练习", "对照真实项目", "延伸阅读"]
-FUTURE_SECTIONS = ["为什么需要", "生产方案", "框架映射"]
-PREREQ_SECTIONS = ["学习目标", "前置", "核心概念", "动手", "常见错误", "练习", "它在 AI 应用里用在哪", "延伸阅读"]
-MILESTONE_SECTIONS = ["这一步加什么", "验收证据", "依赖的课程"]
+LESSON_SECTIONS = ["为什么需要", "学习目标", "心智模型", "机制拆解", "常见错误", "取舍", "框架映射", "练习", "延伸阅读"]
+OPTIONAL_SECTIONS = ["前置", "工程落地", "一线经验"]
+PREREQ_SECTIONS = ["学习目标", "核心概念", "常见错误", "延伸阅读"]
 
 
 def frontmatter(path: Path) -> dict[str, str]:
@@ -34,27 +32,20 @@ def headings(path: Path) -> set[str]:
     return {h.strip() for h in re.findall(r"^## (.+)$", path.read_text(encoding="utf-8"), re.M)}
 
 
-def check_unit(readme: Path, sections: list[str], *, needs_code: bool, needs_exercises: bool) -> tuple[list[str], list[str]]:
+def check_unit(readme: Path, sections: list[str], *, needs_exercises: bool) -> tuple[list[str], list[str]]:
     errors, warnings = [], []
-    fm = frontmatter(readme)
-    if fm.get("status") != "complete":
+    if frontmatter(readme).get("status") != "complete":
         return errors, warnings
     found = headings(readme)
     for s in sections:
         if s not in found:
             errors.append(f"missing section '## {s}'")
-    for s in FUTURE_SECTIONS if sections is LESSON_SECTIONS else []:
-        if s not in found:
-            warnings.append(f"missing new-template section '## {s}'")
-    unit = readme.parent
-    if needs_code:
-        code = list((unit / "code").glob("*.py"))
-        if not code:
-            errors.append("code/ has no .py file")
-        elif sections is LESSON_SECTIONS and not any("INJECT_" in p.read_text(encoding="utf-8") for p in code):
-            warnings.append("no INJECT_ switch in code/ (failure injection should be reproducible)")
+    if sections is LESSON_SECTIONS:
+        for s in OPTIONAL_SECTIONS:
+            if s not in found:
+                warnings.append(f"no '## {s}' section")
     if needs_exercises:
-        ex = unit / "exercises.md"
+        ex = readme.parent / "exercises.md"
         if not ex.exists():
             errors.append("exercises.md missing")
         elif "<details>" not in ex.read_text(encoding="utf-8"):
@@ -68,13 +59,12 @@ def main() -> int:
     args = parser.parse_args()
 
     units = [
-        *((p, LESSON_SECTIONS, True, True) for p in sorted(ROOT.glob("lessons/*/README.md"))),
-        *((p, PREREQ_SECTIONS, True, True) for p in sorted(ROOT.glob("prerequisites/*/*/README.md"))),
-        *((p, MILESTONE_SECTIONS, False, False) for p in sorted(ROOT.glob("project/m*/README.md"))),
+        *((p, LESSON_SECTIONS, True) for p in sorted(ROOT.glob("lessons/*/README.md"))),
+        *((p, PREREQ_SECTIONS, False) for p in sorted(ROOT.glob("prerequisites/*/*/README.md"))),
     ]
     total_errors = total_warnings = 0
-    for readme, sections, needs_code, needs_exercises in units:
-        errors, warnings = check_unit(readme, sections, needs_code=needs_code, needs_exercises=needs_exercises)
+    for readme, sections, needs_exercises in units:
+        errors, warnings = check_unit(readme, sections, needs_exercises=needs_exercises)
         rel = readme.relative_to(ROOT)
         for e in errors:
             print(f"ERROR {rel}: {e}")
@@ -83,9 +73,7 @@ def main() -> int:
         total_errors += len(errors)
         total_warnings += len(warnings)
     print(f"{len(units)} units checked, {total_errors} error(s), {total_warnings} warning(s)")
-    if total_errors or (args.strict and total_warnings):
-        return 1
-    return 0
+    return 1 if total_errors or (args.strict and total_warnings) else 0
 
 
 if __name__ == "__main__":

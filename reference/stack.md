@@ -12,7 +12,7 @@
 | 数据库 | PostgreSQL + pgvector | 一个库同时管业务数据和向量，少一个组件 | 向量量级超过千万或需要专门的过滤性能时评估专用向量库 |
 | 缓存与队列 | Redis | 状态、幂等键、简单队列 | 需要严格顺序和重放时换消息队列 |
 | 模型接入 | `openai` SDK 走 OpenAI 兼容协议，包在 adapter 后面；默认 fake adapter，真实示范用 DeepSeek | 不绑供应商；离线可跑；DeepSeek 国内可访问且价格低 | 需要 Anthropic 原生特性（如 prompt caching 细节、server tools）时另加一个 adapter |
-| Agent | 普通 Python 状态机 | 先懂机制再选框架 | 项目需要持久化 checkpoint 和 HITL 时评估框架；[Framework Lab](../project/framework-lab/README.md) 用同一需求对照 LangGraph、OpenAI Agents SDK、Claude Agent SDK，全景见 [框架全景与选型标准](../project/framework-lab/00-landscape.md) |
+| Agent | 普通 Python 状态机 | 先懂机制再选框架 | 项目需要持久化 checkpoint 和 HITL 时评估框架，全景与选型标准见 [框架一览](./frameworks.md) |
 | 可观测 | 结构化日志 + OpenTelemetry + Arize Phoenix | 通用 trace 标准；Phoenix 本地起得快 | 需要团队协作和评测管理时比较 Langfuse |
 | 容器 | Docker Compose | 一条命令起依赖 | 无 |
 

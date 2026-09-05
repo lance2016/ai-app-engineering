@@ -53,7 +53,7 @@ def get_adapter(provider: str | None = None) -> ModelAdapter:
 
 ## 对照
 
-- 参考：本仓库 [`project/src/aiapp/adapters/`](../project/src/aiapp/adapters/) 是这条原则的完整实现；DeepSeek、DashScope 的 OpenAI 兼容接口见 [DeepSeek API 文档](https://api-docs.deepseek.com/) 与 [阿里云 DashScope 兼容模式](https://help.aliyun.com/zh/model-studio/compatibility-of-openai-with-dashscope)（访问日期 2026-09-04）。12-factor-agents 没有直接对应的 factor，但 factor 02 和 factor 03 的"自己掌控 prompt 和上下文"与此同源：你能掌控的前提是中间没有黑盒。
+- 参考：DeepSeek、DashScope 的 OpenAI 兼容接口见 [DeepSeek API 文档](https://api-docs.deepseek.com/) 与 [阿里云 DashScope 兼容模式](https://help.aliyun.com/zh/model-studio/compatibility-of-openai-with-dashscope)（访问日期 2026-09-04）。12-factor-agents 没有直接对应的 factor，但 factor 02 和 factor 03 的"自己掌控 prompt 和上下文"与此同源：你能掌控的前提是中间没有黑盒。
 - 相关课程：[00 环境与模型接入](../lessons/00-setup/README.md)、[02 模型调用、结构化输出与流式](../lessons/02-model-api-structured-output-streaming/README.md)、[19 可靠性、成本、部署与 LLMOps](../lessons/19-reliability-cost-llmops/README.md)、[21 模型适配、微调与推理服务](../lessons/21-model-adaptation-finetuning-inference/README.md)
 
 ---

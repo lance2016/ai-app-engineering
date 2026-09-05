@@ -10,8 +10,9 @@
 
 ## 不接受什么
 
-- 新增一级目录，或在 `lessons/`、`prerequisites/` 末尾追加编号。
-- 绑定特定云厂商或 Agent 框架的课程正文。框架代码只接受进 `project/framework-lab/`。
+- 新增一级目录，或在 `lessons/` 末尾追加编号。
+- 绑定特定云厂商或 Agent 框架的课程正文。框架只在每课的「框架映射」表里对照，附官网链接。
+- 可运行的项目代码。课文里的代码是示意性的；能跑的实现在 [ai-app-engineering-ref](https://github.com/lance2016/ai-app-engineering-ref)。
 - 翻译搬运参考仓库的段落。
 - Dashboard、学习计划类文件。
 
