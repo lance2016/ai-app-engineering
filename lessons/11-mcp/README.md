@@ -49,7 +49,19 @@ sequenceDiagram
 
 规范里还有很多这里没碰的部分：prompts、sampling、elicitation、resource 订阅、Streamable HTTP 传输、鉴权。它们都建在同一个生命周期上，学会 stdio 上的这一小圈，其余是查文档的事。
 
-![本课核心关系：Agent Host 通过协议桥接外部能力服务器](./images/11-mcp-capability-bridge.svg)
+把上面三点画在一起，能看清治理落在哪一侧：
+
+```mermaid
+flowchart LR
+    S["MCP Server（另一个进程）<br/>Tools · Resources"] -->|tools/list · resources/list| W
+    W["Host：白名单<br/>决定告诉模型哪些"] --> M[模型提出调用]
+    M --> G{"Host：鉴权 · 超时<br/>版本校验"}
+    G -- 放行 --> C["tools/call"]
+    G -- 拦下 --> X[请求根本不发出]
+    C --> S
+```
+
+协议负责「接得上」，白名单和守卫负责「能不能用」，两件事都不在 server 那一侧。
 
 ## 机制拆解
 

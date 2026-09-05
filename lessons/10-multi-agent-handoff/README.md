@@ -48,7 +48,6 @@ OpenAI Agents SDK 把这叫 handoff，把「把另一个 Agent 当工具调用�
 
 **状态归运行时，Agent 拿视图。** 所有 Agent 的输出都进同一个线程，带 `agent` 标签。每个 Agent 调模型时拿到的是运行时算出来的视图。专家 Agent 抛异常，运行时记一条 `handoff_failed`，控制权回到 triage。
 
-![本课核心关系：多个 Agent 通过任务契约安全交接](./images/10-multi-agent-handoff.svg)
 
 ## 机制拆解
 

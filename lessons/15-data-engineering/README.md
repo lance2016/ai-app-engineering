@@ -49,7 +49,6 @@ flowchart LR
 
 解析这一步下面用 markdown 示意。真实项目里 PDF、扫描件、PPT 要用专门的解析器：Docling 和 Unstructured 都能把多种格式转成带结构的元素（标题、段落、表格），输出形状和这里一样，后面的流程不变。
 
-![本课核心关系：知识数据从摄取、版本化到删除的生命周期](./images/15-data-quality-lifecycle.svg)
 
 ## 机制拆解
 

@@ -96,7 +96,7 @@
 ## 仓库结构
 
 ```text
-├── lessons/          主线 24 课，每课 README + exercises.md + images/
+├── lessons/          主线 24 课，每课 README + exercises.md
 ├── prerequisites/    前置 · LLM 原理 F00–F07，八篇
 ├── principles/       12 条工程原则，一条一个文件
 ├── reference/        术语表、技术选型、框架一览、外部资料

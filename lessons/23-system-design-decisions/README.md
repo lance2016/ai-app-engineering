@@ -52,7 +52,6 @@ flowchart LR
 | Workflow vs Agent | 能枚举步骤就 Workflow | 路径是否真的不可枚举；失败代价是否允许探索 |
 | 单体 vs 平台 | 第二个团队出现之前是单体 | 有没有真实的第二个消费者；配额和隔离是否已经成为事故来源 |
 
-![本课核心关系：用权衡矩阵、假设与验证条件记录架构决策](./images/23-architecture-decision-adr.svg)
 
 ## 机制拆解
 

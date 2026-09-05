@@ -56,7 +56,6 @@ flowchart LR
     P --> E
 ```
 
-![本课核心关系：评测集、指标、发布门禁与回归用例闭环](./images/17-evaluation-regression-loop.svg)
 
 ## 机制拆解
 

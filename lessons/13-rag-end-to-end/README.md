@@ -63,7 +63,6 @@ flowchart LR
     V -- 是 --> O[带来源回答]
 ```
 
-![本课核心关系：文档切分、混合检索、重排与引用生成](./images/13-rag-pipeline-citations.svg)
 
 ## 机制拆解
 

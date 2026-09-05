@@ -48,7 +48,6 @@ flowchart TD
 
 **LoRA 在这棵树里的位置**：它让「调行为」便宜到一张消费级显卡就能做，但表达能力受 rank 限制，不适合「学大量新知识」。这和上面的规则一致——知识走 RAG，行为才微调。
 
-![本课核心关系：根据质量缺口选择 Prompt、RAG、微调或推理优化](./images/21-model-adaptation-decision.svg)
 
 ## 机制拆解
 

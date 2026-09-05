@@ -65,7 +65,6 @@ flowchart TD
     A --> G[测试轨迹与停止条件]
 ```
 
-![本课核心关系：确定性 Workflow 与受约束 Agent 的控制流差异](./images/09-workflow-vs-agent.svg)
 
 ## 机制拆解
 

@@ -44,11 +44,36 @@ flowchart LR
 
 **流式回答是一个状态机。** 等待、流式输出、工具执行中、需要确认、完成、失败，每个状态的渲染和可用操作都不同。
 
+```mermaid
+stateDiagram-v2
+    waiting: 等待
+    streaming: 流式输出
+    tooling: 工具执行中
+    confirming: 需要确认
+    done: 完成
+    failed: 失败
+    cancelled: 已取消
+
+    [*] --> waiting
+    waiting --> streaming: 首块到达
+    streaming --> tooling: 模型要调工具
+    tooling --> streaming: 结果回填
+    tooling --> confirming: 动作不可逆
+    confirming --> tooling: 用户批准
+    confirming --> cancelled: 用户拒绝
+    streaming --> done
+    waiting --> failed: 超时
+    tooling --> failed: 工具失败 / 预算耗尽
+    failed --> waiting: 重试
+    done --> [*]
+    cancelled --> [*]
+```
+
+每个状态要回答同一个问题：用户此刻看到什么、能点什么。
+
 **控制权按可逆性分级。** 分级由运行时按动作的**声明**决定，不由模型判断。这和第 05 课确认门是同一条原则的两面。
 
 **反馈要能定位问题。** 一个总体的「点赞率 85%」什么都说明不了。
-
-![本课核心关系：Agent 产品从等待、流式到审批、恢复的状态机](./images/22-product-ux-state-machine.svg)
 
 ## 机制拆解
 

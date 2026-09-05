@@ -59,7 +59,6 @@ flowchart LR
     B -- 是 --> M
 ```
 
-![本课核心关系：上下文窗口中的区块排序、压缩与裁剪](./images/08-context-window-composition.svg)
 
 ## 机制拆解
 

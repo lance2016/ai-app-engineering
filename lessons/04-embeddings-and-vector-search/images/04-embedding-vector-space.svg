@@ -1,20 +1,55 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
-<title>VECTOR SEARCH</title><desc>相似度只提供候选集，排序与业务过滤决定结果能否使用</desc>
+<title>Vector search</title><desc>相似度只提供候选集：离查询点最近的邻居里也会混进不相关的块</desc>
 <defs>
-<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#061329"/><stop offset="1" stop-color="#0a1d3b"/></linearGradient>
-<pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#1c3960" stroke-width="1" opacity=".42"/></pattern>
-<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#42d9ff"/></marker>
+<style>
+  .t  { font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
+  .h1 { font-size: 26px; font-weight: 600; fill: #2a2823; }
+  .h2 { font-size: 17px; fill: #5c574d; }
+  .bx { font-size: 21px; font-weight: 600; fill: #2a2823; }
+  .sub{ font-size: 15px; fill: #5c574d; }
+  .an { font-size: 16px; fill: #857f72; }
+  .warn { font-size: 17px; fill: #8a5334; }
+  .box { fill: none; stroke: #5c574d; stroke-width: 1.5; }
+  .arw { stroke: #5c574d; stroke-width: 1.5; }
+  .dot { fill: #5c574d; }
+</style>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#5c574d"/></marker>
 </defs>
-<rect width="1200" height="675" fill="url(#bg)"/><rect width="1200" height="675" fill="url(#grid)" opacity=".55"/>
-<text x="54" y="54" fill="#eef7ff" font-size="27" font-family="Arial, sans-serif" font-weight="700">04 · VECTOR SEARCH</text>
-<text x="54" y="84" fill="#9fb3ce" font-size="17" font-family="Arial, sans-serif">相似度只提供候选集，排序与业务过滤决定结果能否使用</text>
-<g><rect x="55" y="295" width="150" height="82" rx="14" fill="#0d2343" stroke="#63e6be" stroke-width="2"/>
-<text x="73" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Query</text>
-<text x="73" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">text</text></g><line x1="205" y1="336" x2="315" y2="336" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="315" y="295" width="170" height="82" rx="14" fill="#0d2343" stroke="#42d9ff" stroke-width="2"/>
-<text x="333" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Embed</text>
-<text x="333" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">vector</text></g><line x1="485" y1="336" x2="600" y2="336" stroke="#42d9ff" stroke-width="4" marker-end="url(#arrow)" /><ellipse cx="735" cy="335" rx="140" ry="105" fill="#0d2343" stroke="#9c7bff" stroke-width="2"/>
-  <text x="650" y="265" fill="#9c7bff" font-size="20" font-family="Arial, sans-serif">vector space</text>
-  <circle cx="675" cy="325" r="10" fill="#42d9ff"/><circle cx="710" cy="300" r="10" fill="#42d9ff"/><circle cx="750" cy="340" r="10" fill="#42d9ff"/><circle cx="790" cy="370" r="10" fill="#42d9ff"/><circle cx="850" cy="280" r="10" fill="#ff5f7a"/><line x1="875" y1="335" x2="965" y2="335" stroke="#9c7bff" stroke-width="4" marker-end="url(#arrow)" /><g><rect x="965" y="295" width="175" height="82" rx="14" fill="#0d2343" stroke="#63e6be" stroke-width="2"/>
-<text x="983" y="329" fill="#eef7ff" font-size="22" font-family="Arial, sans-serif" font-weight="700">Top-k + filter</text>
-<text x="983" y="359" fill="#9fb3ce" font-size="15" font-family="Arial, sans-serif">usable context</text></g><text x="785" y="460" fill="#ff5f7a" font-size="18" font-family="Arial, sans-serif">nearby ≠ relevant</text>
+
+<rect width="1200" height="675" fill="#eae7df"/>
+<text class="t h1" x="54" y="54">04 Vector search</text>
+<text class="t h2" x="54" y="84">相似度只提供候选集，排序和业务过滤决定结果能不能用</text>
+
+<rect class="box" x="55" y="295" width="150" height="82" rx="2"/>
+<text class="t bx"  x="75" y="329">Query</text>
+<text class="t sub" x="75" y="357">text</text>
+<line class="arw" x1="205" y1="336" x2="308" y2="336" marker-end="url(#arrow)"/>
+
+<rect class="box" x="315" y="295" width="170" height="82" rx="2"/>
+<text class="t bx"  x="335" y="329">Embed</text>
+<text class="t sub" x="335" y="357">vector</text>
+<line class="arw" x1="485" y1="336" x2="588" y2="336" marker-end="url(#arrow)"/>
+
+<ellipse cx="735" cy="335" rx="140" ry="105" fill="none" stroke="#d2cdc1" stroke-width="1.5"/>
+<text class="t an" x="600" y="218">vector space</text>
+
+<circle cx="700" cy="330" r="62" fill="none" stroke="#857f72" stroke-width="1.5" stroke-dasharray="5 5"/>
+<text class="t an" x="668" y="256">top-k</text>
+
+<circle class="dot" cx="665" cy="310" r="7"/>
+<circle class="dot" cx="672" cy="355" r="7"/>
+<circle class="dot" cx="730" cy="300" r="7"/>
+<circle class="dot" cx="820" cy="290" r="7"/>
+<circle cx="745" cy="352" r="7" fill="#8a5334"/>
+
+<circle cx="700" cy="330" r="5" fill="none" stroke="#2a2823" stroke-width="2"/>
+<text class="t an" x="710" y="322">q</text>
+
+<line x1="750" y1="360" x2="706" y2="452" stroke="#8a5334" stroke-width="1.5" stroke-dasharray="4 4"/>
+<text class="t warn" x="600" y="478">离得近，不代表相关：这一块也会进候选集</text>
+
+<line class="arw" x1="878" y1="335" x2="958" y2="335" marker-end="url(#arrow)"/>
+<rect class="box" x="965" y="295" width="175" height="82" rx="2"/>
+<text class="t bx"  x="985" y="329">Top-k + filter</text>
+<text class="t sub" x="985" y="357">usable context</text>
 </svg>

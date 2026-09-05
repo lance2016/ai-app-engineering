@@ -52,7 +52,6 @@ flowchart LR
 
 日志和 trace 的关系：日志是线性的、每条独立、便于 grep 和聚合；trace 有父子关系、便于看一次运行的全貌。两者用同一个 `run_id` 关联，**缺一个都不完整**。
 
-![本课核心关系：一次请求展开为模型、检索、工具与审批 trace spans](./images/18-observability-trace-spans.svg)
 
 ## 机制拆解
 
