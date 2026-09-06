@@ -22,7 +22,7 @@ estimated_time: 约 1.5 小时
 
 - [05 Tool Calling](../05-tool-calling/README.md)：ToolSpec、白名单、错误结果。MCP 工具最终都要变成这些东西
 
-## 心智模型
+## 怎么理解它
 
 ```mermaid
 sequenceDiagram

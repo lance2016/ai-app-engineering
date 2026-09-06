@@ -24,7 +24,7 @@ estimated_time: 约 1.5 小时
 - [08 Agent 的 Context Engineering](../08-context-engineering-for-agents/README.md)：按需加载的机制，本课是它在「能力说明」上的具体应用
 - [11 MCP](../11-mcp/README.md)：接入协议。Skill 常常是「怎么用一组 MCP 工具」的说明书
 
-## 心智模型
+## 怎么理解它
 
 | 层 | 回答的问题 | 长什么样 | 谁消费它 |
 |---|---|---|---|

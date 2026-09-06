@@ -22,7 +22,7 @@ estimated_time: 约 1.5 小时
 
 - [05 Tool Calling](../05-tool-calling/README.md)：工具契约和四个守卫，本课的循环建立在它们之上
 
-## 心智模型
+## 怎么理解它
 
 ```mermaid
 flowchart LR

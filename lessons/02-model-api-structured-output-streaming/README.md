@@ -23,7 +23,7 @@ estimated_time: 约 2 小时
 
 - [01 从模型到应用](../01-how-llms-work/README.md)：token、抽样、上下文窗口是预算
 
-## 心智模型
+## 怎么理解它
 
 ```mermaid
 sequenceDiagram

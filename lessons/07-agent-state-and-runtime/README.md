@@ -23,7 +23,7 @@ estimated_time: 约 2 小时
 - [06 Agent 循环与控制流](../06-agent-loop/README.md)：循环结构、停止条件、「跳出循环等人」的伏笔
 - [05 Tool Calling](../05-tool-calling/README.md)：幂等键。恢复时不重跑已执行的工具，靠的是同一个思路
 
-## 心智模型
+## 怎么理解它
 
 ```mermaid
 flowchart LR
@@ -246,7 +246,7 @@ LangGraph 在这一层做得最完整，但要注意一个坑：节点内 `inter
 
 ## 延伸阅读
 
-- [12-factor-agents · factor 05 Unify execution state and business state](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-05-unify-execution-state.md)（访问日期 2026-09-04）：本课心智模型的出处，列了七个好处。
+- [12-factor-agents · factor 05 Unify execution state and business state](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-05-unify-execution-state.md)（访问日期 2026-09-04）：本课那张事件线程图的出处，列了七个好处。
 - [12-factor-agents · factor 06 Launch/Pause/Resume](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-06-launch-pause-resume.md) 与 [factor 07 Contact humans with tools](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-07-contact-humans-with-tools.md)（访问日期 2026-09-04）：注意 factor 06 那条备注——很多编排器允许暂停，但不允许在「选好工具」和「执行工具」之间暂停。
 - [12-factor-agents · factor 12 Stateless reducer](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-12-stateless-reducer.md)（访问日期 2026-09-04）：作者自己说「这条主要是好玩」，但本课的事件线程就是照它写的。
 - [LangGraph · Persistence](https://langchain-ai.github.io/langgraph/concepts/persistence/) 与 [Human-in-the-loop](https://langchain-ai.github.io/langgraph/concepts/human_in_the_loop/)（访问日期 2026-09-05）：同一组问题的框架化回答，值得对照看它的 checkpoint 粒度选择。

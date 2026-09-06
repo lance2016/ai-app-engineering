@@ -23,7 +23,7 @@ estimated_time: 约 1.5 小时
 - [07 Agent State 与 Runtime](../07-agent-state-and-runtime/README.md)：事件线程和事件流，本课的持久化就是存它
 - [14 RAG 端到端](../14-rag-end-to-end/README.md)：检索这一跳的内部
 
-## 心智模型
+## 怎么理解它
 
 ### 一条请求链
 

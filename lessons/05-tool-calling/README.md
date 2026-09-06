@@ -22,7 +22,7 @@ estimated_time: 约 2 小时
 
 - [02 模型调用、结构化输出与流式](../02-model-api-structured-output-streaming/README.md)：JSON Schema 怎么约束模型输出
 
-## 心智模型
+## 怎么理解它
 
 模型看到的工具是一段 JSON Schema。它的输出是一段结构化 JSON，说「我想调这个工具，参数是这些」。**到这里为止，世界上什么都没变。** 接下来每一步都是确定性代码：
 

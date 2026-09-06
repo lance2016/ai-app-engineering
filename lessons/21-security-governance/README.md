@@ -24,7 +24,7 @@ estimated_time: 约 2.5 小时
 - [05 Tool Calling](../05-tool-calling/README.md)：注册表、白名单、确认门，本课的守卫全部建在它们之上
 - [12 Skill 与能力生态分层](../12-skills-and-capability-layers/README.md)、[11 MCP](../11-mcp/README.md)：供应链一节的对象
 
-## 心智模型
+## 怎么理解它
 
 ```mermaid
 flowchart LR

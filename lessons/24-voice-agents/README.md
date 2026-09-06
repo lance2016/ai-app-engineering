@@ -28,7 +28,7 @@ estimated_time: 约 2 小时
 - [07 Agent State 与 Runtime](../07-agent-state-and-runtime/README.md)：double texting 的三种策略，打断是它在语音里的形态
 - [23 AI 产品设计与交互](../23-product-design-ux/README.md)：UI 状态机和确认与撤销，这一课把它们搬到没有屏幕的场景
 
-## 心智模型
+## 怎么理解它
 
 ```mermaid
 flowchart LR

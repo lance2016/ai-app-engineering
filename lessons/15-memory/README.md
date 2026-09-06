@@ -23,7 +23,7 @@ estimated_time: 约 1.5 小时
 - [07 Agent State 与 Runtime](../07-agent-state-and-runtime/README.md)：事件线程。长期记忆的来源就是线程里的事件编号
 - [原则 05](../../principles/05-runtime-owns-state.md)：四类状态。本课只讲第四类
 
-## 心智模型
+## 怎么理解它
 
 先把三个常被混为一谈的东西分开：
 

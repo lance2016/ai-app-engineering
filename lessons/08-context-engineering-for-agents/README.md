@@ -23,7 +23,7 @@ estimated_time: 约 2 小时
 - [07 Agent State 与 Runtime](../07-agent-state-and-runtime/README.md)：事件线程是本课的输入。`to_messages()` 是最简单的上下文组装，本课把它做成可配置的
 - [03 Prompt Engineering](../03-prompt-engineering/README.md)：单次调用里指令怎么写
 
-## 心智模型
+## 怎么理解它
 
 ```mermaid
 flowchart LR

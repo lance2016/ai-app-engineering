@@ -23,7 +23,7 @@ estimated_time: 约 1.5 小时
 - 前置 [F05 训练与对齐](../../prerequisites/llm-foundations/05-training-and-alignment/README.md) 和 [F06 KV Cache 与推理](../../prerequisites/llm-foundations/06-kv-cache-and-inference/README.md)：LoRA 为什么有效、prefill 与 decode、KV cache 公式、GQA、量化。本课直接用这些结论
 - [18 评测](../18-evaluation/README.md)：没有评测集就无法判断微调有没有用
 
-## 心智模型
+## 怎么理解它
 
 ### 决策树：改哪一层
 

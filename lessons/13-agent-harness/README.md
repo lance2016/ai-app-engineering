@@ -27,7 +27,7 @@ estimated_time: 约 2 小时
 - [05 Tool Calling](../05-tool-calling/README.md)、[06 Agent 循环与控制流](../06-agent-loop/README.md)、[07 Agent State 与 Runtime](../07-agent-state-and-runtime/README.md)：这一课是这三样的组合形态，不再重复它们的机制
 - [12 Skill 与能力生态分层](../12-skills-and-capability-layers/README.md)：Skill 和 MCP 在 harness 里各占哪一格
 
-## 心智模型
+## 怎么理解它
 
 ```mermaid
 flowchart TB

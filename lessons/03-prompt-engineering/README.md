@@ -22,7 +22,7 @@ estimated_time: 约 1.5 小时
 
 - [02 模型调用、结构化输出与流式](../02-model-api-structured-output-streaming/README.md)：消息格式、系统消息的位置、JSON Schema 约束输出
 
-## 心智模型
+## 怎么理解它
 
 ```mermaid
 flowchart LR

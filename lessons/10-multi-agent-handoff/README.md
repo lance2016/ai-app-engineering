@@ -23,7 +23,7 @@ estimated_time: 约 2 小时
 - [09 Workflow 还是 Agent](../09-workflow-vs-agent/README.md)：本课是 routing 和 orchestrator-workers 在多 Agent 上的延伸
 - [07 Agent State 与 Runtime](../07-agent-state-and-runtime/README.md)：多个 Agent 共用一个事件线程，靠 `agent` 标签区分
 
-## 心智模型
+## 怎么理解它
 
 ```mermaid
 flowchart TB

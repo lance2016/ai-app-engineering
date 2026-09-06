@@ -24,7 +24,7 @@ Agent 的不确定性如果没有映射成清楚的界面状态，用户只会�
 - [05 Tool Calling](../05-tool-calling/README.md)：确认门。本课的「撤销窗口」是它的另一半
 - [07 Agent State 与 Runtime](../07-agent-state-and-runtime/README.md)：事件流。本课 UI 状态机消费的就是那份事件
 
-## 心智模型
+## 怎么理解它
 
 ```mermaid
 flowchart LR

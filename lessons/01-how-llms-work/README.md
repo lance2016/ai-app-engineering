@@ -26,7 +26,7 @@ estimated_time: 约 1.5 小时
 
 - 前置 [F00 LLM 是什么](../../prerequisites/llm-foundations/00-what-an-llm-is/README.md)、[F01 Tokenization](../../prerequisites/llm-foundations/01-tokenization/README.md)、[F04 Context Window 与 Sampling](../../prerequisites/llm-foundations/04-context-window-and-sampling/README.md)、[F07 模型地图](../../prerequisites/llm-foundations/07-model-landscape/README.md)：本课不再解释 token、窗口、采样、模型分类是什么
 
-## 心智模型
+## 怎么理解它
 
 ```mermaid
 flowchart LR
