@@ -29,8 +29,6 @@ hide:
 
 [开始学习](lessons/00-setup/README.md){ .md-button .md-button--primary }
 
-[已经做过 AI 应用？能力诊断](reference/diagnostic.md){ .md-button }
-
 </div>
 
 </div>
