@@ -191,7 +191,7 @@ async def handle_second_message(thread, current: asyncio.Task, text: str):
         await run(thread, model)            # 已完成的工具结果留在线程里，不浪费
 ```
 
-interrupt 那支里的 `completed_tool_results` 值得注意：**被打断不等于前面白干**。已经拿到的工具结果留在事件线程里，第二次运行的模型能看到它们。
+看 interrupt 那一支里的 `completed_tool_results`：**被打断不等于前面白干**。已经拿到的工具结果留在事件线程里，第二次运行的模型能看到它们。
 
 不选任何一种策略，第二条消息会在第一次运行还在写线程时被追加进去，两个循环交错写同一个列表。这不是 bug，是**没有做决定**。
 

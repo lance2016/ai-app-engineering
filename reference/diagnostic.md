@@ -295,7 +295,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 | 哪一组失分多 | 通常意味着 | 从哪读 |
 |---|---|---|
 | 一（模型边界与成本） | 把模型当黑盒用，没算过账 | [01](../lessons/01-how-llms-work/README.md) · [02](../lessons/02-model-api-structured-output-streaming/README.md) |
-| 二（工具与副作用） | 工具调用当成"函数调用"来写 | [05](../lessons/05-tool-calling/README.md)，再看[原则 06](../principles/06-side-effects-are-idempotent-and-auditable.md) |
+| 二（工具与副作用） | 工具调用当成「函数调用」来写 | [05](../lessons/05-tool-calling/README.md)，再看[原则 06](../principles/06-side-effects-are-idempotent-and-auditable.md) |
 | 三（运行时与状态） | 靠框架的默认行为在跑，没自己握过控制流 | [06](../lessons/06-agent-loop/README.md) → [08](../lessons/08-context-engineering-for-agents/README.md)，这三课是全课骨架 |
 | 四（检索与记忆） | RAG 搭起来过，但没量过它到底行不行 | [04](../lessons/04-embeddings-and-vector-search/README.md) · [14](../lessons/14-rag-end-to-end/README.md) |
 | 五（评测、可观测、可靠性） | 最常见的一种：demo 做得出来，线上撑不住 | Part 4 完整读，从 [18](../lessons/18-evaluation/README.md) 开始 |

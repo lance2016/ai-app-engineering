@@ -88,7 +88,7 @@ MCP 就是 JSON-RPC 2.0 加一套约定好的方法名。看清消息长什么�
 
 **在第三条之前调 `tools/list` 是协议错误**，规范里明确要求 server 拒绝。理由很实际：双方还没就协议版本达成一致，此时交换的任何结构都可能对不上。
 
-server 侧的方法分派本质上是这样一个状态机：
+server 侧的方法分派就是这样一个状态机：
 
 ```python
 def handle(self, method, params):

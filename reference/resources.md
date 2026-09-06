@@ -7,7 +7,7 @@
 
 ## 知识地图：课程参考的仓库
 
-拿来对照"我的地图上还缺哪一块"，不是拿来逐行读的。
+拿来对照「我的地图上还缺哪一块」，不是拿来逐行读的。
 
 | 仓库 | 用途 | 访问日期 |
 |---|---|---|
@@ -29,11 +29,11 @@
 | OpenAI | 读它回答什么 | 对应课 | 访问日期 |
 |---|---|---|---|
 | [Function calling](https://platform.openai.com/docs/guides/function-calling) | 工具怎么定义、并行调用怎么回、strict 模式限制了什么 | 05 | 2026-09-06 |
-| [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs) | schema 约束的确切写法，以及它和"提示模型输出 JSON"的区别 | 02 | 2026-09-06 |
-| [Prompt caching](https://platform.openai.com/docs/guides/prompt-caching) | 什么样的前缀能命中缓存，命中之后省的是哪部分钱 | 08、19 | 2026-09-06 |
+| [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs) | schema 约束的确切写法，以及它和「提示模型输出 JSON」的区别 | 02 | 2026-09-06 |
+| [Prompt caching](https://platform.openai.com/docs/guides/prompt-caching) | 什么样的前缀能命中缓存，命中之后省的是哪部分钱 | 08、20 | 2026-09-06 |
 | [Reasoning models](https://platform.openai.com/docs/guides/reasoning) | reasoning token 怎么计费、effort 怎么选、和工具调用怎么配合 | 01、02 | 2026-09-06 |
-| [Batch API](https://platform.openai.com/docs/guides/batch) | 离线批处理的提交与回收；能接受延迟时单价明显更低 | 19、21 | 2026-09-06 |
-| [Agents SDK 文档](https://openai.github.io/openai-agents-python/) | handoff、guardrail、session 三个词的官方定义 | 10、20 | 2026-09-06 |
+| [Batch API](https://platform.openai.com/docs/guides/batch) | 离线批处理的提交与回收；能接受延迟时单价明显更低 | 20、22 | 2026-09-06 |
+| [Agents SDK 文档](https://openai.github.io/openai-agents-python/) | handoff、guardrail、session 三个词的官方定义 | 10、21 | 2026-09-06 |
 
 | Anthropic | 读它回答什么 | 对应课 | 访问日期 |
 |---|---|---|---|
@@ -41,21 +41,21 @@
 | [Prompt caching](https://docs.claude.com/en/docs/build-with-claude/prompt-caching) | 缓存断点放在哪、最短长度和有效期各是多少 | 08 | 2026-09-06 |
 | [Extended thinking](https://docs.claude.com/en/docs/build-with-claude/extended-thinking) | thinking block 长什么样，多轮工具调用里怎么传递 | 02、08 | 2026-09-06 |
 | [Claude Agent SDK 概览](https://docs.claude.com/en/api/agent-sdk/overview) | 一个厂商自己实现的 agent 循环，边界划在哪 | 06、07 | 2026-09-06 |
-| [Claude Code · Hooks](https://docs.claude.com/en/docs/claude-code/hooks) | 怎么在 agent 循环里插确定性拦截点，而不是写进提示词 | 06、20 | 2026-09-06 |
+| [Claude Code · Hooks](https://docs.claude.com/en/docs/claude-code/hooks) | 怎么在 agent 循环里插确定性拦截点，而不是写进提示词 | 13、21 | 2026-09-06 |
 
 **这两家的文档页会改，字段名也会改。** 落到代码里的字段，以你写代码那天打开的页面为准。
 
 ## 真实系统：agent harness
 
-编码 agent 是目前跑得最久、被用得最狠的一类 Agent 产品。读它们**不是为了学架构，是为了看第 05～12 课的机制在真机上长什么样**：
+编码 agent 是目前跑得最久、被用得最狠的一类 Agent 产品。读它们**不是为了学架构，是为了看第 05～13 课的机制在真机上长什么样**：
 一个工具的参数该怎么设计、循环凭什么停、上下文满了先扔什么、权限边界画在哪。下面每行只写一件最值得看的事。
 
 | 项目 | 语言 | 值得看的一件事 | 对应课 |
 |---|---|---|---|
-| [openai/codex](https://github.com/openai/codex) | Rust | 沙箱和审批分级：哪些动作直接做、哪些要问 | 06、20 |
-| [cline/cline](https://github.com/cline/cline) | TypeScript | 计划与执行分成两种模式；文件改动走 diff 而不是整文件重写 | 09、22 |
+| [openai/codex](https://github.com/openai/codex) | Rust | 沙箱和审批分级：哪些动作直接做、哪些要问 | 06、21 |
+| [cline/cline](https://github.com/cline/cline) | TypeScript | 计划与执行分成两种模式；文件改动走 diff 而不是整文件重写 | 09、13 |
 | [Aider-AI/aider](https://github.com/Aider-AI/aider) | Python | repo map：怎么在有限上下文里表示一个大代码库 | 08、13 |
-| [All-Hands-AI/OpenHands](https://github.com/All-Hands-AI/OpenHands) | Python | 动作与观察成对的事件流，就是第 07 课那份事件记录 | 07、18 |
+| [All-Hands-AI/OpenHands](https://github.com/All-Hands-AI/OpenHands) | Python | 动作与观察成对的事件流，就是第 07 课那份事件记录 | 07、19 |
 | [SWE-agent/SWE-agent](https://github.com/SWE-agent/SWE-agent) | Python | agent-computer interface：工具是为模型设计的，不是为人 | 05 |
 | [block/goose](https://github.com/block/goose) | Rust | 扩展能力全部走 MCP，是第 11 课协议价值的一个实例 | 11、12 |
 | [anthropics/claude-code](https://github.com/anthropics/claude-code) | — | 本体不开源，这个仓库是 CHANGELOG、插件与示例；机制看上面的官方文档 | 06、12 |
@@ -70,9 +70,9 @@
 | 规范 | 管什么 | 对应课 | 访问日期 |
 |---|---|---|---|
 | [Model Context Protocol](https://modelcontextprotocol.io/specification) | 能力接入的生命周期与消息格式 | 11 | 2026-09-04 |
-| [OpenTelemetry GenAI semantic conventions](https://github.com/open-telemetry/semantic-conventions-genai) | span 名与属性名 | 18 | 2026-09-04 |
-| [OpenTelemetry 属性注册表 · gen_ai](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/registry/attributes/gen-ai.md) | 哪些属性名已废弃 | 18 | 2026-09-04 |
-| [OWASP Top 10 for LLM Applications](https://genai.owasp.org/llm-top-10/) | 威胁分类的通用词汇 | 20 | 2026-09-04 |
+| [OpenTelemetry GenAI semantic conventions](https://github.com/open-telemetry/semantic-conventions-genai) | span 名与属性名 | 19 | 2026-09-04 |
+| [OpenTelemetry 属性注册表 · gen_ai](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/registry/attributes/gen-ai.md) | 哪些属性名已废弃 | 19 | 2026-09-04 |
+| [OWASP Top 10 for LLM Applications](https://genai.owasp.org/llm-top-10/) | 威胁分类的通用词汇 | 21 | 2026-09-04 |
 
 用到协议时**记下版本号**，它们都还在演进。
 
@@ -94,7 +94,7 @@
 | [Attention Is All You Need](https://arxiv.org/abs/1706.03762) | 第 3.2 节 | F03 |
 | [Sentence-BERT](https://arxiv.org/abs/1908.10084) | 第 3 节训练目标 | F02、04 |
 | [Matryoshka Representation Learning](https://arxiv.org/abs/2205.13147) | 摘要与图 1 | F02、04 |
-| [RAG](https://arxiv.org/abs/2005.11401) | 摘要与图 1 | 13 |
+| [RAG](https://arxiv.org/abs/2005.11401) | 摘要与图 1 | 14 |
 | [ReAct](https://arxiv.org/abs/2210.03629) | 摘要与图 1 | 06 |
 
 ## 需要定期核查的内容
