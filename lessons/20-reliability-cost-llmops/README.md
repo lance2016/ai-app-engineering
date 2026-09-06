@@ -22,7 +22,7 @@ estimated_time: 约 2.5 小时
 ## 前置
 
 - [06 Agent 循环与控制流](../06-agent-loop/README.md)：预算和停止条件，本课把它扩展到钱和时间
-- [18 可观测性](../19-observability/README.md)：SLO 和告警建立在指标之上
+- [19 可观测性](../19-observability/README.md)：SLO 和告警建立在指标之上
 
 ## 心智模型
 

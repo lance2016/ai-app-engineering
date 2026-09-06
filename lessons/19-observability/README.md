@@ -22,7 +22,7 @@ estimated_time: 约 2 小时
 ## 前置
 
 - [07 Agent State 与 Runtime](../07-agent-state-and-runtime/README.md)：被观测的对象
-- [17 评测](../18-evaluation/README.md)：评测集里的失败案例从 trace 里挑
+- [18 评测](../18-evaluation/README.md)：评测集里的失败案例从 trace 里挑
 
 ## 心智模型
 

@@ -20,7 +20,7 @@ RAG 的数据会更新、重复、过期和被删除。只写一个 ingest 脚�
 
 ## 前置
 
-- [13 RAG 端到端](../14-rag-end-to-end/README.md)：知道 chunk 是什么、索引是给谁用的
+- [14 RAG 端到端](../14-rag-end-to-end/README.md)：知道 chunk 是什么、索引是给谁用的
 
 ## 心智模型
 

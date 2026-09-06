@@ -20,7 +20,7 @@ estimated_time: 约 2 小时
 
 ## 前置
 
-- [16 系统架构与端到端数据流](../17-system-architecture/README.md)：本课的估算落在那条请求链的每个环节上
+- [17 系统架构与端到端数据流](../17-system-architecture/README.md)：本课的估算落在那条请求链的每个环节上
 - [09 Workflow 还是 Agent](../09-workflow-vs-agent/README.md)：本课把那一课的架构选择放进更大的决策框架
 
 ## 心智模型

@@ -1,9 +1,14 @@
-"""Fail if any relative Markdown link points to a missing file.
+"""Fail if a relative Markdown link is broken, or mislabelled with a lesson number.
 
 Run:  uv run python scripts/check_links.py
 Scans every .md file in the repo (except templates/, whose links are
 placeholders). External links (http, mailto) and pure anchors are skipped.
-Exit code 1 when at least one link is broken.
+
+Two checks. The first is that the target exists. The second is that a link
+written as `[14 RAG 端到端](../14-rag-end-to-end/README.md)` agrees with itself:
+the 2026-09-06 renumber moved paths but left seven labels naming the old
+lesson, and a check that only resolves paths stays green through that.
+Exit code 1 when either fails.
 """
 
 import re
@@ -13,6 +18,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SKIP_DIRS = {".git", ".venv", "node_modules", ".pytest_cache", "templates"}
 LINK_RE = re.compile(r"\]\(([^)\s]+)\)")
+# [NN 标题](../NN-slug/...) -- the label's lesson number must match the path's.
+NUMBERED_RE = re.compile(r"\[(\d{2})[^\]]*\]\((?:\.\./)+(\d{2})-[a-z0-9-]+/")
 # Fenced code blocks contain regexes and shell that look like links; skip them.
 FENCE_RE = re.compile(r"^```", re.MULTILINE)
 
@@ -51,14 +58,25 @@ def broken_links(md: Path) -> list[str]:
     return bad
 
 
+def mislabelled(md: Path) -> list[str]:
+    """Links whose label names a different lesson than the path they point at."""
+    text = strip_code_blocks(md.read_text(encoding="utf-8"))
+    return [f"[{label} ...] -> {path}-..." for label, path in NUMBERED_RE.findall(text) if label != path]
+
+
 def main() -> int:
-    failures = 0
-    for md in iter_markdown():
+    files = iter_markdown()
+    broken = labels = 0
+    for md in files:
+        rel = md.relative_to(ROOT)
         for target in broken_links(md):
-            print(f"BROKEN {md.relative_to(ROOT)} -> {target}")
-            failures += 1
-    print(f"checked {len(iter_markdown())} files, {failures} broken link(s)")
-    return 1 if failures else 0
+            print(f"BROKEN {rel} -> {target}")
+            broken += 1
+        for note in mislabelled(md):
+            print(f"LABEL  {rel}: {note}")
+            labels += 1
+    print(f"checked {len(files)} files, {broken} broken link(s), {labels} mislabelled")
+    return 1 if broken or labels else 0
 
 
 if __name__ == "__main__":

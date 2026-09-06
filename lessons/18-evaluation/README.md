@@ -24,7 +24,7 @@ estimated_time: 约 2 小时
 ## 前置
 
 - [07 Agent State 与 Runtime](../07-agent-state-and-runtime/README.md)：轨迹评测直接对事件线程做断言
-- [13 RAG 端到端](../14-rag-end-to-end/README.md)：Recall@k 是本课方法在检索层的应用
+- [14 RAG 端到端](../14-rag-end-to-end/README.md)：Recall@k 是本课方法在检索层的应用
 
 ## 心智模型
 
