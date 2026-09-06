@@ -227,4 +227,4 @@ flowchart LR
 
 ---
 
-[前置 · LLM 原理](../prerequisites/README.md) · [12 条工程原则](../principles/README.md) · [自测：我该从哪一课开始](../reference/diagnostic.md)
+[补充基础](../prerequisites/README.md) · [12 条工程原则](../principles/README.md) · [自测：我该从哪一课开始](../reference/diagnostic.md)

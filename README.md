@@ -44,12 +44,12 @@
 |---|---|---|
 | **第一步** | 从 [00 起步](./lessons/00-setup/README.md) 顺着读，别跳 | 先花 20 分钟做 [26 题自测](./reference/diagnostic.md) |
 | **然后** | Part 1 → Part 5 按顺序走完 | 按自测结果挑薄弱的 Part 读 |
-| **模型原理** | token、attention、KV cache 不熟，先补[前置八篇](./prerequisites/README.md) | 读到「前置 F0x」的引用再回查 |
+| **模型原理** | token、attention、KV cache 不熟，先补[补充基础里的 LLM 原理八篇](./prerequisites/README.md) | 读到「前置 F0x」的引用再回查 |
 | **想直接看结论** | 学完每个 Part 后回看[工程原则](./principles/README.md) | [12 条工程原则](./principles/README.md)是全课的压缩版 |
 | **正在选框架** | 学完 Part 2 再看 | [框架一览与选型标准](./reference/frameworks.md) |
 
-[前置 · LLM 原理](./prerequisites/README.md)那一组是**可选的补充**，不是必修：主线 26 课在需要的地方会点名引用它（那一组还是草稿，比主线薄）。
-不确定自己的底子够不够，看一眼[进课程前该有的能力清单](./reference/foundations.md)；每个 Part 在搭什么、学完怎么算过关，见[课程总览](./lessons/README.md)。
+[补充基础](./prerequisites/README.md)那两组都是**可选的**，不是必修：编程与后端底子是一张学习索引，只指路；LLM 原理八篇在主线需要时会被点名引用（那八篇大多还是草稿，比主线薄）。
+不确定自己的底子够不够，看一眼[编程与后端底子](./prerequisites/engineering-foundations.md)；每个 Part 在搭什么、学完怎么算过关，见[课程总览](./lessons/README.md)。
 
 ## 26 课
 
@@ -129,7 +129,7 @@
 
 ```text
 ├── lessons/          主线 26 课，每课 README + exercises.md
-├── prerequisites/    前置 · LLM 原理 F00–F07，八篇
+├── prerequisites/    补充基础：编程与后端底子的学习索引，加 LLM 原理 F00–F07 八篇
 ├── principles/       12 条工程原则，一条一个文件
 ├── reference/        术语表、技术选型、框架一览、外部资料
 └── docs/ mkdocs.yml  文档站配置（内容都是上面几个目录的符号链接）
@@ -146,7 +146,7 @@
 
 ## 参考资料
 
-术语见 [glossary.md](./reference/glossary.md)，自测题见 [diagnostic.md](./reference/diagnostic.md)，能力清单见 [foundations.md](./reference/foundations.md)，技术选型见 [stack.md](./reference/stack.md)，框架对比见 [frameworks.md](./reference/frameworks.md)，外部资料见 [resources.md](./reference/resources.md)。
+编程与后端底子见 [engineering-foundations.md](./prerequisites/engineering-foundations.md)，术语见 [glossary.md](./reference/glossary.md)，自测题见 [diagnostic.md](./reference/diagnostic.md)，技术选型见 [stack.md](./reference/stack.md)，框架对比见 [frameworks.md](./reference/frameworks.md)，外部资料见 [resources.md](./reference/resources.md)。
 
 ## 贡献与许可
 

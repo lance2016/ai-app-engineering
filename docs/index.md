@@ -176,7 +176,7 @@ hide:
 
 </div>
 
-<p class="band__foot" markdown="1">每个 Part 的前置、能力域拆解和出师标准，见[课程总览](lessons/README.md)。[前置 · LLM 原理](prerequisites/README.md)八篇是可选补充，主线课在需要时会点名引用。</p>
+<p class="band__foot" markdown="1">每个 Part 的前置、能力域拆解和出师标准，见[课程总览](lessons/README.md)。[补充基础](prerequisites/README.md)里的 LLM 原理八篇是可选的，主线课在需要时会点名引用。</p>
 
 </section>
 
@@ -208,7 +208,7 @@ hide:
 <article class="path" data-path="a" markdown="1">
 <p class="path__label">RECOMMENDED PATH · 从地基开始，整条链走一遍</p>
 <ol class="tl" markdown="1">
-<li markdown="span">**先花十分钟**，读[课程总览](lessons/README.md)，知道六个 Part 各在搭什么。不确定底子够不够，对一下[能力清单](reference/foundations.md)。</li>
+<li markdown="span">**先花十分钟**，读[课程总览](lessons/README.md)，知道六个 Part 各在搭什么。不确定底子够不够，对一下[编程与后端底子](prerequisites/engineering-foundations.md)。</li>
 <li markdown="span">**从 [00 起步](lessons/00-setup/README.md)顺着读**，别跳。Part 1 到 Part 5 的顺序就是依赖顺序，前一个 Part 是后一个的地基。</li>
 <li markdown="span">**卡在模型原理上再回补。** 正文出现「前置 F0x」的引用时，再去读[那八篇](prerequisites/README.md)，不用一开始就啃。</li>
 <li markdown="span">**每学完一个 Part，回看[工程原则](principles/README.md)。** 12 条是全课的压缩版，先学机制再读原则，才读得进去。</li>

@@ -1,11 +1,11 @@
 ---
 status: complete
-part: 开始这里
+part: 补充基础
 ---
 
-# 进这门课之前，该有哪些底子
+# 编程与后端底子：默认你有什么，缺了去哪补
 
-> **这门课不教 Python，也不教后端。** 但它默认你有一些东西。这一页把这些默认值列出来，免得读到一半卡在和 AI 无关的地方。
+> **这门课不教 Python，也不教后端。** 这一页是一张索引，不是教程：把课程默认你会的东西列出来，标清每项在哪一课用到、不会的话去哪学。免得读到一半卡在和 AI 无关的地方。
 >
 > 分三档：**必备**指不会就读不下去；**用到再学**指遇到那一课再补，半小时够；**可选**指补了有好处、不补也不影响主线。
 >
@@ -81,7 +81,7 @@ part: 开始这里
 |---|---|---|
 | 复杂度直觉（O(n) 还是 O(n log n)） | 必备 | 第 04 课「十万条以内暴力扫描就够，什么时候该建索引」 |
 | 哈希表 | 必备 | 幂等键、result store、去重，到处都是 |
-| 向量、点积、余弦相似度 | 必备 | 第 04 课的全部基础。前置 [F02](../prerequisites/llm-foundations/02-embeddings/README.md) 讲了够用的部分 |
+| 向量、点积、余弦相似度 | 必备 | 第 04 课的全部基础。前置 [F02](./llm-foundations/02-embeddings/README.md) 讲了够用的部分 |
 | top-k 与堆 | 用到再学 | 检索返回 top-k，重排是在这个 k 上再排一次 |
 | 队列与并发模型 | 用到再学 | 第 07 课的 double texting 三种策略，本质是队列策略 |
 | ANN 索引原理（HNSW） | 可选 | 第 04 课会用它，但调参靠实测，不靠推导 |
@@ -92,20 +92,20 @@ part: 开始这里
 | 想补的项 | 去哪学 | 读哪几节 |
 |---|---|---|
 | 复杂度直觉 | [Big-O cheat sheet](https://www.bigocheatsheet.com/) | 只看常见数据结构那张表 |
-| 向量、点积、余弦 | [前置 F02](../prerequisites/llm-foundations/02-embeddings/README.md) | 全篇，配一个纯标准库的小实验 |
+| 向量、点积、余弦 | [前置 F02](./llm-foundations/02-embeddings/README.md) | 全篇，配一个纯标准库的小实验 |
 | top-k 与堆 | [`heapq` 文档](https://docs.python.org/3/library/heapq.html) | `nlargest` 一个函数就够 |
 | HNSW 参数的含义 | [pgvector 的索引说明](https://github.com/pgvector/pgvector#indexing) | `m` 与 `ef_construction` 两个参数 |
 | HNSW 原理（可选） | [HNSW 论文](https://arxiv.org/abs/1603.09320) | 摘要与图 1 |
 
-访问日期均为 2026-09-06。模型侧的基础全部在[前置 · LLM 原理](../prerequisites/README.md)，八篇，不需要线性代数。
+访问日期均为 2026-09-06。模型侧的基础全部在[LLM 原理那八篇](./README.md)，不需要线性代数。
 
 ## 不需要的东西
 
 省下时间，这门课用不到：
 
 - **训练和微调模型的能力。** 第 22 课讲什么时候该微调、怎么算显存、成本临界点在哪，但不教你训一个模型。
-- **深度学习框架。** 全课不出现 PyTorch。前置里的小实验是纯标准库的。
-- **线性代数和概率论的推导。** 需要的部分（向量、余弦、采样）在前置里用具体数字讲完了。
+- **深度学习框架。** 全课不出现 PyTorch。LLM 原理那八篇里的小实验是纯标准库的。
+- **线性代数和概率论的推导。** 需要的部分（向量、余弦、采样）在 LLM 原理那八篇里用具体数字讲完了。
 - **前端框架。** 第 23 课讲交互设计和状态机，不写 React。
 - **Kubernetes。** 第 20 课到容器和灰度为止。
 
@@ -114,8 +114,8 @@ part: 开始这里
 | 你的情况 | 建议 |
 |---|---|
 | 上面必备项基本都有，没做过 AI 应用 | [第 00 课](../lessons/00-setup/README.md)顺着读 |
-| 做过 AI 应用，想查漏补缺 | 先做[自测](./diagnostic.md)，按结果挑 Part |
-| 模型原理不熟（token、attention、KV cache） | [前置 · LLM 原理](../prerequisites/README.md)，八篇 |
+| 做过 AI 应用，想查漏补缺 | 先做[自测](../reference/diagnostic.md)，按结果挑 Part |
+| 模型原理不熟（token、attention、KV cache） | [LLM 原理八篇](./README.md) |
 | 必备项缺得比较多 | 先补 Python 的类型注解、dataclass、async 三项和 SQL，其余边读边补 |
 
 课程结构和各 Part 的出师标准见[课程总览](../lessons/README.md)。
