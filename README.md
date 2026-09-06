@@ -25,33 +25,49 @@
 
 **如果你要的是能跑的代码**，参考实现在另一个仓库：[ai-app-engineering-ref](https://github.com/lance2016/ai-app-engineering-ref)——一个带工具调用、RAG、Memory、评测、trace 和部署的服务，`docker compose up` 就能起来。七个里程碑里 M0–M5 已完成，M6（多租户平台 RFC）和 framework-lab 还是草稿，四个 capstone 完成了一个。
 
+## 这门课适合谁
+
+| 你的情况 | 这门课给你什么 |
+|---|---|
+| 会 Python 和后端，调通过模型 API，但停在「demo 能跑」，不知道离上线还差什么 | 从第 00 课顺着读，缺的那一圈骨架就是 Part 4 的内容 |
+| 在用 LangChain 或 LangGraph，却说不清框架替你做了哪些决定 | 每课用普通 Python 讲同一个机制，末尾一张表对照三个框架的叫法 |
+| 要做 AI 应用的架构评审或技术选型，需要一份判断依据 | [课程总览](./lessons/README.md)的能力域清单，加 [12 条工程原则](./principles/README.md) |
+| 线上出了问题，只能看到最后那句错误回答 | 失败分层定位贯穿全课，第 17、18 课给证据链 |
+
+**不适合三种情况。** 想要 `git clone` 就能跑的项目——去[参考实现仓库](https://github.com/lance2016/ai-app-engineering-ref)；想学怎么训练或微调模型——这里只讲到应用工程师做决策的深度；不写代码只想了解 AI 能做什么——正文全是机制和示意代码。
+
 ## 从哪里开始
 
-**没做过 AI 应用**：从 [第 00 课](./lessons/00-setup/README.md) 顺着读，别跳。
+两条路径，看你属于哪一种。
 
-**已经做过 RAG 或 Agent**：先做 [24 题自测](./reference/diagnostic.md)，20 分钟定位薄弱区，按结果挑 Part。
+|  | 没做过 AI 应用 | 做过 RAG 或 Agent |
+|---|---|---|
+| **第一步** | 从 [00 起步](./lessons/00-setup/README.md) 顺着读，别跳 | 先花 20 分钟做 [24 题自测](./reference/diagnostic.md) |
+| **然后** | Part 1 → Part 5 按顺序走完 | 按自测结果挑薄弱的 Part 读 |
+| **模型原理** | token、attention、KV cache 不熟，先补[前置八篇](./prerequisites/README.md) | 读到「前置 F0x」的引用再回查 |
+| **想直接看结论** | 学完每个 Part 后回看[工程原则](./principles/README.md) | [12 条工程原则](./principles/README.md)是全课的压缩版 |
+| **正在选框架** | 学完 Part 2 再看 | [框架一览与选型标准](./reference/frameworks.md) |
 
-| 还想找 | 去哪 |
-|---|---|
-| 每个 Part 在搭什么、学完怎么算过关 | [课程总览](./lessons/README.md) |
-| 进课程前该有哪些底子 | [能力清单](./reference/foundations.md) |
-| 模型原理（token、attention、KV cache） | [前置 · LLM 原理](./prerequisites/README.md)，八篇（草稿，比主线薄） |
-| 一张对照清单 | [12 条工程原则](./principles/README.md) |
-| 框架选型 | [框架一览与选型标准](./reference/frameworks.md) |
+[前置 · LLM 原理](./prerequisites/README.md)那一组是**可选的补充**，不是必修：主线 24 课在需要的地方会点名引用它（那一组还是草稿，比主线薄）。
+不确定自己的底子够不够，看一眼[进课程前该有的能力清单](./reference/foundations.md)；每个 Part 在搭什么、学完怎么算过关，见[课程总览](./lessons/README.md)。
 
 ## 24 课
 
 每课 1～2.5 小时（第 00 课半小时），结构固定：为什么需要 → 心智模型 → 机制拆解 → 常见错误 → 取舍 → 工程落地 → 框架映射 → 一线经验 → 练习。
 
-**每个 Part 在搭什么、学完之后该能回答哪些问题，见[课程总览](./lessons/README.md)。**
+**每个 Part 的出师标准——学完该能回答哪些问题——见[课程总览](./lessons/README.md)。**
 
 ### Part 0 起步
+
+**学完之后。** 知道这门课的代码为什么不追求能跑，什么时候该去参考实现。
 
 | # | 课程 | 一句话 |
 |---|---|---|
 | 00 | [起步：怎么读这门课，怎么接第一个模型](./lessons/00-setup/README.md) | 课程定位，加一段能直接复制去跑的最小模型调用 |
 
 ### Part 1 模型与上下文
+
+**学完之后。** 应用能选对模型、拿到可解析的结构化输出、把指令和上下文管起来，并接上语义检索。
 
 | # | 课程 | 一句话 |
 |---|---|---|
@@ -61,6 +77,8 @@
 | 04 | [Embedding 与向量检索基础](./lessons/04-embeddings-and-vector-search/README.md) | 选模型和维度、暴力检索到什么规模换索引、切块怎样改变召回、pgvector |
 
 ### Part 2 Tool 与 Agent
+
+**学完之后。** 应用有了工具、循环、状态、上下文组装和能力接入，可以自己走多步完成一个任务。
 
 | # | 课程 | 一句话 |
 |---|---|---|
@@ -75,6 +93,8 @@
 
 ### Part 3 知识与记忆
 
+**学完之后。** 应用有了检索、引用、记忆，以及一套管数据的规矩。
+
 | # | 课程 | 一句话 |
 |---|---|---|
 | 13 | [RAG 端到端](./lessons/13-rag-end-to-end/README.md) | 解析、切块、索引、混合检索、重排、生成、引用，七步每步怎么坏、怎么测 |
@@ -82,6 +102,8 @@
 | 15 | [数据工程与数据质量](./lessons/15-data-engineering/README.md) | 版本、新鲜度、权限和删除演练，决定 RAG 上限的不是模型而是数据 |
 
 ### Part 4 生产工程
+
+**学完之后。** 应用有了评测、trace、限流、fallback、成本账、安全边界和部署流程。
 
 | # | 课程 | 一句话 |
 |---|---|---|
@@ -92,7 +114,9 @@
 | 20 | [安全与治理](./lessons/20-security-governance/README.md) | 提示注入、越权、数据泄露、沙箱、供应链、多租户边界、数据生命周期 |
 | 21 | [模型适配、微调与推理服务](./lessons/21-model-adaptation-finetuning-inference/README.md) | 什么时候该微调、显存怎么算、托管和自建的成本临界点 |
 
-### Part 5 架构与产品
+### Part 5 产品与技术决策
+
+**学完之后。** 能独立设计一个 AI 应用，并写得出一份别人能审的技术决策。
 
 | # | 课程 | 一句话 |
 |---|---|---|

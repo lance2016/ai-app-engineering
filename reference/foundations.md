@@ -1,6 +1,6 @@
 ---
 status: complete
-part: 查阅
+part: 开始这里
 ---
 
 # 进这门课之前，该有哪些底子

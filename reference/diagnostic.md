@@ -1,6 +1,6 @@
 ---
 status: complete
-part: 查阅
+part: 开始这里
 ---
 
 # 自测：我该从哪一课开始

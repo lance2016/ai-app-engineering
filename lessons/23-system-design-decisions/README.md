@@ -1,6 +1,6 @@
 ---
 status: complete
-part: Part 5 架构与产品
+part: Part 5 产品与技术决策
 estimated_time: 约 2 小时
 ---
 
