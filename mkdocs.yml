@@ -58,6 +58,12 @@ extra:
 
 extra_css:
   - stylesheets/wabi.css
+  # 首页是浏览页，和 lesson 的沉浸阅读版式是两种角色，样式单独一份。
+  - stylesheets/home.css
+
+extra_javascript:
+  # 学习进度存在读者自己的浏览器里，没有账号也没有后端。
+  - javascripts/progress.js
 
 plugins:
   # 装了 jieba 之后，Material 会在构建期对中文正文分词，搜索才能命中中文词。

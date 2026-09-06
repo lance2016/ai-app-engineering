@@ -432,6 +432,27 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 }
 .md-typeset .mermaid { margin: 2.4rem 0; }
 
+/* One diagram language across the whole course, so a reader never has to
+   re-learn what a shape means. Declare the role in the diagram source --
+   `class NodeName risk` in Mermaid -- and the colour is decided here:
+   celadon is the path under discussion, rust is failure or risk. Shapes and
+   edges carry the rest, and Mermaid's own syntax already says them: rectangle
+   for a component, circle (`((...))`) for a concept, diamond (`{...}`) for a
+   decision, `-.->` for an optional or asynchronous edge. Only nodes take a
+   class -- Mermaid gives edges no hook for one.
+   Mermaid writes its own rules into the SVG under an id selector, so these
+   need !important to land; that is the whole reason for it. */
+.md-typeset .mermaid .node.path > :is(rect, polygon, circle, path) {
+  stroke: var(--ws-celadon) !important;
+  stroke-width: 1.6px !important;
+}
+.md-typeset .mermaid .node.path .nodeLabel { color: var(--ws-celadon) !important; }
+.md-typeset .mermaid .node.risk > :is(rect, polygon, circle, path) {
+  stroke: var(--ws-rust) !important;
+  stroke-width: 1.6px !important;
+}
+.md-typeset .mermaid .node.risk .nodeLabel { color: var(--ws-rust) !important; }
+
 .md-typeset img { border-radius: 2px; }
 
 /* --- folded exercise answers --------------------------------------------- */
@@ -471,34 +492,8 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 .md-typeset :target > .headerlink,
 .md-typeset :hover > .headerlink { color: var(--ws-celadon); }
 
-/* --- the front page ------------------------------------------------------- */
-
-/* index.md hides both sidebars, which is how we recognise it without a
-   template override. Its column runs wider and opens with more silence. */
-.md-main__inner:has(.md-sidebar--primary[hidden]) .md-content__inner {
-  max-width: 38rem;
-  margin-inline: auto;
-}
-
-/* The edit-this-page pencil has nothing to sit beside on the front page. */
-.md-main__inner:has(.md-sidebar--primary[hidden]) .md-content__button { display: none; }
-.md-main__inner:has(.md-sidebar--primary[hidden]) .md-content__inner > h1 {
-  font-size: 2.9rem;
-  line-height: 1.2;
-  margin-top: 5rem;
-  margin-bottom: 1.2rem;
-  font-weight: 400;
-}
-.md-main__inner:has(.md-sidebar--primary[hidden]) .md-content__inner > h1 + h2 {
-  margin-top: 0;
-  margin-bottom: 2.2rem;
-  font-size: 1.2rem;
-  font-weight: 400;
-  color: var(--ws-ink-2);
-}
-.md-main__inner:has(.md-sidebar--primary[hidden]) .md-typeset .md-button {
-  margin-top: .8rem;
-}
+/* The front page is a different job -- browsing, not reading -- and lives in
+   home.css. Nothing about it belongs in the reading skin. */
 
 /* --- quality floor -------------------------------------------------------- */
 

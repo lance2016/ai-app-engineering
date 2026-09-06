@@ -31,6 +31,35 @@
 5. **不创建 Dashboard、周计划、学习记录、复盘之类的文件。** 那是读者自己的事。
 6. **README 的课程总表按 Part 分组**，只有 Part 和课号两套编号。不要再引入新的编号体系。
 
+## 2.5 站点外观与图示规范
+
+`docs/` 除了符号链接，还有三个文件决定站点长什么样，改之前先看它们各自的开头注释：
+
+| 文件 | 管什么 |
+|---|---|
+| `docs/stylesheets/wabi.css` | 阅读皮肤：纸色、墨色、青瓷、细线、无阴影无卡片，正文 36rem 窄栏 |
+| `docs/stylesheets/home.css` | 首页版式（56rem 宽栏），加课程页底部那个「标记为已掌握」控件 |
+| `docs/javascripts/progress.js` | 学习进度和路径选择，只用 localStorage，没有账号也没有后端 |
+
+**首页 `docs/index.md` 是排版页，不是普通 Markdown。** 它用 `md_in_html` 写成带 class 的 HTML 骨架，
+链接一律写 Markdown 语法，class 和属性靠 `attr_list` 挂上去：
+
+```markdown
+[01](lessons/01-how-llms-work/README.md){ .amap__lesson data-lesson="01" }
+```
+
+raw HTML 里的 `href` 既不会被 MkDocs 改写成站点 URL，也逃过 `check_links.py`，所以不要那样写。
+课程地图里每个课号链接上的 `data-lesson` 是进度脚本认课的唯一依据，加课或改路径时必须同步。
+
+**全站示意图共用一套视觉约定**，画新图时直接套，不要再发明配色：
+
+- **青瓷色**＝正在讲的那条路径；**铁锈色**＝失败、风险、降级。其他一律墨色。
+- **实线**＝运行时同步流；**虚线**＝可选调用、异步或离线。
+- **矩形**＝组件；**圆形**（`((...))`）＝概念；**菱形**（`{...}`）＝判断。
+
+Mermaid 里只要写 `class NodeName path` 或 `class NodeName risk`，颜色由 `wabi.css` 决定，
+不要在图里写 `style` 和十六进制色值。首页底部的 VISUAL LANGUAGE 一节就是这套约定的图例。
+
 ## 3. 一课的固定结构
 
 ```markdown
@@ -57,7 +86,7 @@ estimated_time: 约 N 小时
 至少一张图加几段话。这一节要能独立成立：
 读者只看这一节，也该拿到这一课最重要的判断。
 
-**图默认用 Mermaid。** 只有流程图画不出来的东西才建 `images/` 放 SVG，比如第 04 课
+**图默认用 Mermaid，配色按 2.5 的约定走。** 只有流程图画不出来的东西才建 `images/` 放 SVG，比如第 04 课
 那张向量空间散点图，点和点之间的距离本身就是内容。不要为了「配一张图」再画一遍
 紧挨着的 Mermaid 已经说清楚的关系：2026-09-05 清过一轮，24 张配图里有 20 张是
 这种重复，全部删掉了。

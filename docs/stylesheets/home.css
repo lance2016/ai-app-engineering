@@ -1,0 +1,772 @@
+/* ==========================================================================
+   The front page, plus the one control it needs on every lesson page.
+
+   wabi.css is the reading skin: one paper tone, hairlines, no fills, a narrow
+   36rem column built for sitting with a lesson. This file gives index.md the
+   other job -- browsing and orientation -- without inventing a second visual
+   language for it.
+
+   Rules kept from wabi.css, in full:
+   1. Structure comes from whitespace, hairlines and type scale. No cards,
+      no shadows, no fills, no radius beyond the 2px already in use.
+   2. Colour is spent on celadon (the path you are on) and rust (failure).
+      Nothing else is coloured.
+   3. No web fonts. Serif for headings and figure labels, mono for the
+      addressing marks -- lesson numbers, layer indices, eyebrows.
+
+   What is different here: the column runs to 56rem so a five-layer map and a
+   four-band architecture fit side by side, while every run of prose inside it
+   is still capped near the reading measure.
+
+   Note that Material sets the root at 125%, so 1rem is 20px throughout.
+   ========================================================================== */
+
+/* --- the wide column ------------------------------------------------------ */
+
+/* index.md hides both sidebars; the .home wrapper is what actually marks the
+   page, so the width rule keys off the content rather than the chrome. */
+.md-content__inner:has(> .home) {
+  max-width: 56rem;
+  /* Material holds the content off the screen edge with a side margin, which
+     centring would drop; the gutter has to come back as padding. */
+  margin-inline: auto;
+  padding-inline: .8rem;
+}
+
+/* The edit-this-page pencil has nothing to sit beside on the front page. */
+.md-main__inner:has(.md-sidebar--primary[hidden]) .md-content__button { display: none; }
+
+.home { margin-bottom: 3rem; }
+
+/* The front page has no table of contents, so the anchor pilcrows have
+   nothing to link to and only add noise beside the section labels. */
+.md-typeset .home .headerlink { display: none; }
+
+/* Prose inside a wide column still wants the reading measure. */
+.home .band__lede,
+.home .band__foot,
+.home .legend__lede,
+.home .outcome > * { max-width: 34rem; }
+
+/* --- section marks -------------------------------------------------------- */
+
+/* Every section opens with a mono eyebrow over a hairline. This is the one
+   repeated device that makes the page recognisable. */
+.home .eyebrow {
+  margin: 0 0 1.4rem;
+  padding-top: .5rem;
+  border-top: 1px solid var(--ws-ink);
+  font-family: var(--ws-mono);
+  font-size: .58rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ws-ink-2);
+}
+.home .eyebrow--sub {
+  border-top-color: var(--ws-rule);
+  color: var(--ws-ink-3);
+}
+
+.home .band { margin-top: 5rem; }
+.md-typeset .home .band > h2 {
+  margin: 0 0 1rem;
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+.home .band__lede { color: var(--ws-ink-2); }
+.home .band__foot {
+  margin-top: 2rem;
+  font-size: .78rem;
+  color: var(--ws-ink-2);
+}
+
+/* --- hero ----------------------------------------------------------------- */
+
+.home .hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(15rem, .85fr);
+  gap: 4rem;
+  align-items: start;
+  padding-bottom: 1rem;
+}
+
+.md-typeset .home .hero h1 {
+  margin: 3.4rem 0 .8rem;
+  font-size: 2.6rem;
+  line-height: 1.15;
+  font-weight: 400;
+  letter-spacing: -.01em;
+}
+
+.home .hero__tagline {
+  margin: 0 0 1.8rem;
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid var(--ws-rule);
+  font-family: var(--ws-serif);
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: var(--ws-ink-2);
+}
+
+.home .hero__lede > p { max-width: 32rem; }
+
+/* Material's list reset carries a [dir] prefix, so plain .home .hero__meta
+   loses to it -- the .md-typeset prefix is what wins the display. */
+.md-typeset .home .hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem .9rem;
+  margin: 1.8rem 0 1.6rem !important;
+  padding: 0;
+  list-style: none;
+  font-family: var(--ws-mono);
+  font-size: .6rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ws-ink-3);
+}
+.md-typeset .home .hero__meta li { margin: 0; }
+.md-typeset .home .hero__meta li:not(:last-child)::after {
+  content: "·";
+  margin-left: .9rem;
+  color: var(--ws-rule);
+}
+
+.home .hero__cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .8rem;
+}
+.md-typeset .home .hero__cta p { margin: 0; }
+.md-typeset .home .hero__cta .md-button { margin: 0; }
+
+/* --- hero figure: the stack ----------------------------------------------- */
+
+/* The brand mark. Five layers, drawn as what they are: a thing built from the
+   bottom up. Hairlines only -- the foundation is the one line that thickens. */
+.md-typeset .home .stackfig {
+  margin: 3.6rem 0 0;
+  padding: 0;
+  text-align: left;          /* Material centres figures; this one is a table */
+}
+.home .stackfig__cap {
+  margin-bottom: .7rem;
+  font-family: var(--ws-mono);
+  font-size: .55rem;
+  letter-spacing: .18em;
+  color: var(--ws-ink-3);
+}
+.home .stackfig__body {
+  border: 1px solid var(--ws-rule);
+  border-bottom: 2px solid var(--ws-ink);
+}
+.home .stackfig__layer {
+  display: flex;
+  align-items: baseline;
+  gap: .9rem;
+  padding: .72rem .9rem;
+  border-bottom: 1px solid var(--ws-rule-faint);
+}
+.home .stackfig__layer:last-child { border-bottom: 0; }
+.home .stackfig__part {
+  flex: 0 0 auto;
+  width: 3.1rem;
+  font-family: var(--ws-mono);
+  font-size: .58rem;
+  letter-spacing: .08em;
+  color: var(--ws-ink-3);
+}
+.home .stackfig__name {
+  font-family: var(--ws-serif);
+  font-size: .88rem;
+  color: var(--ws-ink-2);
+}
+
+/* The base layer is where a reader starts, so it carries the one mark of
+   colour on the figure. */
+.home .stackfig__layer--base { position: relative; }
+.home .stackfig__layer--base .stackfig__part,
+.home .stackfig__layer--base .stackfig__name { color: var(--ws-celadon); }
+.home .stackfig__layer--base::after {
+  content: "START";
+  margin-left: auto;
+  font-family: var(--ws-mono);
+  font-size: .52rem;
+  letter-spacing: .16em;
+  color: var(--ws-celadon);
+}
+
+.home .stackfig__note {
+  margin: .9rem 0 0;
+  font-size: .7rem;
+  line-height: 1.7;
+  color: var(--ws-ink-3);
+}
+
+/* --- why this course ------------------------------------------------------ */
+
+.home .why {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.4rem;
+}
+.home .why__item {
+  padding-top: .9rem;
+  border-top: 1px solid var(--ws-rule);
+}
+.home .why__num {
+  margin: 0 0 .7rem !important;
+  font-family: var(--ws-mono);
+  font-size: .7rem;
+  color: var(--ws-ink-3);
+}
+.md-typeset .home .why__head {
+  margin: 0 0 .6rem;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.home .why__head span {
+  display: block;
+  margin-top: .15rem;
+  font-family: var(--ws-sans);
+  font-size: .72rem;
+  font-weight: 400;
+  color: var(--ws-ink-3);
+}
+.md-typeset .home .why__item p:last-child {
+  margin: 0;
+  font-size: .78rem;
+  line-height: 1.85;
+  color: var(--ws-ink-2);
+}
+
+/* --- architecture map ------------------------------------------------------ */
+
+/* One row per layer, hung off a continuous rail. The rail is the whole point:
+   the five layers are not five topics, they are one thing stacked. */
+.home .amap { margin-top: 2.4rem; }
+
+.home .amap__row {
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+}
+.home .amap__idx {
+  padding-top: .1rem;
+  font-family: var(--ws-mono);
+  font-size: .62rem;
+  letter-spacing: .1em;
+  color: var(--ws-ink-3);
+}
+.home .amap__body {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(10rem, 14rem) 1fr;
+  gap: .4rem 1.8rem;
+  padding: 0 0 2.2rem 1.5rem;
+  border-left: 1px solid var(--ws-rule);
+}
+.home .amap__row:last-child .amap__body { padding-bottom: 0; }
+
+/* The node on the rail. Paper behind it so the line reads as passing under. */
+.home .amap__body::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: .45rem;
+  width: 5px;
+  height: 5px;
+  background: var(--ws-paper);
+  border: 1px solid var(--ws-celadon);
+}
+.home .amap__row--pre .amap__body::before { border-color: var(--ws-ink-3); }
+
+.home .amap__title {
+  display: block;
+  font-family: var(--ws-serif);
+  font-size: 1.05rem;
+  color: var(--ws-ink) !important;
+  text-decoration: none !important;
+}
+.home .amap__title:hover { color: var(--ws-celadon) !important; }
+.home .amap__part {
+  display: block;
+  margin-top: .2rem;
+  font-size: .68rem;
+  color: var(--ws-ink-3);
+}
+
+.md-typeset .home .amap__lessons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+  margin: 0 0 .6rem;
+}
+
+/* A lesson number is an address, so it is set in mono and boxed like one.
+   Marked-as-learned turns the box celadon; that is the only state it has. */
+.md-typeset .home .amap__lesson {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.7rem;
+  padding: .12rem .28rem;
+  border: 1px solid var(--ws-rule);
+  border-radius: 2px;
+  font-family: var(--ws-mono);
+  font-size: .62rem;
+  color: var(--ws-ink-2);
+  text-decoration: none;
+  transition: border-color .15s, color .15s;
+}
+.md-typeset .home .amap__lesson:hover {
+  border-color: var(--ws-ink);
+  color: var(--ws-ink);
+}
+/* Marked lessons flip to a filled box rather than only changing hue, so the
+   state survives a monochrome screen and colour-blind readers. */
+.md-typeset .home .amap__lesson.is-done {
+  background: var(--ws-celadon);
+  border-color: var(--ws-celadon);
+  color: var(--ws-paper);
+}
+
+.md-typeset .home .amap__topics {
+  margin: 0;
+  font-size: .74rem;
+  line-height: 1.8;
+  color: var(--ws-ink-2);
+}
+.md-typeset .home .amap__gain {
+  margin: .4rem 0 0;
+  font-size: .72rem;
+  line-height: 1.75;
+  color: var(--ws-ink-3);
+}
+.md-typeset .home .amap__gain::before {
+  content: "→ ";
+  color: var(--ws-celadon);
+}
+
+/* --- learning journey ------------------------------------------------------ */
+
+.home .picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.home .picker__opt {
+  display: flex;
+  gap: .8rem;
+  padding: 1rem;
+  background: transparent;
+  border: 1px solid var(--ws-rule);
+  border-radius: 2px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.home .picker__opt:hover { border-color: var(--ws-ink-2); }
+.home .picker__opt[aria-pressed="true"] {
+  border-color: var(--ws-celadon);
+  border-left-width: 2px;
+  padding-left: calc(1rem - 1px);
+}
+.home .picker__key {
+  flex: 0 0 auto;
+  font-family: var(--ws-serif);
+  font-size: 1.1rem;
+  line-height: 1.3;
+  color: var(--ws-ink-3);
+}
+.home .picker__opt[aria-pressed="true"] .picker__key { color: var(--ws-celadon); }
+.home .picker__txt {
+  font-size: .76rem;
+  line-height: 1.7;
+  color: var(--ws-ink-2);
+}
+
+.home .path {
+  margin-top: 2.4rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--ws-rule);
+}
+.home .path[hidden] { display: none; }
+.home .path__label {
+  margin: 0 0 1.2rem !important;
+  font-family: var(--ws-mono);
+  font-size: .58rem;
+  letter-spacing: .16em;
+  color: var(--ws-celadon);
+}
+
+/* A path is a sequence, so it is numbered down a rail like the map above. */
+.md-typeset .home .tl {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: tl;
+  max-width: 40rem;
+}
+.md-typeset .home .tl li {
+  position: relative;
+  margin: 0;
+  padding: 0 0 1.1rem 2.4rem;
+  border-left: 1px solid var(--ws-rule);
+  font-size: .8rem;
+  line-height: 1.85;
+  color: var(--ws-ink-2);
+  counter-increment: tl;
+}
+.md-typeset .home .tl li:last-child { padding-bottom: 0; }
+.md-typeset .home .tl li::before {
+  content: counter(tl, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translateX(-50%);
+  padding: 0 .3rem;
+  background: var(--ws-paper);
+  font-family: var(--ws-mono);
+  font-size: .58rem;
+  color: var(--ws-ink-3);
+}
+
+/* --- progress -------------------------------------------------------------- */
+
+.home .prog__empty {
+  max-width: 34rem;
+  font-size: .78rem;
+  line-height: 1.85;
+  color: var(--ws-ink-3);
+}
+.home .prog__body[hidden] { display: none; }
+
+.home .prog__count {
+  margin: 0 0 1.2rem !important;
+  font-family: var(--ws-serif);
+  color: var(--ws-ink-3);
+}
+.home .prog__count strong {
+  font-size: 2.6rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--ws-celadon);
+}
+.home .prog__total {
+  margin-left: .5rem;
+  font-family: var(--ws-mono);
+  font-size: .68rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+/* Twenty-four ticks, one per lesson. A ruler, not a progress bar: it says
+   which lessons, not just how many. */
+.home .prog__ruler {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  margin-bottom: 1.4rem;
+  max-width: 34rem;
+}
+.home .prog__tick {
+  flex: 1 1 0;
+  height: 1.1rem;
+  border: 1px solid var(--ws-rule);
+  border-radius: 1px;
+  transition: background .15s, border-color .15s;
+}
+.home .prog__tick.is-done {
+  background: var(--ws-celadon);
+  border-color: var(--ws-celadon);
+}
+.home .prog__tick.is-next {
+  border-color: var(--ws-celadon);
+  border-style: dashed;
+}
+
+.home .prog__last {
+  margin: 0 0 1.4rem !important;
+  font-family: var(--ws-mono);
+  font-size: .6rem;
+  letter-spacing: .14em;
+  color: var(--ws-ink-3);
+}
+.md-typeset .home .prog__last a {
+  font-family: var(--ws-sans);
+  font-size: .78rem;
+  letter-spacing: 0;
+  margin-left: .5rem;
+}
+.md-typeset .home .prog__next { margin: 0 0 1.2rem; }
+.md-typeset .home .prog__next .md-button { margin: 0; }
+
+.home .prog__reset { margin: 0 !important; }
+.home .prog__reset button {
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: var(--ws-sans);
+  font-size: .68rem;
+  color: var(--ws-ink-3);
+  text-decoration: underline;
+  text-decoration-color: var(--ws-rule);
+  text-underline-offset: .22em;
+  cursor: pointer;
+}
+.home .prog__reset button:hover { color: var(--ws-rust); }
+
+/* --- the system diagram ----------------------------------------------------- */
+
+/* Four bands, read downwards. Components are rectangles on hairlines; the
+   flow between them is a glyph in the gutter rather than a drawn arrow, so the
+   whole thing reflows to one column on a phone without breaking. */
+.home .sys { margin-top: 2.4rem; }
+
+.home .sys__band {
+  display: grid;
+  grid-template-columns: 6rem 1fr;
+  gap: .6rem 1.4rem;
+  padding: 1.4rem 0;
+  border-top: 1px solid var(--ws-rule);
+}
+.home .sys__band:last-child { border-bottom: 1px solid var(--ws-rule); }
+.home .sys__band--async,
+.home .sys__band--base { border-top-style: dashed; }
+
+.home .sys__bandname {
+  margin: .15rem 0 0 !important;
+  font-family: var(--ws-mono);
+  font-size: .6rem;
+  letter-spacing: .12em;
+  color: var(--ws-ink-3);
+}
+.home .sys__bandname span {
+  display: block;
+  margin-top: .3rem;
+  font-family: var(--ws-sans);
+  font-size: .68rem;
+  letter-spacing: 0;
+  color: var(--ws-ink-2);
+}
+
+.home .sys__nodes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: .5rem;
+}
+
+.md-typeset .home .sysnode {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: .2rem;
+  min-width: 6.6rem;
+  padding: .55rem .7rem;
+  border: 1px solid var(--ws-ink-2);
+  border-radius: 2px;
+  font-size: .74rem;
+  color: var(--ws-ink) !important;
+  text-decoration: none;
+  transition: border-color .15s, background .15s;
+}
+.md-typeset .home .sysnode span {
+  font-family: var(--ws-mono);
+  font-size: .55rem;
+  letter-spacing: .08em;
+  color: var(--ws-ink-3);
+}
+.md-typeset .home .sysnode:hover { border-color: var(--ws-celadon); }
+
+/* The request path is the one thing on the diagram that is coloured. */
+.md-typeset .home .sysnode--core { border-color: var(--ws-celadon); border-width: 2px; }
+.md-typeset .home .sysnode--async { border-style: dashed; border-color: var(--ws-rule); }
+.md-typeset .home .sysnode--risk {
+  border-style: dashed;
+  border-color: var(--ws-rust);
+  color: var(--ws-rust) !important;
+}
+.md-typeset .home .sysnode--risk span { color: var(--ws-rust); }
+
+.home .sys__arrow,
+.home .sys__dot {
+  align-self: center;
+  font-family: var(--ws-mono);
+  font-size: .7rem;
+  color: var(--ws-ink-3);
+}
+.home .sys__arrow::before { content: "→"; }
+.home .sys__dot::before { content: "·"; color: var(--ws-rule); }
+
+.home .sys__aside {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem;
+}
+.home .sys__asidenote {
+  font-size: .68rem;
+  color: var(--ws-rust);
+}
+.home .sys__bandnote {
+  grid-column: 2;
+  margin: 0 !important;
+  max-width: 34rem;
+  font-size: .7rem;
+  line-height: 1.75;
+  color: var(--ws-ink-3);
+}
+
+/* --- the legend ------------------------------------------------------------- */
+
+.home .legend { margin-top: 3.4rem; }
+.home .legend__lede {
+  margin-bottom: 1rem;
+  font-size: .76rem;
+  color: var(--ws-ink-2);
+}
+.md-typeset .home .legend__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: .6rem 1.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.md-typeset .home .legend__list li {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  margin: 0;
+  font-size: .7rem;
+  color: var(--ws-ink-2);
+}
+.home .lg {
+  flex: 0 0 auto;
+  width: 1.4rem;
+  height: .8rem;
+}
+.home .lg--celadon { border: 1px solid var(--ws-celadon); background: var(--ws-celadon); }
+.home .lg--rust    { border: 1px solid var(--ws-rust); }
+.home .lg--solid   { height: 0; border-top: 1px solid var(--ws-ink-2); }
+.home .lg--dashed  { height: 0; border-top: 1px dashed var(--ws-ink-2); }
+.home .lg--rect    { border: 1px solid var(--ws-ink-2); }
+.home .lg--circle  { width: .8rem; border: 1px solid var(--ws-ink-2); border-radius: 50%; }
+.home .lg--diamond {
+  width: .8rem;
+  height: .8rem;
+  border: 1px solid var(--ws-ink-2);
+  transform: rotate(45deg) scale(.8);
+}
+
+/* --- closing text ----------------------------------------------------------- */
+
+.home .cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3rem;
+}
+.md-typeset .home .cols h3,
+.md-typeset .home .outcome h3 {
+  margin: 0 0 .9rem;
+  padding-top: .8rem;
+  border-top: 1px solid var(--ws-rule);
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+.md-typeset .home .cols p,
+.md-typeset .home .outcome p {
+  font-size: .78rem;
+  line-height: 1.9;
+  color: var(--ws-ink-2);
+}
+.home .outcome { margin-top: 3rem; }
+
+/* --- responsive ------------------------------------------------------------- */
+
+/* 13" laptops land here: the hero splits at a narrower ratio and the map's
+   two inner columns collapse before the page does. */
+@media screen and (max-width: 66em) {
+  .home .hero { gap: 2.6rem; }
+  .home .amap__body { grid-template-columns: minmax(9rem, 12rem) 1fr; gap: .4rem 1.2rem; }
+}
+
+/* Tablet: everything that was side by side stacks. */
+@media screen and (max-width: 60em) {
+  .home .hero {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .md-typeset .home .stackfig { margin-top: 2.6rem; max-width: 26rem; }
+  .home .why { grid-template-columns: 1fr; gap: 1.8rem; }
+  .home .picker { grid-template-columns: 1fr; gap: .7rem; }
+  .home .cols { grid-template-columns: 1fr; gap: 2.2rem; }
+  .home .amap__body { grid-template-columns: 1fr; gap: .7rem; }
+  .home .sys__band { grid-template-columns: 1fr; gap: .9rem; }
+  .home .sys__aside,
+  .home .sys__bandnote { grid-column: 1; }
+}
+
+/* Phone: the map and the architecture both become one column of rows, and the
+   flow glyph turns downwards so the reading order still shows.  */
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .home .hero h1 { font-size: 1.9rem; margin-top: 2rem; }
+  .home .hero__tagline { font-size: .98rem; }
+  .home .band { margin-top: 3.4rem; }
+  .md-typeset .home .band > h2 { font-size: 1.25rem; }
+
+  .home .amap__row { grid-template-columns: 2rem 1fr; }
+  .home .amap__body { padding-left: 1rem; }
+
+  .home .sys__nodes { flex-direction: column; align-items: stretch; }
+  .home .sys__arrow::before { content: "↓"; }
+  .home .sys__dot { display: none; }
+  /* Stacked, a node reads on one line, so the part tag moves beside the name
+     instead of under it -- twelve components otherwise run very long. */
+  .md-typeset .home .sysnode {
+    min-width: 0;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: .5rem .7rem;
+  }
+  .home .sys__aside { flex-direction: column; align-items: flex-start; }
+
+  .home .prog__count strong { font-size: 2rem; }
+  .home .prog__ruler { gap: 2px; }
+  .home .prog__tick { height: .9rem; }
+}
+
+/* --- the mark control, on every lesson page ---------------------------------- */
+
+/* Injected by progress.js at the end of a lesson. It is the only interactive
+   thing in the reading column, so it stays a line of text over a hairline. */
+.mark {
+  margin-top: 3.4rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--ws-rule);
+}
+.mark__btn {
+  padding: .45em 1.3em;
+  background: transparent;
+  border: 1px solid var(--ws-rule);
+  border-radius: 2px;
+  font-family: var(--ws-serif);
+  font-size: .82rem;
+  color: var(--ws-ink-2);
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.mark__btn:hover { border-color: var(--ws-ink); color: var(--ws-ink); }
+.mark.is-done .mark__btn { border-color: var(--ws-celadon); color: var(--ws-celadon); }
+.mark__note {
+  margin: .7rem 0 0 !important;
+  font-size: .68rem;
+  color: var(--ws-ink-3);
+}
