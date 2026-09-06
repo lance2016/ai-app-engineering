@@ -341,9 +341,18 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 .md-nav { font-size: .68rem; line-height: 1.7; }
 .md-nav__title { font-family: var(--ws-serif); color: var(--ws-ink-2); font-weight: 500; }
 .md-nav__link { color: var(--ws-ink-2); transition: color .15s; }
-.md-nav__link:hover, .md-nav__link:focus { color: var(--ws-ink); }
-.md-nav__item .md-nav__link--active,
-.md-nav__item .md-nav__link--active:hover { color: var(--ws-celadon); font-weight: 600; }
+.md-nav__item .md-nav__link--active { color: var(--ws-celadon); font-weight: 600; }
+
+/* Material hangs its hover colour off an attribute selector --
+   .md-nav__link[href]:hover is (0,3,0) -- so the plain .md-nav__link:hover rule
+   that used to sit here never applied, and every nav item hovered to
+   --md-accent-fg-color, which this skin maps to celadon-2. That green sits a
+   shade off the active celadon, so a hovered section read as the section you
+   were in. Position is the left rule's job; hover only deepens the ink. */
+.md-nav__link[for]:focus,  .md-nav__link[for]:hover,
+.md-nav__link[href]:focus, .md-nav__link[href]:hover { color: var(--ws-ink); }
+.md-nav--primary .md-nav__item--active > .md-nav__link:focus,
+.md-nav--primary .md-nav__item--active > .md-nav__link:hover { color: var(--ws-celadon); }
 
 .md-sidebar--primary .md-nav__list .md-nav__link {
   position: relative;
@@ -361,11 +370,15 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 
 .md-sidebar__scrollwrap::-webkit-scrollbar-thumb { background: var(--ws-rule); }
 
-/* 37 of the 45 pages carry status: complete, so that badge marks the rule
+/* 44 of the 51 pages carry status: complete, so that badge marks the rule
    rather than the exception and reads as noise. Only the unfinished pages
    get a mark, and it stays a dot. */
 .md-status--complete { display: none; }
-.md-status { color: var(--ws-ink-3); }
+/* The badge is a flex sibling of the label and .md-nav__link aligns to
+   flex-start, so a label long enough to wrap left the dot stranded at the top
+   right, reading as a bullet rather than as a mark on that title. Drop it to
+   the last line. */
+.md-status { color: var(--ws-ink-3); align-self: flex-end; }
 .md-status::after {
   content: "";
   display: inline-block;
