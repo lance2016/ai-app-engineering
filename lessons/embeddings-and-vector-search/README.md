@@ -6,7 +6,7 @@ estimated_time: 约 1.5 小时
 
 # 04 Embedding 与向量检索基础
 
-> 前置 F02 讲了 embedding 是什么、余弦为什么先归一化。这一课只讲工程：怎么选模型和维度、什么时候该从精确检索换成近似索引、切块怎样改变召回、pgvector 怎么建表建索引，以及向量检索什么时候不好使。为第 14 课 RAG 和第 15 课 Memory 打底。
+> 这一课只讲工程：怎么选模型和维度、什么时候该从精确检索换成近似索引、切块怎样改变召回、pgvector 怎么建表建索引，以及向量检索什么时候不好使。为第 14 课 RAG 和第 15 课 Memory 打底。
 
 ## 为什么需要
 
@@ -21,7 +21,7 @@ estimated_time: 约 1.5 小时
 
 ## 前置
 
-- 前置 [F02 Embedding 与向量空间](../../prerequisites/llm-foundations/02-embeddings/README.md)：向量为什么能比较、余弦与归一化、embedding 层和文本 embedding 模型的区别。本课不再解释这些
+- 这一课默认你知道向量为什么能比较、余弦为什么先归一化、embedding 层和文本 embedding 模型差在哪，不再解释。不熟就翻 [F02 Embedding 与向量空间](../../prerequisites/llm-foundations/02-embeddings/README.md)，**不用先读完再回来**
 
 ## 怎么理解它
 
@@ -35,7 +35,7 @@ flowchart LR
     IX --> R[最相近的 k 块]
 ```
 
-F02 讲了向量为什么能比较，也讲了归一化之后余弦就是点积（pgvector 的 `<=>` 算的是余弦距离，等于 1 减余弦相似度；存归一化后的向量可以用内积代替，省一次开方）。这里补四个工程事实。
+[F02](../../prerequisites/llm-foundations/02-embeddings/README.md) 讲了向量为什么能比较，也讲了归一化之后余弦就是点积（pgvector 的 `<=>` 算的是余弦距离，等于 1 减余弦相似度；存归一化后的向量可以用内积代替，省一次开方）。这里补四个工程事实。
 
 **query 和 document 要落进同一个可比较的向量空间。** 多数模型的要求是：同模型、同版本、同维度、同归一化方式。但「同一个模型」不等于「同一段代码」——有一类模型做的是**非对称检索**，编码查询和编码文档的输入不一样：有的要求查询加一个前缀（`query: `），有的要传 `task_type` 或 `input_type` 参数，有的干脆是两个 encoder。这类模型两边都按文档的方式编码，相似度会明显变差，而且不报错。
 

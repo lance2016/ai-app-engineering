@@ -6,7 +6,7 @@ estimated_time: 约 1.5 小时
 
 # 01 从模型到应用：能力边界、成本模型与选型
 
-> 前置 F 组讲了模型是怎么工作的。这一课把它当成一个有规格书的部件来用，回答三个问题：它能不能做这件事、在我的任务上做得怎么样、完成一次真实业务任务要花多少钱。三个问题在项目第一周就得答，答错了后面全是重做。
+> 这一课把模型当成一个有规格书的部件来用，回答三个问题：它能不能做这件事、在我的任务上做得怎么样、完成一次真实业务任务要花多少钱。三个问题在项目第一周就得答，答错了后面全是重做。
 
 ## 为什么需要
 
@@ -24,7 +24,7 @@ estimated_time: 约 1.5 小时
 
 ## 前置
 
-- 前置 [F00 LLM 是什么](../../prerequisites/llm-foundations/00-what-an-llm-is/README.md)、[F01 Tokenization](../../prerequisites/llm-foundations/01-tokenization/README.md)、[F04 Context Window 与 Sampling](../../prerequisites/llm-foundations/04-context-window-and-sampling/README.md)、[F07 模型地图](../../prerequisites/llm-foundations/07-model-landscape/README.md)：本课不再解释 token、窗口、采样、模型分类是什么
+- 这一课默认你知道 token、上下文窗口、采样、模型分类大致是怎么回事，不再解释。不熟的话，[F00 LLM 是什么](../../prerequisites/llm-foundations/00-what-an-llm-is/README.md)、[F01 Tokenization](../../prerequisites/llm-foundations/01-tokenization/README.md)、[F04 Context Window 与 Sampling](../../prerequisites/llm-foundations/04-context-window-and-sampling/README.md)、[F07 模型地图](../../prerequisites/llm-foundations/07-model-landscape/README.md) 分别讲这四件事。**不用先读完再回来**，正文点到哪篇翻哪篇就行
 
 ## 怎么理解它
 
@@ -41,7 +41,7 @@ flowchart LR
 
 **能力边界只能测出来，而探针只是第一道筛子。** 模型卡告诉你它「支持」什么，不告诉你它在你的任务上会怎么错。数字母、做算术、说出训练截止之后的事、按精确长度输出，这些是所有模型都不稳的地方，只是程度不同。这一课给的探针是 smoke test：一个提示配一个确定性检查，几分钟跑完，用来排雷。它证明不了模型在你的业务上有多好——那要一份按真实请求分布采样的评测集，第 18 课才展开。
 
-**成本的大头是每轮重发的输入。** 一段对话的账单大头不是回答，是每一轮都要重发的系统提示、工具定义、检索结果和历史。完整重发历史时，原始上下文量随轮数近似平方增长（F04 讲过为什么）。但原始上下文量不等于账单，账要按这条链一层层落下来：
+**成本的大头是每轮重发的输入。** 一段对话的账单大头不是回答，是每一轮都要重发的系统提示、工具定义、检索结果和历史。完整重发历史时，原始上下文量随轮数近似平方增长（[F04](../../prerequisites/llm-foundations/04-context-window-and-sampling/README.md) 讲过为什么）。但原始上下文量不等于账单，账要按这条链一层层落下来：
 
 ```text
 原始上下文量
@@ -53,7 +53,7 @@ flowchart LR
 
 提示缓存会把稳定不变的前缀算成便宜的一档，所以两个单价差五倍的模型，在一段对话上的差价可能只有两倍，也可能是十倍，取决于固定部分多大、缓存命不命中。还有一类模型在回答前先花 token 想一遍，那段思考用户看不到，却照样按输出价计费——见机制拆解第四节。
 
-**幻觉是机制，不是故障。** F00 的 bigram 模型没有随机性也会拼出没见过的句子。应用层只有两条路：把事实放进上下文让它照着说（第 14 课 RAG），或者不让它自由发挥，把输出限制成结构化字段或工具调用（第 02、05 课）。让模型「更努力」、把 temperature 设成 0，都不在选项里。
+**幻觉是机制，不是故障。** [F00](../../prerequisites/llm-foundations/00-what-an-llm-is/README.md) 那个 bigram 模型没有随机性也会拼出没见过的句子。应用层只有两条路：把事实放进上下文让它照着说（第 14 课 RAG），或者不让它自由发挥，把输出限制成结构化字段或工具调用（第 02、05 课）。让模型「更努力」、把 temperature 设成 0，都不在选项里。
 
 **模型是可替换的部件，但可替换要设计出来。** 走 OpenAI 兼容协议能省掉重写 HTTP 客户端和消息格式的活，这是原则 12 的收益。但**统一协议只统一了接入，没统一行为**：同一段提示词换个模型可能就跑偏，工具 schema 的严格程度、结构化输出支不支持、推理内容怎么传、图片怎么编码，各家都可能不一样。真正的锁定来自三处：为某个模型调好的提示词、依赖厂商私有特性的代码、没有评测集所以换了也不知道好坏。前两处靠边界隔离，第三处靠第 18 课。
 

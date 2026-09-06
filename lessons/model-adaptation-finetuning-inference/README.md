@@ -20,7 +20,7 @@ estimated_time: 约 1.5 小时
 
 ## 前置
 
-- 前置 [F05 训练与对齐](../../prerequisites/llm-foundations/05-training-and-alignment/README.md) 和 [F06 KV Cache 与推理](../../prerequisites/llm-foundations/06-kv-cache-and-inference/README.md)：LoRA 为什么有效、prefill 与 decode、KV cache 公式、GQA、量化。本课直接用这些结论
+- 这一课直接用几条结论：LoRA 为什么有效、prefill 与 decode 的区别、KV cache 怎么算、GQA 和量化各省了什么。想知道这些结论从哪来，看 [F05 训练与对齐](../../prerequisites/llm-foundations/05-training-and-alignment/README.md) 和 [F06 KV Cache 与推理](../../prerequisites/llm-foundations/06-kv-cache-and-inference/README.md)，**不用先读完再回来**
 - [18 评测](../evaluation/README.md)：没有评测集就无法判断微调有没有用
 
 ## 怎么理解它

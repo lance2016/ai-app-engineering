@@ -189,7 +189,7 @@ nav:
       - 06 副作用幂等、可确认、可审计: principles/06-side-effects-are-idempotent-and-auditable.md
       - 07 失败要分层定位: principles/07-locate-failures-by-layer.md
       - 08 没有评测就没有「变好了」: principles/08-no-eval-no-improvement.md
-      - 09 Trace 是一等公民: principles/09-trace-is-first-class.md
+      - 09 Trace 从第一次调用就该有: principles/09-trace-is-first-class.md
       - 10 成本和延迟是设计约束: principles/10-cost-and-latency-are-design-constraints.md
       - 11 安全边界由代码执行: principles/11-guardrails-in-code-not-prompts.md
       - 12 模型是可替换的适配器: principles/12-models-are-swappable-adapters.md
