@@ -47,7 +47,7 @@ flowchart TB
 
 ## 两条路走
 
-**没做过 AI 应用**：从 [00 起步](lessons/00-setup/README.md)顺着读，别跳。不确定底子够不够，看一眼[进课程前该有的能力清单](reference/foundations.md)。模型原理不熟（token、attention、KV cache），先补[前置 · LLM 原理](prerequisites/README.md)那八篇。
+**没做过 AI 应用**：从 [00 起步](lessons/00-setup/README.md)顺着读，别跳。不确定底子够不够，看一眼[进课程前该有的能力清单](reference/foundations.md)。模型原理不熟（token、attention、KV cache），先补[前置 · LLM 原理](prerequisites/README.md)那八篇——这一组是草稿，比主线课薄，够你做决策但不是完整教程。
 
 **已经做过 RAG 或 Agent**：先花 20 分钟做[自测](reference/diagnostic.md)，24 题定位薄弱区，按结果挑 Part 读。想直接看结论，[12 条工程原则](principles/README.md)是全课的压缩版；正在选框架，看[框架一览与选型标准](reference/frameworks.md)。
 

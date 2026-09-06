@@ -17,6 +17,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 LESSON_SECTIONS = ["为什么需要", "学习目标", "心智模型", "机制拆解", "常见错误", "取舍", "框架映射", "练习", "延伸阅读"]
 OPTIONAL_SECTIONS = ["前置", "工程落地", "一线经验"]
+# 起步课没有前置，也不谈落地和一线经验，不必每次都提醒。
+EXEMPT_FROM_OPTIONAL = {"00-setup"}
 PREREQ_SECTIONS = ["学习目标", "核心概念", "常见错误", "延伸阅读"]
 
 
@@ -40,7 +42,7 @@ def check_unit(readme: Path, sections: list[str], *, needs_exercises: bool) -> t
     for s in sections:
         if s not in found:
             errors.append(f"missing section '## {s}'")
-    if sections is LESSON_SECTIONS:
+    if sections is LESSON_SECTIONS and readme.parent.name not in EXEMPT_FROM_OPTIONAL:
         for s in OPTIONAL_SECTIONS:
             if s not in found:
                 warnings.append(f"no '## {s}' section")

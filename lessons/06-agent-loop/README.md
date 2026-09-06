@@ -1,7 +1,7 @@
 ---
 status: complete
 part: Part 2 Tool 与 Agent
-estimated_time: 约 1 小时
+estimated_time: 约 1.5 小时
 ---
 
 # 06 Agent 循环与控制流

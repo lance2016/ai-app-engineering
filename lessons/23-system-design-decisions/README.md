@@ -254,7 +254,7 @@ def flips(step: float = 0.10) -> list[str]:
 - [Michael Nygard · Documenting Architecture Decisions](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)（访问日期 2026-09-04）：ADR 的原始提议。本课加了备选方案和退出条件两节。
 - [ADR GitHub organization](https://adr.github.io/)（访问日期 2026-09-04）：各种 ADR 模板和工具的汇总。
 - [12-factor-agents · README](https://github.com/humanlayer/12-factor-agents/blob/main/README.md)（访问日期 2026-09-04）：把十二条当作设计评审清单，逐条问「这个方案违反了哪条、为什么可以接受」。
-- [Anthropic · Building effective agents](https://www.anthropic.com/research/building-effective-agents)（访问日期 2026-09-04）：「从最简单的方案开始，只在需要时增加复杂度」，是 Workflow vs Agent 决策的出发点。
+- [Anthropic · Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)（访问日期 2026-09-04）：「从最简单的方案开始，只在需要时增加复杂度」，是 Workflow vs Agent 决策的出发点。
 - [Little's law](https://en.wikipedia.org/wiki/Little%27s_law)（访问日期 2026-09-05）：容量估算里那一行的出处。
 
 ---

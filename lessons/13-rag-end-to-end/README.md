@@ -20,7 +20,7 @@ estimated_time: 约 2 小时
 
 ## 前置
 
-- [04 Embedding 与向量检索基础](../04-embeddings-and-vector-search/README.md)：余弦相似度与切块对召回的影响
+- [04 Embedding 与向量检索基础](../04-embeddings-and-vector-search/README.md)：隔了九课，三条结论这一课直接要用——归一化之后余弦就是点积；切块大小决定召回粒度，改切块等于改召回；换 embedding 模型必须重建全部向量。忘了先回去翻一遍那一课的「心智模型」
 - [05 Tool Calling](../05-tool-calling/README.md)：引用校验的思路和「模型输出是建议」一脉相承
 
 ## 心智模型

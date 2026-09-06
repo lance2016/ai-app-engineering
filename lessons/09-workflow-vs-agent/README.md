@@ -232,7 +232,7 @@ LangGraph 是三个里唯一把 workflow 当一等公民的。如果你的系统
 
 ## 延伸阅读
 
-- [Anthropic · Building effective agents](https://www.anthropic.com/research/building-effective-agents)（访问日期 2026-09-04）：本课五种模式的出处。附录里「Agent 的两个实践领域」和「给工具写好文档」两节也值得读。
+- [Anthropic · Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)（访问日期 2026-09-04）：本课五种模式的出处。附录里「Agent 的两个实践领域」和「给工具写好文档」两节也值得读。
 - [12-factor-agents · factor 10 Small, focused agents](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-10-small-focused-agents.md)（访问日期 2026-09-04）：为什么用确定性代码把多个小 Agent 串起来，比一个大 Agent 可靠。
 - [ai-agents-for-beginners · 07 Planning Design](https://github.com/microsoft/ai-agents-for-beginners/blob/main/07-planning-design/README.md)（访问日期 2026-09-04）：用结构化输出做任务分解和迭代重规划的例子。
 - [langchain-academy · module-4 parallelization、sub-graph、map-reduce](https://github.com/langchain-ai/langchain-academy/tree/main/module-4)（访问日期 2026-09-04）：同样模式的图式表达。

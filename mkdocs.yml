@@ -51,7 +51,7 @@ theme:
         name: 切换到亮色
 
 extra:
-  # 37 篇 complete、7 篇 draft、2 篇 outline。只标未完成的那几篇，见 wabi.css。
+  # 40 篇 complete、9 篇 draft（前置那一组），0 篇 outline。只标未完成的，见 wabi.css。
   status:
     draft: 草稿，内容还会变
     outline: 只有提纲

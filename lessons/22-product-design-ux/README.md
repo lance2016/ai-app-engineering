@@ -1,7 +1,7 @@
 ---
 status: complete
 part: Part 5 架构与产品
-estimated_time: 约 1.5 小时
+estimated_time: 约 2 小时
 ---
 
 # 22 AI 产品设计与交互
