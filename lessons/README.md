@@ -136,6 +136,19 @@ flowchart TB
 
 **学完之后。** 应用能选对模型、拿到结构化的输出、把指令和上下文管起来，并且能把语义检索接进来。
 
+四课连起来是一条线：
+
+```mermaid
+flowchart TB
+    R[需求] --> L1["01 选模型<br/>能力 · 成本 · 硬约束"]
+    L1 --> L2["02 调模型<br/>消息 · 输出 · 流式 · 用量"]
+    L2 --> L3["03 构造一次调用<br/>指令 · 数据 · 任务 · 输出契约"]
+    L3 --> L4["04 接外部知识<br/>文本 → 向量 → 检索 → 相关上下文"]
+    L4 --> N["后面的 Part<br/>工具 · Agent · RAG · Memory"]
+```
+
+四课各管一段，不重叠：01 决定用哪个模型、一次真实任务要花多少钱；02 是模型 API 的运行时契约，管调用怎么发、返回怎么收；03 管一次调用里到底放什么；04 管模型权重里没有的知识怎么进来。
+
 <details class="quiz" markdown="1">
 <summary>先测一下：这个 Part 你要不要读（5 题）</summary>
 
@@ -160,7 +173,7 @@ flowchart TB
 <details markdown="1">
 <summary>对照</summary>
 
-榜单测的是别人的任务。真实模型在自己的探针上往往参差：算术过了，数字母挂了；能写 JSON，但拒绝承认不知道。要的是一组「一个提示加一个确定性检查」的探针，跑在自己真正依赖的能力上。
+榜单测的是别人的任务。真实模型在自己的探针上往往参差：算术过了，数字母挂了；能写 JSON，但拒绝承认不知道。第一步是一组「一个提示加一个确定性检查」的探针，跑在自己真正依赖的能力上——但它只是排雷，说明不了模型在你业务上有多好，那要一份按真实请求采样的评测集（第 18 课）。
 
 → [01](./how-llms-work/README.md)
 </details>
@@ -190,7 +203,7 @@ flowchart TB
 <details markdown="1">
 <summary>对照</summary>
 
-不能。不同模型的向量空间不可比，混在一起检索出的名次没有意义。必须重建全部向量，而且每条向量要记录它是哪个模型哪个版本产生的，迁移期间新旧共存要按版本过滤。
+不能。两批向量落在不同的空间里，混在一起算出的名次没有意义。而且能不能比，看的是空间不是名字：同一个模型换个维度、改一下 query 前缀，产出的向量照样不能和旧的比。所以每条向量要记一个标识向量空间的 id，换空间时并行建一份新索引、回灌、用同一组样本比 Recall@k，再切读流量。
 
 → [04](./embeddings-and-vector-search/README.md)
 </details>
@@ -200,17 +213,17 @@ flowchart TB
 | 课 | 一句话 |
 |---|---|
 | [01](./how-llms-work/README.md) | 硬约束过滤、能力探针、每段对话的成本模型 |
-| [02](./model-api-structured-output-streaming/README.md) | 消息格式、JSON Schema 约束、流式增量、重试 |
+| [02](./model-api-structured-output-streaming/README.md) | 模型 API 的运行时契约：消息、结构化输出、流式、重试、用量 |
 | [03](./prompt-engineering/README.md) | 系统指令、few-shot、prompt 版本化与回归门禁 |
-| [04](./embeddings-and-vector-search/README.md) | 选模型和维度、暴力检索到什么规模换索引、pgvector |
+| [04](./embeddings-and-vector-search/README.md) | 向量空间、精确检索与近似索引、切块、pgvector |
 
 **出师标准。**
 
 - 选型里哪些条件是硬约束、哪些是打分项，为什么许可证属于前者（01）
 - 为什么成本要按一段对话算，不按一次调用算（01）
 - 模型返回的 JSON 解析失败时，运行时该做什么、不该做什么（02）
-- 改了 prompt，凭什么说它变好了（03）
-- 换 embedding 模型为什么必须重建全部向量，维度能不能跨模型比（04）
+- 改了 prompt，凭什么说它没变差，这和「变好了」为什么是两个问题（03）
+- 什么情况下两批向量不能放在一起比，维度能不能跨模型比（04）
 
 **在参考实现里。** [M0 并发实验](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m0-concurrency/README.md)、[M1 API 骨架](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md)。
 

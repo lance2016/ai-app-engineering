@@ -6,7 +6,7 @@ estimated_time: 约 2 小时
 
 # 02 模型调用、结构化输出与流式
 
-> 一次模型调用只有四样东西：一串消息、几个参数、一段返回、一份用量。这一课把它们拆开看清楚，再补上生产环境没人替你做的两件事：解析失败怎么修，钱怎么记。
+> 这一课讲模型 API 的运行时契约：请求里发什么、响应怎么拿回来、格式坏了怎么办、用量怎么记。课程用一套统一的说法来讲，各家 API 的线上格式并不长这样——两者的差别，就是 adapter 要吃掉的东西。
 
 ## 为什么需要
 
@@ -14,10 +14,10 @@ estimated_time: 约 2 小时
 
 ## 学习目标
 
-- 能画出一次调用在线上的形状：消息列表怎么变成 JSON、工具结果靠什么和调用对上、temperature 和 max_tokens 各改变什么
-- 能用一个 Pydantic 模型同时生成 JSON Schema 和校验返回，并把校验错误回给模型让它自己修
-- 能消费流式响应并说清哪些东西只能等最后一块才有
-- 能为一次对话写出重试策略和成本账本
+- 能说清一次调用的请求和响应里各有什么，以及课程的统一模型和某一家的线上格式差在哪
+- 能按「原生结构化输出 → schema 校验 → 修复重试」三层给一个抽取任务选方案，并说出哪些字段不能交给模型改
+- 能消费流式响应：文本增量边到边显示，结构化参数攒完整、校验过才交出去
+- 能把错误分成可重试和不可重试两类，并把每次调用的 usage 落库
 
 ## 前置
 
@@ -37,15 +37,28 @@ sequenceDiagram
     A->>A: 校验、记账、决定重试
 ```
 
+这一课统一按下面这六件事来讲。**这是课程的内部表示，不是任何一家的线上格式：**
+
+| 这一课说的 | 它管什么 |
+|---|---|
+| Messages / Content | 发过去的对话内容，带角色和类型 |
+| Parameters | temperature、max_tokens 这些旋钮 |
+| Structured Output | 怎么让返回可解析 |
+| Streaming | 增量怎么到达、怎么攒 |
+| Error / Retry | 哪些错该重试 |
+| Usage | 这次花了多少 |
+
+线上协议长什么样，各家不一样：有的 `content` 就是一个字符串，有的是一串带类型的块，有的把一次响应摊成一列 output item，流式那层还各有一套事件名。**Adapter 的活就是把这些差别吃掉，对上层只暴露一种形状。**下面机制拆解里的 `Message`、`TextBlock`、`ThinkingBlock` 是这门课挑的一种内部表示，照着设计不吃亏，但别以为线上就长这样。
+
 四个要点：
 
-**消息是有结构的列表，不是一段字符串。** 每条消息有角色。系统消息放指令，用户和助手消息交替，工具结果是单独一种角色，靠 `tool_call_id` 和助手那条里的调用对上，**而不是靠顺序**。消息里的 `content` 也不是一段字符串，是一串带类型的块——图片和推理模型的思考都以块的形式待在里面，见机制拆解第二节。
+**消息是有结构的列表，不是一段字符串。** 每条消息有角色。系统消息放指令，用户和助手消息交替，工具结果是单独一种角色，靠一个调用 id 和助手那条里的调用对上，**而不是靠顺序**。`content` 建议设计成一串带类型的块——图片和推理模型的思考都以块的形式待在里面，见机制拆解第二节。
 
 **参数和消息一起走。** `temperature`、`top_p`、`max_tokens` 放在请求体里，和 `messages` 平级。temperature 改的是抽样分布的形状（第 01 课）；`max_tokens` 是输出上限，撞到上限时 `finish_reason` 是 `length` 而不是 `stop`——回答被截断，但请求「成功」了。工具定义也在同一个请求体里，每次都要重发一遍。
 
-**结构化输出是一份 schema 用两次。** 用 Pydantic 模型生成给模型看的 JSON Schema，返回后用同一个模型校验。校验失败不是异常，是一条新的用户消息：「这里不合法，改。」大多数模型第二次就对了。**运行时不手动修 JSON。**
+**结构化输出有三层，能用上面的就别用下面的。** ① 供应商原生的结构化输出，服务端按 schema 约束解码；② 自己把 JSON Schema 写进提示，返回后在客户端校验；③ 校验没过，再决定要不要回喂给模型改。**第二层永远不能省**，哪怕第一层已经开了：约束解码管的是语法，管不了值对不对。
 
-**流式改变的是体感，不是计算。** 用户感知的是首 token 时间，你付的是总 token。文本可以一块一块给用户看，但工具调用的参数不完整就不能执行，所以它和用量一起出现在最后一块上。同一条流，UI 和工具执行器是两个消费者，关心的时刻不同。
+**流式改变的是体感，不是计算。** 用户感知的是首 token 时间，你付的是总 token。同一条流上有两个消费者，关心的时刻不同：UI 拿到一个文本增量就能显示；任何要拿去执行的结构化参数，必须攒完整、校验过才能用。见机制拆解第四节。
 
 ```mermaid
 flowchart LR
@@ -57,7 +70,7 @@ flowchart LR
     B -- 否 --> G[504 / fallback]
 ```
 
-还有两件 SDK 不替你做的事。**重试**要区分能重试的（429 限流、超时）和不能重试的（400 请求错误，重发一百次结果一样），退避要指数增长并有上限。**成本**要按用量乘单价逐次记账，单价随时会变，放配置不放代码。
+还有两件 SDK 不替你做的事。**重试**要按错误类型分，不是按次数分：「再试一次结果可能不一样吗」是唯一的判断标准。**用量**要每次调用都记下来，因为账单月底才有。这一课只管把 usage 从 API 里拿出来并落库；这些 token 怎么变成钱，第 01 课算过；限流、熔断、降级到备用模型，第 20 课。
 
 ## 机制拆解
 
@@ -86,9 +99,9 @@ def to_wire(m: Message) -> dict:
 
 这类翻译损耗值得看见。模型能不能识别出「这是个失败」，取决于你这个前缀写得够不够明确——这是提示工程侵入协议层的一个例子。
 
-### 二、content 不是一段字符串，是一串块
+### 二、把 content 设计成块列表
 
-上面把 `content` 写成字符串是简化。真实协议里它是**一串块**，每块有自己的类型：
+上面把 `content` 写成字符串是简化。这门课的内部表示里它是**一串块**，每块有自己的类型：
 
 ```python
 Message(role="user", content=[
@@ -108,9 +121,13 @@ Message(role="assistant", content=[
 
 **思考块不能自己造，也不能随手丢。** 有的供应商给思考块带了签名，同一轮里的多次工具调用要求把它原样带回，改一个字符就报错。适配器要是按老习惯把 content 拍平成字符串，这个块就没了——症状是模型在工具调用中途「忘了自己刚才在想什么」，而且只在推理模型上出现，普通模型一切正常。
 
-所以中立消息类型里，**`content` 从第一天就该是块列表**，纯文本只是「只有一个 TextBlock」的特例。反过来设计（默认字符串、需要时再改成列表）在接第一个多模态模型或推理模型时就要重写整个适配器。
+有的供应商线上就是这个形状，有的是一个字符串加几个平行字段，形状不统一。但**你自己的内部类型从第一天就该是块列表**，纯文本只是「只有一个 TextBlock」的特例。反过来设计（默认字符串、需要时再改成列表），接第一个多模态模型或推理模型时就要重写整个适配器。思考内容各家怎么传、要不要原样回传，第 01 课第四节列过要查的三条。
 
-### 三、一份 schema 用两次，失败就回喂
+### 三、结构化输出：先要原生约束，再谈校验和修复
+
+能开供应商的原生结构化输出就先开：服务端按 schema 约束解码，缺半个花括号、前面多一段解释文字这类语法错误基本消失，重试次数跟着降。代价是不是每个模型都支持，schema 特性也受限——`pattern`、`format`、嵌套深度、`additionalProperties`，各家支持面不一样，写之前先查。
+
+**但开了它，下面这套「一份 schema 用两次」照样要留着。**约束解码保证的是「解析得出来」，保证不了「值是对的」：
 
 ```python
 class Invoice(BaseModel):
@@ -142,63 +159,102 @@ async def extract(model, text, max_attempts=3) -> Invoice:
 
 模型第一次可能返回 `{"number": 4471, "date": "30/08/2026", "total": "1,280.50"}`——数字类型错、日期格式错、金额带逗号。Pydantic 报的第一条错误原文直接发回去，第二次基本就对了。
 
-`strip_fences` 是极少数值得在运行时做的归一化：很多模型即使被要求「只输出 JSON」也会包一层 ```` ```json ````。它无歧义、和业务无关，所以可以自动处理。**除此之外的修补都该交给模型**。
+`strip_fences` 是极少数值得在运行时做的归一化：很多模型即使被要求「只输出 JSON」也会包一层 ```` ```json ````。它无歧义、和业务无关，所以可以自动处理。**除此之外的形状修补都该交给模型**。
 
-### 四、流式的两个消费者
+**不是所有校验失败都该让模型改。** 校验失败在 AI 应用里是一类预期内的结果，可以走修复、重试、降级；前提是这个字段改错了没有代价。下面几类不行：
+
+| 字段 | 为什么不能回喂让模型改 |
+|---|---|
+| 金额、数量 | 模型能给出一个格式完全合法的错数字，对不对只有对账才知道 |
+| 权限、角色 | 「是合法值」和「这个用户能用这个值」是两回事，后者只能查 |
+| ID、外键 | 格式对不代表这条记录存在，得回库里核 |
+| 枚举 | 该由代码从白名单里挑，不是让模型再猜一次 |
+| 触发不可逆操作的参数 | 退款、删除、下单，错一次撤不回来 |
+
+这些字段校验没过就该拒绝，把错误抛给上层或转人工。**能自动修的是形状，不能自动修的是事实和授权。**这条边界是原则 01 在解析层的形态。
+
+### 四、流式：一边显示，一边攒
 
 ```python
 async def run(model, messages):
-    started = time.monotonic()
-    first_token_at = None
-    text = []
+    started, first_token_at = time.monotonic(), None
+    text, buffers, ready = [], {}, []        # buffers：按块 id 攒还没收全的参数
 
-    async for chunk in model.stream(messages, tools=tools):
-        if chunk.delta:                      # 文本增量：UI 立刻显示
+    async for ev in model.stream(messages, tools=tools):
+        if ev.type == "text_delta":          # 文本增量：UI 立刻显示
             if first_token_at is None:
                 first_token_at = time.monotonic() - started
-            text.append(chunk.delta)
-            ui.append(chunk.delta)
+            text.append(ev.delta)
+            ui.append(ev.delta)
 
-        if chunk.done:                       # 只有最后一块才有这些
-            tool_calls = chunk.tool_calls    # 参数完整了才能执行
-            usage = chunk.usage              # 记账靠它
+        elif ev.type == "args_delta":        # 结构化参数也是一片片来的
+            buffers[ev.id] = buffers.get(ev.id, "") + ev.delta   # ← 只攒，不解析
+
+        elif ev.type == "block_done":        # 这一块收全了，现在才能解析
+            ready.append(validate(ev.id, buffers.pop(ev.id)))    # ← 校验过才交出去
+
+    return text, ready, model.final_usage()  # usage 由 adapter 兜底给出
 ```
+
+两个地方和直觉不一样。
+
+**结构化参数不是最后一整块塞给你的。** 多数流式接口会把参数的 JSON 一小片一小片推过来，中途拿去 `json.loads` 必然报错。顺序只能是：收增量 → 按 id 攒进缓冲区 → 等到「这一块结束」的事件 → 解析并校验 → 才允许交给执行器。中间任何一步都别想着「先解析看看」。**参数没完整之前绝不执行工具**，这是整节唯一要记的一句。
+
+**usage 不一定挂在最后一个事件上。** 有的 API 放在流的终止事件里，有的开头先给输入部分、结束再补输出部分，有的要在请求里显式打开（OpenAI 兼容接口是 `stream_options={"include_usage": True}`，不带就一个数都拿不到）。所以别在业务代码里写「读最后一块的 usage」，让 adapter 把这些差别收敛掉，对上层只承诺一件事：流结束时拿得到一份最终 usage。
 
 首 token 时间和总时间要分开测。用户投诉「慢」，八成指的是首 token，不是总时长。
 
-请求真实供应商的流式接口时，记得带 `stream_options={"include_usage": True}`——不带这个，最后一块拿不到用量，你的成本账本就是空的。
+攒好的这些调用请求接下来怎么办——什么时候执行、能不能并发、结果怎么写回消息、循环什么时候停——是第 05、06 课的事。这一课到「拿到一个完整且合法的调用请求」为止。
 
 ### 五、重试要看错误类型，不看次数
 
 ```python
-async def complete_with_retry(model, messages, max_attempts=4, base_delay=0.05):
+RETRYABLE = (Timeout, ConnectionError, RateLimited, ServiceUnavailable)
+
+async def complete_with_retry(model, messages, *, max_attempts=4,
+                              base_delay=0.05, deadline):
     for attempt in range(1, max_attempts + 1):
+        if time.monotonic() > deadline:      # ← 总时间预算，比次数更能兜住尾延迟
+            raise Timeout("retry budget exhausted")
         try:
             return await model.complete(messages)
-        except RateLimited:
+        except RETRYABLE as exc:
             if attempt == max_attempts:
                 raise
-            await asyncio.sleep(base_delay * 2 ** (attempt - 1))   # 指数退避
-        except BadRequest:
-            raise            # 请求体本身错了，重发只是重复错误并多付一次钱
+            delay = exc.retry_after or base_delay * 2 ** (attempt - 1)  # ← 服务端说等多久就等多久
+            await asyncio.sleep(min(delay, MAX_DELAY) * random.uniform(0.5, 1.0))  # ← 抖动
+        except (BadRequest, Unauthorized, SchemaError):
+            raise                            # 重发一百次结果一样，只是多付一百次钱
 ```
 
-成本账本就是一次乘法，关键是**每次调用都记**，而不是月底看账单：
+分两类，判断标准只有一句：再试一次，结果可能不一样吗。
+
+| 可以重试 | 不要重试 |
+|---|---|
+| 超时、连接中断这类网络抖动 | 请求体或 schema 写错了（400） |
+| 429 限流 | 鉴权、配额、模型名写错这类配置问题 |
+| 一部分 5xx（服务端临时不可用） | 确定性校验没过的业务错误（第三节那张表） |
+
+四件事要一起做：**指数退避**（每次等的时间翻倍）、**加抖动**（乘一个随机系数，否则一批请求同时醒来再把下游打爆一次）、**尊重 `Retry-After`**（服务端给了就按它的，别自己算）、**同时限次数和限总时长**（只限次数的话，四次各等三十秒照样把用户晾在那）。再往下是熔断、限流、降级到备用模型，第 20 课。
+
+用量这边，这一课只负责一件事：**把 usage 从响应里拿出来，每次调用都记**。
 
 ```python
-def record(self, label, usage, provider) -> float:
-    price_in, price_out = PRICES[provider]        # 单价来自配置，不是代码
-    cost = (usage.input_tokens  / 1e6 * price_in
-          + usage.output_tokens / 1e6 * price_out)
-    self.entries.append((label, usage, cost))
-    return cost
+def record(self, label, usage, provider) -> None:
+    self.entries.append(Entry(
+        label=label, provider=provider, model=usage.model,
+        input_tokens=usage.input_tokens,
+        cached_input_tokens=usage.cached_input_tokens,   # 缓存命中的那部分单价不同
+        output_tokens=usage.output_tokens,
+        reasoning_tokens=usage.reasoning_tokens,         # 推理模型才有
+    ))
 ```
 
-单次调用的数字小到看着无所谓。乘以用户数和轮数之后再判断它便不便宜。
+**记原始 token 数，别只记算好的钱。** 单价会调、缓存折扣各家不同、推理 token 单独计价，拍成一个数字之后就再也拆不回来了，事后想按新单价重算也没得算。这几类 token 怎么变成账单，第 01 课的成本链讲过；这些记录怎么长成按租户按天的成本视图，第 19、20 课。
 
 ## 常见错误
 
-**把校验失败当成崩溃。** 删掉那个 `except`，程序在第一次就死了，模型连改的机会都没有。校验失败是正常路径的一部分。
+**校验失败没有明确的去向。** 它是预期内的一类结果，该有一个明确的分支：这个字段可以让模型改，那个字段直接拒绝。删掉 `except` 让程序死在第一次不行，反过来一律回喂让模型改也不行——第三节那张表里的字段，改出来的合法值可能是假的。
 
 **自己动手修 JSON。** 看到 `"total": "1,280.50"` 就写个正则去逗号，看到日期格式不对就写个转换。每修一处就是一条没人记得的业务规则，而且模型下次换个花样又要修。让模型改，运行时只判对错。
 
@@ -206,17 +262,19 @@ def record(self, label, usage, provider) -> float:
 
 **把图片当成免费的上下文。** 截图看着只有几百 KB，折成 token 比一页文档还多。多模态对话的成本要单独估，不能沿用纯文本的公式（第 01 课）。
 
-**流式时在第一块就动手。** 工具调用只在最后一块出现。如果 UI 消费者和工具消费者共用一个回调，会在参数还是半截 JSON 的时候执行。
+**拿半截参数就去执行。** 参数是一片片推过来的，中途拼出来的是半截 JSON。UI 消费者和执行器共用一个回调时最容易出这事：文本该边到边显示，参数必须攒完整、校验过再动。
 
-**重试 400。** 请求体本身错了，重发只是重复错误并多付一次钱。能重试的只有 429、5xx、超时这类「再试可能不一样」的错误。
+**假定 usage 一定在最后一个事件上。** 换一家 API 它可能在开头、可能分两次给、可能压根没打开。业务代码不该知道这件事，adapter 负责给出最终 usage。
 
-**用量只记输出。** 多轮对话里输入随历史增长，是主要开销；只记输出会低估几倍。第 01 课算过这笔账。
+**只按次数重试，不按错误类型。** 400 重发一百次结果一样，只是多付一百次钱；而只限次数不限总时长，用户会在四次退避里干等一分钟。
+
+**用量只记输出，或者只记算好的钱。** 多轮对话里输入随历史增长，是主要开销，只记输出会低估几倍。而只落一个金额、不落 token 数，等于把缓存命中、推理 token 这些拆分永久丢掉，单价一调就再也对不上账。
 
 ## 取舍
 
-- **严格 schema 模式 vs 客户端校验。** 服务端约束解码几乎消灭格式错误，但不是所有供应商和模型都支持，且 schema 特性受限（有的不支持 `pattern`、`format`）。客户端校验永远要有，它还能挡语义错误。两者叠加是常态。
-- **流式 vs 一次返回。** 流式让首 token 快，代价是客户端逻辑复杂：半截文本、断线重连、工具调用要等最后。后台任务、结构化抽取、评测跑批不需要流式，别为不需要的东西付复杂度。
-- **重试次数与延迟。** 面向用户的实时调用，一次重试可能就超出可接受等待；后台任务可以多试。退避的上限和总次数应该是调用方的参数，不是写死的常量。第 20 课把它扩展成限流和熔断。
+- **原生结构化输出 vs 客户端校验。** 不是二选一。服务端约束解码几乎消灭语法错误，但不是所有供应商和模型都支持，schema 特性也受限（有的不支持 `pattern`、`format`）；客户端校验永远要有，它挡的是语义错误。两者叠加是常态，只是叠加之后回喂重试会触发得少很多。
+- **流式 vs 一次返回。** 流式让首 token 快，代价是客户端逻辑复杂：半截文本、断线重连、结构化参数要自己攒。后台任务、结构化抽取、评测跑批不需要流式，别为不需要的东西付复杂度。
+- **重试次数与延迟。** 面向用户的实时调用，一次重试可能就超出可接受等待；后台任务可以多试。退避上限、最大次数、总时间预算都该是调用方传进来的参数，不是写死的常量——同一个 adapter 会同时服务这两种调用方。第 20 课把它扩展成限流和熔断。
 - **图片直接喂模型，还是先转成文字。** 直接喂省一步、保留版式和图表；先做 OCR 或版面解析则便宜得多、结果可缓存可检索，而且出错时能看见是哪一步错的。文档量大的场景基本都走第二条，第 14 课展开。
 - **temperature 设多少。** 抽取、分类、工具选择用 0 或接近 0，要的是稳定；创作类任务才调高。**0 不保证正确，只保证每次一样**——评测时这一点很重要。
 
@@ -224,7 +282,7 @@ def record(self, label, usage, provider) -> float:
 
 - **首块超时和整体超时是两个值。** 首块超时短（用户等不了），整体超时长（长回答正常）。映射到 HTTP 上，首块超时返回 504，供应商报错返回 502，两者的排查方向完全不同。
 - **流式接口一旦开始推送，就不能再改 HTTP 状态码。** 首块之后出错，只能在流里推一个 `error` 事件。所以所有能在首块前做的检查（鉴权、限流、参数校验）都必须在首块前做完。
-- **usage 要落库，不是打日志。** 「这个租户这个月花了多少」要能查出来，不能靠 grep。
+- **usage 要落库，不是打日志。** 「这个租户这个月花了多少」要能查出来，不能靠 grep。落的是 token 字段和模型 id，不是折算后的金额。
 - **重试和幂等要一起设计。** 一次带副作用的调用超时重试，可能产生两次副作用。第 05 课讲幂等键。
 
 ## 框架映射
@@ -241,7 +299,7 @@ def record(self, label, usage, provider) -> float:
 
 语音机器人项目早期靠在提示词里反复强调「只输出 JSON」，线上仍有百分之几的返回带解释文字或代码围栏，每次都是客服反馈后手动补规则。改成本课的做法之后——schema 和校验共用一个 Pydantic 模型，失败原文回喂重试一次——格式类错误基本消失，剩下的都是真正的语义错误。这些才值得人看。
 
-另一条是流式的两个消费者：TTS 需要一边收文本一边合成，但设备动作命令必须等完整参数。同一条流，前者按句号切句立刻发声，后者只看最后一块。这两个需求写在一个回调里必然打架。
+另一条是流式的两个消费者：TTS 要一边收文本一边合成，但设备动作命令必须等参数收全。同一条流，前者按句号切句立刻发声，后者攒完整、校验过才发下去。这两个需求写在一个回调里必然打架，早期就是这么把半截参数发给设备的。
 
 ## 参考实现
 
@@ -255,7 +313,7 @@ def record(self, label, usage, provider) -> float:
 - [DeepSeek · JSON Output](https://api-docs.deepseek.com/guides/json_mode)（访问日期 2026-09-04）：它的 JSON 模式要求提示词里含 `json` 字样，是个典型的供应商特性差异。
 - [OpenAI · Images and vision](https://platform.openai.com/docs/guides/images-vision)（访问日期 2026-09-06）：图片怎么进请求体，以及 token 怎么按尺寸折算。
 - [Anthropic · Extended thinking](https://platform.claude.com/docs/en/build-with-claude/extended-thinking)（访问日期 2026-09-06）：思考块的字段、签名和传递规则，第二节那条规矩的出处。
-- [Anthropic · Streaming](https://platform.claude.com/docs/en/build-with-claude/streaming) 与 [OpenAI · Streaming responses](https://platform.openai.com/docs/guides/streaming-responses)（访问日期 2026-09-04）：事件类型和最后一块的内容。
+- [Anthropic · Streaming](https://platform.claude.com/docs/en/build-with-claude/streaming) 与 [OpenAI · Streaming responses](https://platform.openai.com/docs/guides/streaming-responses)（访问日期 2026-09-04）：两家的事件类型对着看，能看出增量、结束事件和 usage 的位置各自定在哪。
 
 ---
 
