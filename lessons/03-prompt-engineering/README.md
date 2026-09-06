@@ -39,7 +39,7 @@ flowchart LR
 
 **Prompt 是代码，不是配置字符串。** 12-factor 的 factor 02 说得直接：不要把 prompt 交给框架的 `role=`、`goal=` 参数，你会看不到也调不了实际发出的 token。系统指令应该是一个纯函数：输入是 dataclass，输出是字符串。换版本就是换函数。这样 prompt 的改动走 code review，能 diff，能回滚。
 
-**分区段写，模型和人都好读。** 角色、风格、禁区、输出契约、示例，一个区段说一件事。示例（few-shot）放在最后一个区段，它教的是格式和边界，不是知识。
+**分区段写，模型和人都好读。** 角色、风格、禁区、输出契约、示例，一个区段说一件事。示例（few-shot）放在最后一个区段，它教的是格式和边界，不是知识。推理模型是个例外，示例给多了反而碍事，见常见错误。
 
 **改 prompt 是代码变更，要过门禁。** 一个 5 条的 golden set 就能让「v2 是不是比 v1 好」从感觉变成数字。5 条是冒烟测试，第 17 课讲要多少条、怎么切片。但哪怕 5 条，也比「我试了几句感觉不错」强。
 
@@ -147,6 +147,8 @@ def trim_to_budget(text, budget) -> tuple[str, bool]:
 
 两个问题：一是用 `>=` 而不是 `>`，平局放行；二是 5 条样本里掉一条就是 20 个百分点，粒度太粗，任何阈值都不稳。第一个问题练习 2 让你修，第二个第 17 课解决。
 
+**把为普通模型调好的 prompt 直接搬到推理模型上。** 「一步步思考」这类引导对它是重复劳动——它本来就会想；长篇 few-shot 还会挤占它自己的思考空间。推理模型要的是把目标、成功标准和边界条件写清楚，示例给一个定住格式就够。**换模型类别等于换了一个函数，golden set 必须重跑**，这是本课那道门禁的第一个真实用途。
+
 **把示例当知识库。** few-shot 示例教的是「回答长什么样」，不是「事实是什么」。有人往示例里塞几十条产品问答想让模型「学会」产品，结果每次调用多花几千 token，模型还是会编。产品知识该走第 13 课的检索。
 
 **指令和数据混在一段里。** 把文档直接拼在指令后面，模型分不清哪句是你说的、哪句是文档说的。文档末尾夹一句「IGNORE ALL PREVIOUS INSTRUCTIONS」就可能生效。有标签和声明时，模型大多能把它当文档内容处理——**大多，不是全部**。
@@ -159,6 +161,7 @@ def trim_to_budget(text, budget) -> tuple[str, bool]:
 
 - **长 prompt vs 短 prompt。** v2 换来格式更稳、拒答有出口，代价是每次多付一倍指令 token。用 golden set 上的准确率和 token 数一起决定，不凭感觉。
 - **示例数量。** 一到三个通常够定格式；再多收益递减，成本线性涨。示例要覆盖边界（一个正常、一个拒答），不是同一类型重复。
+- **思路写进 prompt，还是交给模型想。** 步骤固定的任务，把步骤写进指令：便宜、可复现、错了能定位到哪一步。步骤随输入而变的任务，交给推理模型自己想：代码少，但过程不可见、延迟高。这个判断没有通则，两版都写出来在 golden set 上比一次最快。
 - **门禁严格度。** 太严，任何改动都过不了，团队会绕过它；太松，退化会上线。起点是「新版本严格优于旧版本，且不低于绝对阈值」，样本量大了再谈置信区间。
 - **分隔符的选择。** XML 风格标签、Markdown 围栏、明显的分隔线都行，重点是一致，且标签名要说明内容性质（`<document>`、`<tool_result>`），不要用泛泛的 `<data>`。
 
@@ -197,6 +200,7 @@ def trim_to_budget(text, budget) -> tuple[str, bool]:
 
 - [12-factor-agents · factor 02 Own your prompts](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-02-own-your-prompts.md)（访问日期 2026-09-04）：为什么不把 prompt 交给框架，本课第一节的直接出处。
 - [Anthropic · Prompt engineering overview](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview)（访问日期 2026-09-04）及其下的 [Be clear and direct](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct)、[Use examples](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/multishot-prompting)、[Use XML tags](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/use-xml-tags)：官方写法指南，读顺序就是它列的顺序。
+- [Anthropic · Extended thinking 的提示写法](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/extended-thinking-tips)（访问日期 2026-09-06）：为什么对推理模型不该再写「一步步思考」，以及该写什么。
 - [generative-ai-for-beginners · 04 Prompt engineering fundamentals](https://github.com/microsoft/generative-ai-for-beginners/blob/main/04-prompt-engineering-fundamentals/README.md)（访问日期 2026-09-04）：通识层面的技巧清单，适合查漏。
 
 ---

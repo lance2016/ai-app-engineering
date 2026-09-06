@@ -39,7 +39,7 @@ sequenceDiagram
 
 四个要点：
 
-**消息是有结构的列表，不是一段字符串。** 每条消息有角色。系统消息放指令，用户和助手消息交替，工具结果是单独一种角色，靠 `tool_call_id` 和助手那条里的调用对上，**而不是靠顺序**。
+**消息是有结构的列表，不是一段字符串。** 每条消息有角色。系统消息放指令，用户和助手消息交替，工具结果是单独一种角色，靠 `tool_call_id` 和助手那条里的调用对上，**而不是靠顺序**。消息里的 `content` 也不是一段字符串，是一串带类型的块——图片和推理模型的思考都以块的形式待在里面，见机制拆解第二节。
 
 **参数和消息一起走。** `temperature`、`top_p`、`max_tokens` 放在请求体里，和 `messages` 平级。temperature 改的是抽样分布的形状（第 01 课）；`max_tokens` 是输出上限，撞到上限时 `finish_reason` 是 `length` 而不是 `stop`——回答被截断，但请求「成功」了。工具定义也在同一个请求体里，每次都要重发一遍。
 
@@ -87,7 +87,31 @@ def to_wire(m: Message) -> dict:
 
 这类翻译损耗值得看见。模型能不能识别出「这是个失败」，取决于你这个前缀写得够不够明确——这是提示工程侵入协议层的一个例子。
 
-### 二、一份 schema 用两次，失败就回喂
+### 二、content 不是一段字符串，是一串块
+
+上面把 `content` 写成字符串是简化。真实协议里它是**一串块**，每块有自己的类型：
+
+```python
+Message(role="user", content=[
+    TextBlock("这张发票的总额是多少？"),
+    ImageBlock(media_type="image/png", data=b64),        # ← 图片是一个块
+])
+
+Message(role="assistant", content=[
+    ThinkingBlock(text="先找总计行……", signature="ab12"),  # ← 推理模型的思考，用户不看
+    TextBlock("总额 1280.50 元"),
+])
+```
+
+两类块各有一条容易踩的规矩。
+
+**图片按面积折算 token，不按文件大小。** 一张 1024×1024 的截图大约相当于上千 token，比一整页纯文字还贵，而且各家的折算公式不一样，不能拿一家的数字估另一家。进模型之前该缩的缩、该裁的裁；一次塞五张图再聊十轮，窗口是怎么没的会很难解释。
+
+**思考块不能自己造，也不能随手丢。** 有的供应商给思考块带了签名，同一轮里的多次工具调用要求把它原样带回，改一个字符就报错。适配器要是按老习惯把 content 拍平成字符串，这个块就没了——症状是模型在工具调用中途「忘了自己刚才在想什么」，而且只在推理模型上出现，普通模型一切正常。
+
+所以中立消息类型里，**`content` 从第一天就该是块列表**，纯文本只是「只有一个 TextBlock」的特例。反过来设计（默认字符串、需要时再改成列表）在接第一个多模态模型或推理模型时就要重写整个适配器。
+
+### 三、一份 schema 用两次，失败就回喂
 
 ```python
 class Invoice(BaseModel):
@@ -121,7 +145,7 @@ async def extract(model, text, max_attempts=3) -> Invoice:
 
 `strip_fences` 是极少数值得在运行时做的归一化：很多模型即使被要求「只输出 JSON」也会包一层 ```` ```json ````。它无歧义、和业务无关，所以可以自动处理。**除此之外的修补都该交给模型**。
 
-### 三、流式的两个消费者
+### 四、流式的两个消费者
 
 ```python
 async def run(model, messages):
@@ -145,7 +169,7 @@ async def run(model, messages):
 
 请求真实供应商的流式接口时，记得带 `stream_options={"include_usage": True}`——不带这个，最后一块拿不到用量，你的成本账本就是空的。
 
-### 四、重试要看错误类型，不看次数
+### 五、重试要看错误类型，不看次数
 
 ```python
 async def complete_with_retry(model, messages, max_attempts=4, base_delay=0.05):
@@ -179,6 +203,10 @@ def record(self, label, usage, provider) -> float:
 
 **自己动手修 JSON。** 看到 `"total": "1,280.50"` 就写个正则去逗号，看到日期格式不对就写个转换。每修一处就是一条没人记得的业务规则，而且模型下次换个花样又要修。让模型改，运行时只判对错。
 
+**把 content 拍平成字符串。** 见第二节。适配器里一句 `"".join(...)` 就能让思考块和图片块悄悄消失，而且不报错。
+
+**把图片当成免费的上下文。** 截图看着只有几百 KB，折成 token 比一页文档还多。多模态对话的成本要单独估，不能沿用纯文本的公式（第 01 课）。
+
 **流式时在第一块就动手。** 工具调用只在最后一块出现。如果 UI 消费者和工具消费者共用一个回调，会在参数还是半截 JSON 的时候执行。
 
 **重试 400。** 请求体本身错了，重发只是重复错误并多付一次钱。能重试的只有 429、5xx、超时这类「再试可能不一样」的错误。
@@ -190,6 +218,7 @@ def record(self, label, usage, provider) -> float:
 - **严格 schema 模式 vs 客户端校验。** 服务端约束解码几乎消灭格式错误，但不是所有供应商和模型都支持，且 schema 特性受限（有的不支持 `pattern`、`format`）。客户端校验永远要有，它还能挡语义错误。两者叠加是常态。
 - **流式 vs 一次返回。** 流式让首 token 快，代价是客户端逻辑复杂：半截文本、断线重连、工具调用要等最后。后台任务、结构化抽取、评测跑批不需要流式，别为不需要的东西付复杂度。
 - **重试次数与延迟。** 面向用户的实时调用，一次重试可能就超出可接受等待；后台任务可以多试。退避的上限和总次数应该是调用方的参数，不是写死的常量。第 19 课把它扩展成限流和熔断。
+- **图片直接喂模型，还是先转成文字。** 直接喂省一步、保留版式和图表；先做 OCR 或版面解析则便宜得多、结果可缓存可检索，而且出错时能看见是哪一步错的。文档量大的场景基本都走第二条，第 13 课展开。
 - **temperature 设多少。** 抽取、分类、工具选择用 0 或接近 0，要的是稳定；创作类任务才调高。**0 不保证正确，只保证每次一样**——评测时这一点很重要。
 
 ## 工程落地
@@ -227,6 +256,8 @@ def record(self, label, usage, provider) -> float:
 - [Anthropic · Structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)（访问日期 2026-09-04）：服务端约束输出格式的做法和它的限制，读完就知道客户端校验为什么还是要留。
 - [OpenAI · Structured Outputs 指南](https://platform.openai.com/docs/guides/structured-outputs)（访问日期 2026-09-04）：另一家的等价机制，从 Pydantic 模型直接生成 schema 的写法和本课一致。
 - [DeepSeek · JSON Output](https://api-docs.deepseek.com/guides/json_mode)（访问日期 2026-09-04）：它的 JSON 模式要求提示词里含 "json" 字样，是个典型的供应商特性差异。
+- [OpenAI · Images and vision](https://platform.openai.com/docs/guides/images-vision)（访问日期 2026-09-06）：图片怎么进请求体，以及 token 怎么按尺寸折算。
+- [Anthropic · Extended thinking](https://platform.claude.com/docs/en/build-with-claude/extended-thinking)（访问日期 2026-09-06）：思考块的字段、签名和传递规则，第二节那条规矩的出处。
 - [Anthropic · Streaming](https://platform.claude.com/docs/en/build-with-claude/streaming) 与 [OpenAI · Streaming responses](https://platform.openai.com/docs/guides/streaming-responses)（访问日期 2026-09-04）：事件类型和最后一块的内容。
 
 ---

@@ -51,6 +51,8 @@ flowchart TD
 
 **LoRA 在这棵树里的位置**：它让「调行为」便宜到一张消费级显卡就能做，但表达能力受 rank 限制，不适合「学大量新知识」。这和上面的规则一致——知识走 RAG，行为才微调。
 
+**蒸馏在这棵树里的位置**：它不是新分支，是 `D 先攒数据` 那个节点最常用的做法——让大模型（或推理模型）批量产出答案，人只审不写，再拿这批数据去做 SFT 或 LoRA，线上跑那个小模型。它把「攒 1k 条高质量样本」从几周的人力活变成几天的机器活，前置条件却一点没变：**没有评测集，蒸馏出来的小模型好不好你依然说不清**。两个坑要提前知道：老师模型犯的错，学生会原样继承而且更自信；有的供应商条款限制用它的输出去训练模型，动手前读一遍条款。
+
 
 ### 走到微调之前，先穷尽这几个
 
@@ -130,6 +132,8 @@ def breakeven_tokens_per_month() -> float:
 
 用峰值利用率算成本，是自建方案最常见的自我欺骗。
 
+还有一处默认值容易被忽略：`API_USD_PER_M_IN` 填的是同步调用的单价。**能接受几小时延迟的活，走供应商的批处理接口，单价通常低一半**（各家都标在 50% 上下，以文档为准），临界点跟着右移一倍——很多算下来「该自建了」的场景，改成批量提交之后就不必自建。哪些活能这么跑：离线评测、批量打标、文档预处理与向量重建（第 15 课）、蒸馏用的数据生成。判断标准只有一条：**这个结果有没有人在等**。
+
 ### 三、vLLM 还是 llama.cpp
 
 | | vLLM | llama.cpp |
@@ -162,7 +166,9 @@ def breakeven_tokens_per_month() -> float:
 ## 工程落地
 
 - **模型升级要走评测门禁。** 供应商发新版本、你换了量化精度、换了推理引擎，都要跑一遍第 17 课的评测集再上线。
-- **微调数据本身是资产也是风险。** 训练数据里的 PII 会被模型记住；数据的来源和授权要能说清（第 20 课 LLM04）。
+- **线上和离线的活要分开算钱。** 同一个模型，实时问答走同步接口，夜里跑的重建索引和评测走批处理，成本差一倍。混在一个入口里，账单上就分不出来了。
+
+**微调数据本身是资产也是风险。** 训练数据里的 PII 会被模型记住；数据的来源和授权要能说清（第 20 课 LLM04）。
 - **自建推理要有容量规划。** 显存估算给的是能不能起来，吞吐和并发才决定能服务多少人。压测比估算可靠。
 - **混合部署是常态。** 高频简单任务走自建小模型，低频复杂任务走托管大模型。适配器层做路由，业务层无感。
 
@@ -195,6 +201,7 @@ def breakeven_tokens_per_month() -> float:
 - [LLMs-from-scratch · ch05–ch07](https://github.com/rasbt/LLMs-from-scratch)（访问日期 2026-09-04）：预训练、分类微调、指令微调的从零实现。想知道微调在代码层面是什么就读这三章。
 - [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685)（访问日期 2026-09-04）：原始论文，第 4 节的方法描述一页就够。
 - [vLLM 文档](https://docs.vllm.ai/en/latest/)（访问日期 2026-09-04）：首页的 PagedAttention 一段解释了它怎么管理 KV cache。
+- [OpenAI · Batch API](https://platform.openai.com/docs/guides/batch) 与 [Anthropic · Batch processing](https://platform.claude.com/docs/en/build-with-claude/batch-processing)（访问日期 2026-09-06）：提交、轮询、取回的流程和各自的折扣与规模上限。
 - [ai-agents-for-beginners · 17 Creating Local AI Agents](https://github.com/microsoft/ai-agents-for-beginners/blob/main/17-creating-local-ai-agents/README.md)（访问日期 2026-09-04）：小模型在本地做 Agent 的场景和「云端加本地」的混合模式。
 
 ---

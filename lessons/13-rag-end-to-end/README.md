@@ -45,6 +45,8 @@ flowchart LR
 | 生成 | 模型用了自己的知识而不是来源；来源里没有答案时硬编 | 引用率；「来源不含答案」的 golden 用例 |
 | 引用 | 编造不存在的引用 id；引用和句子对不上 | 代码校验 |
 
+**有些文档根本没有文本层。** 扫描件、截图、拍下来的表格，抽取出来是空的或一堆乱码，后面六步全都白做。三条路：OCR 转成文字后照常走流水线；版面解析把表格和阅读顺序还原成结构（跨行跨列的表格尤其需要，OCR 会把它拍平成一行行碎字）；或者把整页图直接交给视觉模型。**前两条把图变成可检索、可引用、可缓存的文本，第三条不行**——图片进不了 BM25 索引，也给不出「这句话来自哪一块」。
+
 **检索这一步要两条腿走路。** BM25 匹配精确词，擅长型号、数字、专有名词，对同义改写无能为力。向量匹配语义，擅长改写，但对「3 到 5 天」和「1 到 2 天」这种只差数字的句子分辨力弱。
 
 **引用是生成阶段的校验。** 模型说「来源 `[refund-policy#0]` 支持这句话」，这和第 05 课模型说「我调用了工具」是同一类陈述：一个建议，需要代码去核实。
@@ -226,6 +228,8 @@ def recall_at_k(retriever, golden, chunks, ks=(1, 3, 5)) -> dict[int, float]:
 
 **切块只看大小不看边界。** 见第一节。
 
+**对着没有文本层的 PDF 调切块参数。** 解析出来就是乱的，块怎么切都不对。心智模型那张表第一行说的就是这件事：抽样打开解析结果看一眼，比调三天参数快。
+
 **引用校验只检查 id 存在。** 见第五节。
 
 **golden set 里只有能答的问题。** 真实系统必须有几个「来源里没有答案」的用例，看模型是不是老实说不知道。只测能答的问题，等于没测幻觉。
@@ -233,6 +237,7 @@ def recall_at_k(retriever, golden, chunks, ks=(1, 3, 5)) -> dict[int, float]:
 ## 取舍
 
 - **块大小。** 小块检索精确、上下文少；大块上下文全、分数平。经验起点是 300～800 字符加一段重叠，然后用 Recall@k 调。**没有通用最优值，每个语料不同。**
+- **图表和表格：转成文本，还是保留原图。** 转文本便宜、可检索、能给到块级引用，但复杂表格和图示会丢信息；保留原图交给视觉模型信息最全，代价是每次都要重看一遍图（贵且慢），引用只能到页。常见做法是两者都留：文本进索引负责召回，命中之后需要时再把原图一起给模型。
 - **BM25 还是向量还是都要。** 只有 BM25，同义改写会漏；只有向量，型号和数字会混。都要就多一套索引和一次融合。语料里精确标识符多的（法规、技术手册）BM25 权重要高。
 - **重排的代价。** cross-encoder 把候选数从几十压到几个，质量提升明显，但每个候选都要过一次模型。候选取多少是延迟和召回的直接权衡，通常 20～50。
 - **pgvector 还是专用向量库。** pgvector 让一个库同时放业务数据和向量，少一个组件，权限过滤可以用 SQL 的 `WHERE`。到千万级向量、或者需要复杂过滤加近邻组合时，再评估专用库。
@@ -266,6 +271,7 @@ def recall_at_k(retriever, golden, chunks, ks=(1, 3, 5)) -> dict[int, float]:
 - [Lewis 等 · Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401)（访问日期 2026-09-04）：RAG 一词的出处。读摘要和图 1 就够，理解「检索器和生成器是两个可以分别评测的组件」。
 - [Okapi BM25](https://en.wikipedia.org/wiki/Okapi_BM25)（访问日期 2026-09-04）：公式和 `k1`、`b` 两个参数的含义。上面那段代码就是这一页的直译。
 - [pgvector](https://github.com/pgvector/pgvector)（访问日期 2026-09-04）：索引类型（HNSW、IVFFlat）和距离函数。
+- [docling](https://github.com/docling-project/docling)（访问日期 2026-09-06）与 [marker](https://github.com/datalab-to/marker)（访问日期 2026-09-06）：两个把 PDF 转成结构化 Markdown 的开源项目，拿自己的脏文档各跑一遍，比读任何解析器对比都直接。
 - [generative-ai-for-beginners · 15 RAG and Vector Databases](https://github.com/microsoft/generative-ai-for-beginners/blob/main/15-rag-and-vector-databases/README.md)（访问日期 2026-09-04）：通识版的七步，附一个 notebook。
 - [ai-agents-for-beginners · 05 Agentic RAG](https://github.com/microsoft/ai-agents-for-beginners/blob/main/05-agentic-rag/README.md)（访问日期 2026-09-04）：多轮检索的动机、失败模式和边界。读完本课再看，你会发现它讨论的所有问题都能落到七步中的某一步。
 
