@@ -194,6 +194,8 @@ OpenAI Agents SDK 把 handoff 做成了核心概念，它的 input filter 就是
 
 见 [exercises.md](./exercises.md)。
 
+想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，可选的 handoff 分支。
+
 ## 延伸阅读
 
 - [ai-agents-for-beginners · 08 Multi-agent design patterns](https://github.com/microsoft/ai-agents-for-beginners/blob/main/08-multi-agent/README.md)（访问日期 2026-09-04）：什么场景值得多 Agent，group chat / hand-off / collaborative filtering 三种模式。

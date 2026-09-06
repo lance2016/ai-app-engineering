@@ -186,6 +186,7 @@ def forget(memories, user_id: str, subject: str, requested_by: str) -> list[Memo
 - **区分「用户明说」和「模型推断」。** 推断出来的东西在回答里要用可被纠正的语气（「我记得你好像……」），而不是当成事实陈述。
 - **遗忘要能级联。** 用户删除账号时，记忆、审计里的关联、缓存、以及已经进了某条摘要的部分，都要有处理方案。
 - **记忆表要有 TTL 和容量上限。** 一个聊了三年的用户，记忆条数不该无限增长。
+- **怎么测：两类样本都要有。** 该记住的——说过一次，几轮之后还能用上；该忘掉的——用户改了口径，旧的不能再出现。第二类最容易漏测也最容易出事：记忆系统的典型故障不是想不起来，是记住了一件已经不成立的事。
 
 ## 框架映射
 
@@ -207,6 +208,8 @@ def forget(memories, user_id: str, subject: str, requested_by: str) -> list[Memo
 ## 练习
 
 见 [exercises.md](./exercises.md)。
+
+想看这一课的机制装进一个真实服务是什么样：参考实现的 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md)，记忆提取、冲突合并与删除。
 
 ## 延伸阅读
 

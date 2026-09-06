@@ -239,6 +239,8 @@ if any(stores.residue(source_id).values()):
 
 见 [exercises.md](./exercises.md)。
 
+想看这一课的机制装进一个真实服务是什么样：参考实现的 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md)，文档版本与删除演练。
+
 ## 延伸阅读
 
 - [Docling](https://github.com/docling-project/docling)（访问日期 2026-09-04）：多格式文档转结构化输出的开源解析器，看 README 的 Features 和 Python usage 两节。

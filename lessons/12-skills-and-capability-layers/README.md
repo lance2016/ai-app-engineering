@@ -212,6 +212,8 @@ Skill 目前主要是 Anthropic 生态的概念，但**三级加载的思路和�
 
 见 [exercises.md](./exercises.md)。
 
+想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，那个 Skill 包。
+
 ## 延伸阅读
 
 - [Anthropic · Agent Skills 概览](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)（访问日期 2026-09-04）：SKILL.md 格式、frontmatter 字段、渐进式披露的官方说明。

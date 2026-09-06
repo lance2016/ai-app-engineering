@@ -240,6 +240,7 @@ def recall_at_k(retriever, golden, chunks, ks=(1, 3, 5)) -> dict[int, float]:
 ## 工程落地
 
 - **每次检索都要留证据**：查了什么、召回了哪些块、融合前后的名次、最终给模型看的是哪几块。回答错了，这份证据决定你去修哪一步。
+- **怎么测：检索和生成分开量。** 检索层看 Recall@k（该召回的召回了几成）和 Hit@k（前 k 条里至少有一条对的吗），这两个数字回答的不是同一个问题，别混用：单文档问答 Hit@5 很好看，多文档汇总就得看 Recall@5。生成层看引用是否真的支撑了那句话。哪一层掉了先修哪一层。
 - **Recall@k 进 CI 门禁。** 设一个阈值（比如 R@5 ≥ 0.85），跌破就不合并。切块参数、embedding 模型、检索权重都是会被人「顺手优化」的东西。
 - **引用校验的结果要落库**，不只是拦截。引用失败率的趋势是模型质量的一个先行指标。
 - **权限必须进索引**。检索时用 `WHERE tenant_id = ?` 过滤，不要检索完再在应用层筛——后者会让 top-k 被无权访问的文档占满。
@@ -257,6 +258,8 @@ def recall_at_k(retriever, golden, chunks, ks=(1, 3, 5)) -> dict[int, float]:
 ## 练习
 
 见 [exercises.md](./exercises.md)。
+
+想看这一课的机制装进一个真实服务是什么样：参考实现的 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md)，混合检索、引用与 Recall@k。
 
 ## 延伸阅读
 

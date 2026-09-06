@@ -51,7 +51,7 @@ theme:
         name: 切换到亮色
 
 extra:
-  # 37 篇 complete、6 篇 draft、2 篇 outline。只标未完成的那几篇，见 wabi.css。
+  # 37 篇 complete、7 篇 draft、2 篇 outline。只标未完成的那几篇，见 wabi.css。
   status:
     draft: 草稿，内容还会变
     outline: 只有提纲
@@ -94,6 +94,7 @@ markdown_extensions:
 nav:
   - 首页: index.md
   - 主线课程:
+      - 课程总览：每个 Part 在搭什么: lessons/README.md
       - "Part 0 起步":
           - 00 起步：怎么读这门课，怎么接第一个模型: lessons/00-setup/README.md
       - "Part 1 模型与上下文":
@@ -149,6 +150,8 @@ nav:
       - 原则 11｜安全边界由确定性代码执行: principles/11-guardrails-in-code-not-prompts.md
       - 原则 12｜模型是可替换的适配器: principles/12-models-are-swappable-adapters.md
   - 查阅:
+      - 自测：我该从哪一课开始: reference/diagnostic.md
+      - 进这门课之前，该有哪些底子: reference/foundations.md
       - 框架一览与选型标准: reference/frameworks.md
       - 术语表: reference/glossary.md
       - 技术选型: reference/stack.md

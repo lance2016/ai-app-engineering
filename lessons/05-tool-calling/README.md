@@ -141,6 +141,8 @@ async def run_transfer(bank, call, attempts=2, timeout=0.1) -> Message:
 
 超时的语义是「不知道做没做」，不是「没做」。带幂等键重试，外部系统返回 `replayed: True`，账本里仍然只有一笔。
 
+注意这个键防的是**同一次调用的重试**。`call.id` 每次生成都不同，模型如果在下一轮重新发起一次转账，键也是新的，外部系统会认为这是第二笔业务。要挡住这种重复，幂等键得从业务意图派生——这个会话、这个订单、这一次用户确认——而不是从模型这次的调用派生。两种键防的是两件不同的事，副作用重的工具两种都要有。
+
 ### 守卫 ③：确认门
 
 ```python
@@ -180,6 +182,7 @@ async def run_tool(store, call: ToolCall) -> Message:
 - **确认状态必须持久化。** 用户可能关掉页面、十分钟后从手机上回来确认。存在内存里的 pending 状态一次重启就没了。
 - **每次工具执行落一条审计记录**：谁、什么时候、调了什么、参数是什么、结果是什么、幂等键是什么。出事时这张表是唯一的事实来源。
 - **白名单来自请求上下文**，不是全局配置。同一个 Agent 在不同租户、不同场景下能用的工具集合不同。
+- **怎么测。** 断言不看模型说了什么，看它调了什么：工具名对不对、参数过不过 schema、有副作用的调用有没有走确认门、重试时幂等键变没变。这四条写成测试，就是第 17 课轨迹评测的最小形态。
 
 ## 框架映射
 
@@ -203,6 +206,8 @@ async def run_tool(store, call: ToolCall) -> Message:
 ## 练习
 
 见 [exercises.md](./exercises.md)。
+
+想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，工具契约、确认门与幂等。
 
 ## 延伸阅读
 

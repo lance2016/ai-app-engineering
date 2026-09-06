@@ -245,6 +245,8 @@ LangGraph 在这一层做得最完整，但要注意一个坑：节点内 `inter
 
 见 [exercises.md](./exercises.md)。
 
+想看这一课的机制装进一个真实服务是什么样：参考实现的 [M2 数据与状态](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m2-state-and-storage/README.md)，checkpoint 与 resume。
+
 ## 延伸阅读
 
 - [12-factor-agents · factor 05 Unify execution state and business state](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-05-unify-execution-state.md)（访问日期 2026-09-04）：本课心智模型的出处，列了七个好处。

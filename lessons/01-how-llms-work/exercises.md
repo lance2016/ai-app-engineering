@@ -4,9 +4,9 @@
 
 ## 练习 1：给选型矩阵加一条硬约束
 
-给 `01_model_selection_matrix.py` 的 `Candidate` 加一个 `license` 字段（比如 `"proprietary"`、`"apache-2.0"`、`"llama-community"`），给 `Requirement` 加 `allowed_licenses`。假设需求是"必须能自部署且允许商用"，重跑。
+给正文的 `Candidate` 加一个 `license` 字段（比如 `"proprietary"`、`"apache-2.0"`、`"llama-community"`），给需求对象 `req` 加 `allowed_licenses`，再往 `hard_filter` 里补一条判断。假设需求是"必须能自部署且允许商用"。
 
-验收：`hosted-*` 全部因为许可证被筛掉，只剩 `open-8b-selfhost`；把 `allowed_licenses` 放开后结果回到原样。
+验收：写出这条判断，并说清它为什么必须待在 `hard_filter` 里，而不是挪到后面的打分环节。
 
 <details><summary>答案与讨论</summary>
 
@@ -18,7 +18,7 @@
 
 ## 练习 2：加一个"引用真实性"探针
 
-给 `02_capability_probe.py` 加第六个探针：让模型为"Python 3.12 移除了 distutils"这个说法给出一个可核实的来源。检查函数要判断模型是给了一个具体的官方链接或文档名，还是编了一个看起来像的。
+给正文的 `PROBES` 加第五个探针：让模型为"Python 3.12 移除了 distutils"这个说法给出一个可核实的来源。检查函数要判断模型是给了一个具体的官方链接或文档名，还是编了一个看起来像的。
 
 验收：能说出为什么这个探针很难写成确定性检查，并给出一个"够用"的版本。
 

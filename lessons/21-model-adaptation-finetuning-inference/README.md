@@ -170,6 +170,8 @@ def breakeven_tokens_per_month() -> float:
 
 见 [exercises.md](./exercises.md)。
 
+想看这一课的机制装进一个真实服务是什么样：参考实现的 [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md)（还是草稿），模型与推理选型那条 ADR。
+
 ## 延伸阅读
 
 - [llm-course · The LLM Engineer](https://github.com/mlabonne/llm-course)（访问日期 2026-09-04）：Engineer 路线的 Inference optimization 和 Deploying LLMs 两节，链接了 Flash Attention、MQA/GQA、speculative decoding 的原始资料。

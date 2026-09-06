@@ -35,7 +35,7 @@ flowchart LR
     W --> M[模型]
 ```
 
-Anthropic 把上下文叫作 **attention budget**：窗口里每多一个 token，模型对其他 token 的注意力就少一点。上下文越长召回能力越差，是所有模型都有的性质。所以上下文工程的目标不是「塞得越多越好」，而是**在预算内放进信号最强的一组 token**。
+Anthropic 把上下文叫作 **attention budget**：窗口里每多一个 token，模型对其他 token 的注意力就少一点。上下文越长，模型对窗口中段内容的召回越容易出问题，各家模型上都反复观测到，只是程度不同。所以上下文工程的目标不是「塞得越多越好」，而是**在预算内放进信号最强的一组 token**。
 
 四个动作：
 
@@ -209,6 +209,7 @@ def build_window(turn, history) -> list[Message]:
 - **裁剪按整轮，不按条。** 只裁掉半轮（留下 assistant 的工具调用、丢掉对应的 tool result）会让模型看到不完整的对话，行为很怪。
 - **`result_id` 的存储要有 TTL**，否则一天下来内存里全是没人再取的查询结果。
 - **提示缓存要主动用**。供应商支持显式缓存断点时（比如 Anthropic 的 `cache_control`），把断点打在系统提示词和工具定义之后。
+- **怎么测。** 留一组固定的长对话样本，每次改组装策略都跑一遍，比对最终发给模型的消息列表和各区段的 token 占比。上下文的回归特别隐蔽：某个区段被裁没了，模型不报错，只是变笨。
 
 ## 框架映射
 
@@ -229,6 +230,8 @@ Claude Agent SDK 的自动压缩最省事，代价是压缩策略不在你手里
 ## 练习
 
 见 [exercises.md](./exercises.md)。
+
+想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，ContextBuilder。
 
 ## 延伸阅读
 

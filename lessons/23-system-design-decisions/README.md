@@ -247,6 +247,8 @@ def flips(step: float = 0.10) -> list[str]:
 
 见 [exercises.md](./exercises.md)。最后一题是综合设计题，附参考答案骨架。
 
+想看这一课的机制装进一个真实服务是什么样：参考实现的 [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md)（还是草稿），那份多租户平台 RFC。
+
 ## 延伸阅读
 
 - [Michael Nygard · Documenting Architecture Decisions](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)（访问日期 2026-09-04）：ADR 的原始提议。本课加了备选方案和退出条件两节。

@@ -228,6 +228,8 @@ LangGraph 是三个里唯一把 workflow 当一等公民的。如果你的系统
 
 见 [exercises.md](./exercises.md)。
 
+想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，那份「为什么还不需要自治 Agent」的选型记录。
+
 ## 延伸阅读
 
 - [Anthropic · Building effective agents](https://www.anthropic.com/research/building-effective-agents)（访问日期 2026-09-04）：本课五种模式的出处。附录里「Agent 的两个实践领域」和「给工具写好文档」两节也值得读。

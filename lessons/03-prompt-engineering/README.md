@@ -167,7 +167,7 @@ def trim_to_budget(text, budget) -> tuple[str, bool]:
 - **版本放文件名里**：`assistant.v1.md`、`assistant.v2.md`，启动时按配置加载，**找不到文件直接起不来**——静默回退到默认 prompt 是最坏的选择。
 - **每次响应带上 prompt 版本号**（响应头或事件字段）。事后排查「这条回答是哪版 prompt 生成的」，靠的是这个，不是靠猜上线时间。
 - **渲染结果进 diff**。上线前把 v(n) 和 v(n-1) 的渲染输出 diff 一遍，很多「模型突然变笨」的问题在 diff 里就看出是某个区段被误删了。
-- **golden set 和 prompt 放在一起**，改 prompt 的 PR 必须带上门禁跑的结果。
+- **怎么测。** 每个 prompt 版本配一组固定输入和期望输出的 golden case，和 prompt 文件放在一起，改 prompt 的 PR 必须带上门禁结果。这组 case 就是第 17 课回归门禁的雏形，从第一版 prompt 开始攒。
 
 ## 框架映射
 
@@ -190,6 +190,8 @@ def trim_to_budget(text, budget) -> tuple[str, bool]:
 ## 练习
 
 见 [exercises.md](./exercises.md)。
+
+想看这一课的机制装进一个真实服务是什么样：参考实现的 [M1 API 骨架](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md)，system prompt 的版本化。
 
 ## 延伸阅读
 

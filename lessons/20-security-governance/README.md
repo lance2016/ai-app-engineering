@@ -151,6 +151,8 @@ def leaks_system_prompt(text: str) -> bool:
 
 金丝雀比「检测模型是不是在复述指令」可靠得多：它是一个**精确的字符串**，出现即泄露，没有误判空间。系统提示里塞一个无意义但唯一的 token，成本为零。
 
+但它只能查到这一件事。模型用自己的话把系统提示复述一遍、恰好没带上这个 token，金丝雀什么都发现不了。**它几乎不误报，但漏报很多**，是一道成本极低的兜底，不是完整的泄露检测。
+
 同一个过滤器要用在**两处**：
 
 ```python
@@ -266,6 +268,8 @@ OpenAI Agents SDK 把 guardrails 做成了框架概念；另两个要自己写�
 ## 练习
 
 见 [exercises.md](./exercises.md)。
+
+想看这一课的机制装进一个真实服务是什么样：参考实现的 [M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md)，注入与越权测试、多租户边界。
 
 ## 延伸阅读
 

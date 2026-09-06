@@ -11,7 +11,11 @@
 | 前置 | `prerequisites/llm-foundations/` | F00–F07 八篇 LLM 原理，只到应用工程师能做决策的深度 |
 | 主线 | `lessons/` | 24 课 00–23，每课 `README.md + exercises.md` |
 | 原则 | `principles/` | 12 条，一条一个文件，12-factor-agents 风格 |
-| 查阅 | `reference/` | 术语表、技术选型、框架一览、外部资料 |
+| 查阅 | `reference/` | 术语表、技术选型、框架一览、外部资料、能力清单、诊断题 |
+
+另有三个导航页，不属于任何一课，但改课程结构时必须同步：
+`lessons/README.md`（六个 Part 的定位与出师标准）、`reference/diagnostic.md`（有经验读者的自测题）、
+`reference/foundations.md`（进课程前该有的 Python / 后端 / 算法能力清单）。
 
 配套的**参考实现**在另一个仓库 [ai-app-engineering-ref](https://github.com/lance2016/ai-app-engineering-ref)：一个完整的 AI 应用服务，七个里程碑 M0–M6，加 framework-lab 和 capstones。本仓库**不再包含任何可运行的项目代码**，2026-09-05 拆分完成。
 
@@ -69,7 +73,9 @@ estimated_time: 约 N 小时
 只写和本课相关的：质量 / 延迟 / 成本 / 安全。没有标准答案，列的是读者必须自己做的判断。
 
 ## 工程落地
-从示意代码到能上线还差什么：持久化、监控、多租户、分层、回滚。纯文字，不指向任何代码仓库。
+从示意代码到能上线还差什么：持久化、监控、多租户、分层、回滚。纯文字。
+**最后一条固定是「怎么测」**：这一课的东西拿什么样本、什么指标验证。评测不是第 17 课才开始的事，
+每课都要留下一块以后能进 golden set 的东西，17 课只负责把它们合成一个系统。
 
 ## 框架映射
 一张表，本课概念在 LangGraph、OpenAI Agents SDK、Claude Agent SDK 里各叫什么。
@@ -81,6 +87,8 @@ estimated_time: 约 N 小时
 
 ## 练习
 见 [exercises.md](./exercises.md)。
+后面跟一行指向参考实现里对应的里程碑，映射见 ai-app-engineering-ref 的 `project/README.md`。
+**这是正文里唯一允许指向代码仓库的地方**，其他小节仍然纯文字。
 
 ## 延伸阅读
 - [标题](url)（访问日期 YYYY-MM-DD）：一句话说为什么值得读。

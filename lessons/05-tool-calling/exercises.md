@@ -6,7 +6,7 @@
 
 给正文的 `GetWeatherArgs` 加一个 `date: datetime.date` 字段，然后设想模型返回了 `"date": "yesterday"`。
 
-验收：运行输出里出现一条 `[ERROR] invalid arguments: ...` 的工具结果，紧接着模型用合法日期重新调用，最后正常回答。
+验收：写出这时的消息序列——一条 `[ERROR] invalid arguments: ...` 的工具结果，模型换成合法日期重新调用，最后正常回答。
 
 <details><summary>提示与答案</summary>
 

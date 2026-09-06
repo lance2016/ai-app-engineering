@@ -12,6 +12,8 @@ estimated_time: 约 2 小时
 
 「我感觉 prompt 变好了」不能阻止回归，也不能解释哪类用户被伤害。评测集、轨迹断言和门禁把主观判断变成可重复的证据。
 
+**这一课不是评测的起点。** 前面每一课都在「工程落地」里留了一块碎片：01 的能力探针、03 的 prompt golden case、04 和 13 的 Recall@k、05 的工具调用断言、06 的停止原因分布、08 的上下文回归样本、14 的「该记住 / 该忘掉」两类样本。它们各自都能用，但各跑各的：没有统一的切片标签，没有基线，没有门禁，也没人知道哪个数字掉了该找谁。这一课把它们合成一个系统。
+
 ## 学习目标
 
 - 能为一个 AI 功能建一份带切片标签的 golden set，并用确定性断言在一秒内跑完
@@ -239,6 +241,8 @@ def gate(current: dict, baseline: dict) -> list[str]:
 ## 练习
 
 见 [exercises.md](./exercises.md)。
+
+想看这一课的机制装进一个真实服务是什么样：参考实现的 [M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md)，golden set 回归与门禁。
 
 ## 延伸阅读
 

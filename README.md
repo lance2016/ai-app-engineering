@@ -23,21 +23,27 @@
 - **把失败当内容。** 每课都有「常见错误」，讲的是这个机制在生产里具体会怎么坏。
 - **每课有一线经验。** 来自一个真实的语音机器人项目：踩过什么坑、后来怎么改的。
 
-**如果你要的是能跑的代码**，参考实现在另一个仓库：[ai-app-engineering-ref](https://github.com/lance2016/ai-app-engineering-ref)——一个带工具调用、RAG、Memory、评测、trace 和部署的完整服务，七个里程碑，`docker compose up` 就能起来。
+**如果你要的是能跑的代码**，参考实现在另一个仓库：[ai-app-engineering-ref](https://github.com/lance2016/ai-app-engineering-ref)——一个带工具调用、RAG、Memory、评测、trace 和部署的服务，`docker compose up` 就能起来。七个里程碑里 M0–M5 已完成，M6（多租户平台 RFC）和 framework-lab 还是草稿，四个 capstone 完成了一个。
 
 ## 从哪里开始
 
-| 你是谁 | 从哪开始 |
+**没做过 AI 应用**：从 [第 00 课](./lessons/00-setup/README.md) 顺着读，别跳。
+
+**已经做过 RAG 或 Agent**：先做 [24 题自测](./reference/diagnostic.md)，20 分钟定位薄弱区，按结果挑 Part。
+
+| 还想找 | 去哪 |
 |---|---|
-| **想系统入门 AI 应用工程** | 从 [第 00 课](./lessons/00-setup/README.md) 顺着读 |
-| **模型原理还不熟**（token、attention、KV cache） | 先看 [前置 · LLM 原理](./prerequisites/README.md)，八篇 |
-| **已经在做 Agent，想查漏补缺** | 直接跳 [05 Tool Calling](./lessons/05-tool-calling/README.md)、[07 State 与 Runtime](./lessons/07-agent-state-and-runtime/README.md)、[17 评测](./lessons/17-evaluation/README.md) |
-| **在选框架** | [框架一览与选型标准](./reference/frameworks.md) |
-| **想要一张对照清单** | [12 条工程原则](./principles/README.md) |
+| 每个 Part 在搭什么、学完怎么算过关 | [课程总览](./lessons/README.md) |
+| 进课程前该有哪些底子 | [能力清单](./reference/foundations.md) |
+| 模型原理（token、attention、KV cache） | [前置 · LLM 原理](./prerequisites/README.md)，八篇 |
+| 一张对照清单 | [12 条工程原则](./principles/README.md) |
+| 框架选型 | [框架一览与选型标准](./reference/frameworks.md) |
 
 ## 24 课
 
 每课 1～2.5 小时（第 00 课半小时），结构固定：为什么需要 → 心智模型 → 机制拆解 → 常见错误 → 取舍 → 工程落地 → 框架映射 → 一线经验 → 练习。
+
+**每个 Part 在搭什么、学完之后该能回答哪些问题，见[课程总览](./lessons/README.md)。**
 
 ### Part 0 起步
 
@@ -114,7 +120,7 @@
 
 ## 参考资料
 
-术语见 [reference/glossary.md](./reference/glossary.md)，技术选型见 [reference/stack.md](./reference/stack.md)，框架对比见 [reference/frameworks.md](./reference/frameworks.md)，外部资料见 [reference/resources.md](./reference/resources.md)。
+术语见 [glossary.md](./reference/glossary.md)，自测题见 [diagnostic.md](./reference/diagnostic.md)，能力清单见 [foundations.md](./reference/foundations.md)，技术选型见 [stack.md](./reference/stack.md)，框架对比见 [frameworks.md](./reference/frameworks.md)，外部资料见 [resources.md](./reference/resources.md)。
 
 ## 贡献与许可
 

@@ -40,7 +40,7 @@ flowchart LR
 
 ## 动手
 
-主线 [第 04 课](../../../lessons/04-embeddings-and-vector-search/README.md) 的 `01_toy_embeddings_and_cosine.py` 用一个没有语义的词袋向量把余弦和归一化讲清楚，本篇完成前先做那个。
+主线 [第 04 课](../../../lessons/04-embeddings-and-vector-search/README.md) 正文的哈希词袋 `embed()` 和 `cosine()` 用一个没有语义的向量把余弦和归一化讲清楚，本篇完成前先读那一段。
 
 ## 它在 AI 应用里用在哪
 
