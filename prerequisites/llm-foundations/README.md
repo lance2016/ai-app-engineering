@@ -14,12 +14,12 @@ updated: 2026-09-04
 |---|---|---|---|---|
 | F00 | [LLM 是什么](./00-what-an-llm-is/README.md) | Next Token Prediction 及其三个直接后果；能力从哪来 | LLMs-from-scratch ch01；Happy-LLM 1～4 | draft |
 | F01 | [Tokenization](./01-tokenization/README.md) | BPE、token 效率、embedding 层、特殊 token | ch02 | draft |
-| F02 | [Embedding 与向量空间](./02-embeddings/README.md) | 文本 embedding 模型是什么、余弦与归一化、维度与模型绑定 | 无对应章 | outline |
+| F02 | [Embedding 与向量空间](./02-embeddings/README.md) | 文本 embedding 模型是什么、余弦与归一化、维度与模型绑定 | 无对应章 | complete |
 | F03 | [Attention 与 Transformer](./03-attention-and-transformer/README.md) | 一次 attention 在算什么、O(n²)、GQA；block 结构与参数量 | ch03、ch04 | draft |
 | F04 | [Context Window 与 Sampling](./04-context-window-and-sampling/README.md) | 窗口是每轮都在花的预算；temperature 与 top-p 改了什么 | 无对应章 | draft |
 | F05 | [训练与对齐](./05-training-and-alignment/README.md) | 预训练、SFT、RLHF / DPO 各给了什么；对话模板；分类微调与 LoRA | ch05、ch06、ch07 | draft |
 | F06 | [KV Cache 与推理](./06-kv-cache-and-inference/README.md) | prefill 与 decode、KV cache 显存、量化、批处理、prompt caching | llm-course Engineer 路线 | draft |
-| F07 | [模型地图](./07-model-landscape/README.md) | 五类模型、开放权重与托管、怎么读模型卡 | generative-ai-for-beginners ch02 | outline |
+| F07 | [模型地图](./07-model-landscape/README.md) | 五类模型、开放权重与托管、怎么读模型卡 | generative-ai-for-beginners ch02 | complete |
 
 ## 怎么学
 

@@ -42,7 +42,7 @@
 
 |  | 没做过 AI 应用 | 做过 RAG 或 Agent |
 |---|---|---|
-| **第一步** | 从 [00 起步](./lessons/00-setup/README.md) 顺着读，别跳 | 先花 20 分钟做 [24 题自测](./reference/diagnostic.md) |
+| **第一步** | 从 [00 起步](./lessons/00-setup/README.md) 顺着读，别跳 | 先花 20 分钟做 [26 题自测](./reference/diagnostic.md) |
 | **然后** | Part 1 → Part 5 按顺序走完 | 按自测结果挑薄弱的 Part 读 |
 | **模型原理** | token、attention、KV cache 不熟，先补[前置八篇](./prerequisites/README.md) | 读到「前置 F0x」的引用再回查 |
 | **想直接看结论** | 学完每个 Part 后回看[工程原则](./principles/README.md) | [12 条工程原则](./principles/README.md)是全课的压缩版 |

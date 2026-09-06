@@ -219,7 +219,7 @@ hide:
 <article class="path" data-path="b" markdown="1">
 <p class="path__label">RECOMMENDED PATH · 先找洞，再补课</p>
 <ol class="tl" markdown="1">
-<li markdown="span">**先做 [24 题自测](reference/diagnostic.md)**，二十分钟。题目按 Part 分组，答不上的那几组就是你的洞。</li>
+<li markdown="span">**先做 [26 题自测](reference/diagnostic.md)**，二十分钟。题目按 Part 分组，答不上的那几组就是你的洞。</li>
 <li markdown="span">**按结果挑 Part 读**，不用从头。做过 RAG 的人最常缺的是 Part 2 的运行时控制（[06](lessons/06-agent-loop/README.md) · [07](lessons/07-agent-state-and-runtime/README.md) · [08](lessons/08-context-engineering-for-agents/README.md)）和 Part 4 的评测（[18](lessons/18-evaluation/README.md)）。</li>
 <li markdown="span">**用 [12 条工程原则](principles/README.md)对照现有项目。** 每条都有反例和正确形态，对不上的那条就去读它指向的课。</li>
 <li markdown="span">**在选框架**，直接看[框架一览与选型标准](reference/frameworks.md)，不必等读完 Part 2。</li>
