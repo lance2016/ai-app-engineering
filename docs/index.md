@@ -47,7 +47,7 @@ hide:
 
 ## 挑一条路线
 
-<p class="band__lede" markdown="span">三种起点，选最接近的那个，下面直接给入口。不确定底子够不够，先对一下[补充基础](prerequisites/README.md)。</p>
+<p class="band__lede" markdown="span">三种起点，选最接近的那个，下面直接给入口。不确定自己缺不缺什么，先对一下[背景知识](prerequisites/README.md)。</p>
 
 <div class="picker" data-picker>
 <button class="picker__opt" type="button" data-path="a" aria-pressed="false">
@@ -209,7 +209,7 @@ hide:
 
 </div>
 
-<p class="band__foot" markdown="span">每个 Part 的前置、能力域拆解和出师标准，还有这 26 课在搭的那个系统的全貌图，都在[课程总览](lessons/README.md)。[补充基础](prerequisites/README.md)里的 LLM 原理八篇是可选的，主线课需要时会点名引用。打开过哪一课会被记下来，下次回到这一页，顶部就有接着读的入口；每课底部另有一个「标记为已掌握」。</p>
+<p class="band__foot" markdown="span">每个 Part 的前置、能力域拆解和出师标准，还有这 26 课在搭的那个系统的全貌图，都在[课程总览](lessons/README.md)。[背景知识](prerequisites/README.md)里的 LLM 原理八篇是可选的，主线课需要时会点名引用。打开过哪一课会被记下来，下次回到这一页，顶部就有接着读的入口；每课底部另有一个「标记为已掌握」。</p>
 
 </section>
 

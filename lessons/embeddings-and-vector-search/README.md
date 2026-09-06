@@ -21,7 +21,7 @@ estimated_time: 约 1.5 小时
 
 ## 前置
 
-- 这一课默认你知道向量为什么能比较、余弦为什么先归一化、embedding 层和文本 embedding 模型差在哪，不再解释。不熟就翻 [F02 Embedding 与向量空间](../../prerequisites/llm-foundations/02-embeddings/README.md)，**不用先读完再回来**
+- 这一课不解释向量为什么能比较、余弦为什么先归一化、embedding 层和文本 embedding 模型差在哪。要补就翻 [F02 Embedding 与向量空间](../../prerequisites/llm-foundations/02-embeddings/README.md)，**不用先读完再回来**
 
 ## 怎么理解它
 

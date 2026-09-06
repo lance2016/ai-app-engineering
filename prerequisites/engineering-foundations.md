@@ -1,9 +1,9 @@
 ---
 status: complete
-part: 补充基础
+part: 背景知识
 ---
 
-# 编程与后端底子：默认你有什么，缺了去哪补
+# 编程与后端：这门课会用到什么，缺了去哪学
 
 > **这门课不教 Python，也不教后端。** 这一页是一张索引，不是教程：把课程默认你会的东西列出来，标清每项在哪一课用到、不会的话去哪学。免得读到一半卡在和 AI 无关的地方。
 >
@@ -77,9 +77,9 @@ part: 补充基础
 
 ## 另外几页
 
-算法与数学那部分在[算法与数学底子](./algorithm-foundations.md)：复杂度、哈希表、向量与余弦、top-k、ANN 索引。
-模型原理在 [LLM 原理那八篇](./README.md)。这门课用不到什么、底子够了从哪开始，见[补充基础总览](./README.md)。
+算法与数学那部分在[算法与数学](./algorithm-foundations.md)：复杂度、哈希表、向量与余弦、top-k、ANN 索引。
+模型原理在 [LLM 原理那八篇](./README.md)。这门课用不到什么、从哪开始，见[背景知识总览](./README.md)。
 
 ---
 
-[补充基础总览](./README.md) · [算法与数学底子](./algorithm-foundations.md)
+[背景知识总览](./README.md) · [算法与数学](./algorithm-foundations.md)

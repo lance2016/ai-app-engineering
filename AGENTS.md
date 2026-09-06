@@ -8,14 +8,14 @@
 
 | 层 | 目录 | 形式 |
 |---|---|---|
-| 补充基础 | `prerequisites/` | 分两类：**工程能力**（`engineering-foundations.md`）和**算法基础**（`algorithm-foundations.md` 加 `llm-foundations/` 的 F00–F07 八篇）。前两者是学习索引，只指路不教；八篇讲 LLM 原理 |
+| 背景知识 | `prerequisites/` | 分两类：**工程能力**（`engineering-foundations.md`）和**算法基础**（`algorithm-foundations.md` 加 `llm-foundations/` 的 F00–F07 八篇）。前两者是学习索引，只指路不教；八篇讲 LLM 原理 |
 | 主线 | `lessons/` | 26 课，每课一个 `README.md`。目录名不带编号，编号由 `mkdocs.yml` 的 nav 位置决定 |
 | 原则 | `principles/` | 12 条，一条一个文件，12-factor-agents 风格 |
 | 查阅 | `reference/` | 术语表、技术选型、框架一览、外部资料、诊断题 |
 
 另有两个导航页，不属于任何一课，但改课程结构时必须同步：
 `lessons/README.md`（两张地图、能力域清单，以及每个 Part 的定位、学前自测和出师标准）、
-`prerequisites/README.md`（补充基础的两类分法，以及那两页学习索引的入口）。
+`prerequisites/README.md`（背景知识的两类分法，以及那两页学习索引的入口）。
 
 **分工是固定的：** `docs/index.md` 管选路线和接着读，`lessons/README.md` 管知识体系。
 自测题不再单独成页，2026-09-06 拆进了 `lessons/README.md` 每个 Part 开头的折叠块，

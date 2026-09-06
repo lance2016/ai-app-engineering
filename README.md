@@ -44,12 +44,12 @@
 |---|---|---|
 | **第一步** | 从 [00 起步](./lessons/setup/README.md) 顺着读 | 先看[课程总览](./lessons/README.md)的能力域清单，对照手上的项目 |
 | **然后** | Part 1 → Part 5 按推荐顺序走完 | 每个 Part 开头有三到五题，答不上就读那个 Part |
-| **模型原理** | token、attention、KV cache 不熟，先补[补充基础里的 LLM 原理八篇](./prerequisites/README.md) | 读到「前置 F0x」的引用再回查 |
+| **模型原理** | token、attention、KV cache 不熟，先补[背景知识里的 LLM 原理八篇](./prerequisites/README.md) | 主线点到哪一篇再回查 |
 | **想直接看结论** | 学完每个 Part 后回看[工程原则](./principles/README.md) | [12 条工程原则](./principles/README.md)是全课的压缩版 |
 | **正在选框架** | 学完 Part 2 再看 | [框架一览与选型标准](./reference/frameworks.md) |
 
-[补充基础](./prerequisites/README.md)那两组都是**可选的**，不是必修：编程与后端底子是一张学习索引，只指路；LLM 原理八篇在主线需要时会被点名引用（那八篇大多还是草稿，比主线薄）。
-不确定自己的底子够不够，看一眼[补充基础](./prerequisites/README.md)；每个 Part 在搭什么、学完怎么算过关，见[课程总览](./lessons/README.md)。
+[背景知识](./prerequisites/README.md)那两组都是**可选的**，不是必修：编程与后端那页是一张学习索引，只指路；LLM 原理八篇在主线需要时会被点名引用（那八篇大多还是草稿，比主线薄）。
+不确定自己缺不缺什么，看一眼[背景知识](./prerequisites/README.md)；每个 Part 在搭什么、学完怎么算过关，见[课程总览](./lessons/README.md)。
 
 ## 26 课
 
@@ -129,7 +129,7 @@
 
 ```text
 ├── lessons/          主线 26 课，每课一个 README
-├── prerequisites/    补充基础：工程能力与算法基础两类，含两页学习索引和 LLM 原理八篇
+├── prerequisites/    背景知识：工程能力与算法基础两类，含两页学习索引和 LLM 原理八篇
 ├── principles/       12 条工程原则，一条一个文件
 ├── reference/        术语表、技术选型、框架一览、外部资料
 └── docs/ mkdocs.yml  文档站配置（内容都是上面几个目录的符号链接）

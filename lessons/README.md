@@ -569,4 +569,4 @@ flowchart LR
 
 ---
 
-[补充基础](../prerequisites/README.md) · [12 条工程原则](../principles/README.md) · [术语表](../reference/glossary.md)
+[背景知识](../prerequisites/README.md) · [12 条工程原则](../principles/README.md) · [术语表](../reference/glossary.md)

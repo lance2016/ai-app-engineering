@@ -24,7 +24,7 @@ estimated_time: 约 1.5 小时
 
 ## 前置
 
-- 这一课默认你知道 token、上下文窗口、采样、模型分类大致是怎么回事，不再解释。不熟的话，[F00 LLM 是什么](../../prerequisites/llm-foundations/00-what-an-llm-is/README.md)、[F01 Tokenization](../../prerequisites/llm-foundations/01-tokenization/README.md)、[F04 Context Window 与 Sampling](../../prerequisites/llm-foundations/04-context-window-and-sampling/README.md)、[F07 模型地图](../../prerequisites/llm-foundations/07-model-landscape/README.md) 分别讲这四件事。**不用先读完再回来**，正文点到哪篇翻哪篇就行
+- 这一课不解释 token、上下文窗口、采样、模型分类是什么。要补的话，[F00 LLM 是什么](../../prerequisites/llm-foundations/00-what-an-llm-is/README.md)、[F01 Tokenization](../../prerequisites/llm-foundations/01-tokenization/README.md)、[F04 Context Window 与 Sampling](../../prerequisites/llm-foundations/04-context-window-and-sampling/README.md)、[F07 模型地图](../../prerequisites/llm-foundations/07-model-landscape/README.md) 分别讲这四件事。**不用先读完再回来**，正文点到哪篇翻哪篇就行
 
 ## 怎么理解它
 
