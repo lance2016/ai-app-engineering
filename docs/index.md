@@ -26,7 +26,7 @@ hide:
 <div class="hero__cta" markdown="1">
 
 [从 00 开始学](lessons/00-setup/README.md){ .md-button .md-button--primary .hero__start }
-<a class="md-button md-button--primary hero__cont" data-prog-next href="#" hidden>继续学习</a>
+<a class="md-button md-button--primary hero__cont" data-prog-next href="#" hidden>接着读</a>
 
 </div>
 
@@ -181,7 +181,7 @@ hide:
 
 </div>
 
-<p class="band__foot" markdown="span">每个 Part 的前置、能力域拆解和出师标准，还有这 26 课在搭的那个系统的全貌图，都在[课程总览](lessons/README.md)。[补充基础](prerequisites/README.md)里的 LLM 原理八篇是可选的，主线课需要时会点名引用。<br>每课页面底部有一个「标记为已掌握」，标过之后这一页顶部会显示进度和一个继续学习的入口。记录只存在这台设备的浏览器里，不上传，也不需要登录。</p>
+<p class="band__foot" markdown="span">每个 Part 的前置、能力域拆解和出师标准，还有这 26 课在搭的那个系统的全貌图，都在[课程总览](lessons/README.md)。[补充基础](prerequisites/README.md)里的 LLM 原理八篇是可选的，主线课需要时会点名引用。<br>打开过哪一课会被记下来，下次回到这一页，顶部就有一个接着读的入口，不用你做任何事。每课底部另有一个「标记为已掌握」，标过之后这里会显示学到哪了、还差多少。两样记录都只存在这台设备的浏览器里，不上传，不需要登录，换设备不同步。</p>
 
 </section>
 
