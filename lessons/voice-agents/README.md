@@ -10,7 +10,7 @@ estimated_time: 约 2 小时
 
 ## 为什么需要
 
-一个在网页上表现良好的 Agent，接上电话之后通常是这样坏的：
+一个在网页上跑得好好的 Agent，接上电话之后通常是这样坏的：
 
 用户说完话，等了两秒半没动静，以为没听见，又说了一遍——两句话叠在一起进了同一轮。模型开始回答，用户听了三个字就插嘴，系统还在念完整段，念完才反应过来。最后是转账金额：用户说的是「一万四」，识别成了「一万四千」，工具参数照单全收，而**用户根本不知道系统听到的是什么**。
 
@@ -48,7 +48,7 @@ flowchart LR
 
 **延迟是这类应用的第一约束，而且它是个预算，不是一个指标。** 人在对话里对停顿的容忍大约在一秒上下，超过就会开始重复自己或者以为断线了。这一秒要分给判停、识别、模型首 token、语音合成首包和网络往返，**每一段都只有一两百毫秒**。第 01 课那笔成本账在这里换成了时间账：先列预算，再选模型。
 
-**打断是一等公民，不是异常。** 用户开口的那一刻要同时做三件事：停播放、停生成、记下**实际播出到了哪里**。第三件最容易漏——模型以为整段话都被听到了，而用户只听到前六个字，后面的对话全建立在一个假的前提上。
+**打断是正常流程，不是异常。** 用户开口的那一刻要同时做三件事：停播放、停生成、记下**实际播出到了哪里**。第三件最容易漏——模型以为整段话都被听到了，而用户只听到前六个字，后面的对话全建立在一个假的前提上。
 
 **ASR 的输出是不可信输入。** 文本输入里用户打错字自己看得见，语音里用户不知道系统听成了什么。识别结果进工具参数之前必须过一道，金额、日期、人名、地址这类槽位要回读确认。这是第 05 课确认门在语音里的样子，触发条件从「动作不可逆」扩展到「**输入不可信 + 动作不可逆**」。
 
@@ -165,7 +165,7 @@ def readback(slots: dict) -> str:
 | 打断与取消 | 自己在节点外做取消 | 会话层可取消，播放侧仍要自己接 | 会话中断由调用方处理 |
 | 延迟预算 | 三家都不管 | 三家都不管 | 三家都不管 |
 
-**延迟预算和打断，三个通用框架一个都不管**——它们的抽象层级在对话逻辑上，不在音频管道上。真正做这件事的是语音专用框架：[Pipecat](https://github.com/pipecat-ai/pipecat) 和 [LiveKit Agents](https://github.com/livekit/agents) 都把管道、打断和时间戳做成了一等公民，值得读它们的管道模型再决定自己写多少。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-06）。
+**延迟预算和打断，三个通用框架一个都不管**——它们的抽象层级在对话逻辑上，不在音频管道上。真正做这件事的是语音专用框架：[Pipecat](https://github.com/pipecat-ai/pipecat) 和 [LiveKit Agents](https://github.com/livekit/agents) 都把管道、打断和时间戳当成了框架的基本构件，值得读它们的管道模型再决定自己写多少。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-06）。
 
 ## 参考实现
 

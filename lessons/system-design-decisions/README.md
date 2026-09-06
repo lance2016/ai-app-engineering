@@ -228,7 +228,7 @@ def flips(step: float = 0.10) -> list[str]:
 | 假设 | 如果为真 | 倾向 |
 |---|---|---|
 | 系统大部分是确定性流程，少数节点交给模型 | 图模型贴合 | LangGraph |
-| 需要多个专家 Agent 互相交接 | handoff 是一等公民 | OpenAI Agents SDK |
+| 需要多个专家 Agent 互相交接 | handoff 是内置能力 | OpenAI Agents SDK |
 | 只用 Claude，且需要深度 MCP / Skill 集成 | 生态最完整 | Claude Agent SDK |
 | 需求还在变，或者要保留换供应商的能力 | 框架的抽象反而是负担 | 直接调 API |
 

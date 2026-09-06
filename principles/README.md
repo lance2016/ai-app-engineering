@@ -14,7 +14,7 @@
 | 06 | [每个副作用都要幂等、可确认、可审计](./06-side-effects-are-idempotent-and-auditable.md) | complete |
 | 07 | [失败要分层定位：数据、检索、上下文、模型、工具、控制流](./07-locate-failures-by-layer.md) | complete |
 | 08 | [没有评测集，就没有「变好了」](./08-no-eval-no-improvement.md) | complete |
-| 09 | [Trace 是一等公民，第一次调用就该有](./09-trace-is-first-class.md) | complete |
+| 09 | [Trace 从第一次调用就该有](./09-trace-is-first-class.md) | complete |
 | 10 | [成本和延迟是设计约束，不是上线后的运维问题](./10-cost-and-latency-are-design-constraints.md) | complete |
 | 11 | [安全边界由确定性代码执行，不靠提示词](./11-guardrails-in-code-not-prompts.md) | complete |
 | 12 | [模型是可替换的适配器，任何代码都不该绑死一家供应商](./12-models-are-swappable-adapters.md) | complete |

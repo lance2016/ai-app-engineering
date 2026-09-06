@@ -213,7 +213,7 @@ async def refine(generator, evaluator, task) -> tuple[str, bool]:
 | 并行 | 图里的并行分支 + reducer | `asyncio.gather` 自己写 | 自己写 |
 | 结构化计划 | 节点输出带 schema 的 state | agent 的 `output_type` | 工具 schema |
 
-LangGraph 是三个里唯一把 workflow 当一等公民的。如果你的系统大部分是确定性流程、只有少数节点交给模型，它的图模型很贴。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
+三个里只有 LangGraph 为 workflow 本身做了建模。如果你的系统大部分是确定性流程、只有少数节点交给模型，它的图模型很贴。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
 ## 一线经验
 

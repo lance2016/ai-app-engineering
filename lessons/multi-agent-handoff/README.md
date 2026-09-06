@@ -172,7 +172,7 @@ triage 的兜底回复要诚实：「我暂时联系不上账务系统，已经�
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
-| handoff | `Command(goto=...)` 或子图 | `handoffs=[...]`，一等公民 | subagent |
+| handoff | `Command(goto=...)` 或子图 | `handoffs=[...]`，框架内置 | subagent |
 | 历史过滤 | 子图有自己的 state schema | `handoff` 的 input filter | 子 agent 独立会话 |
 | 并行 racing | 图里的并行分支 | 自己写 `asyncio` | 自己写 |
 
