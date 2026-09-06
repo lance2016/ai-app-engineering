@@ -171,10 +171,14 @@ async def complete(self, messages) -> ModelResponse:
             reply = await asyncio.wait_for(self.primary.complete(messages), PRIMARY_TIMEOUT)
             self.breaker.record_success()
             return reply
-        except (TimeoutError, Exception):
+        except RETRYABLE:              # ← 只有「主模型这边不行」才算熔断失败
             self.breaker.record_failure()
+        except BadRequest:
+            raise                      # ← 请求本身就是错的，换个模型一样错
     return await self.fallback.complete(messages)      # 快速失败后走备用
 ```
+
+**这里的异常分类和第一节是同一套，不能图省事写成 `except Exception`。** 那样写有两个后果：一个参数拼错导致的 400 会被记成主模型故障，攒够阈值就把健康的主模型熔断掉；同时这个错误会被"降级"成备用模型的一次调用，掩盖掉真正的 bug。熔断器统计的必须是「这个依赖不可用」，不是「这次请求失败了」。
 
 效果差别很大：有熔断器时，故障期间 30 个请求只有几次探测等在生病的主模型上；没有熔断器时，**每个请求都要等满超时**才切备用。
 

@@ -7,15 +7,21 @@ part: 查阅
 
 > 给已经做过 AI 应用的人。24 题，每题先自己答一句话，再展开对照。**不是考试**，题目都是「做过的人一眼能答、只看过文档的人答不上来」的那种，用来定位薄弱区，不用来打分。
 >
-> 全部答完大约 20 分钟。每组末尾写了这组答不上该看哪几课。第一次读这门课的人不用做这一页，直接从[第 00 课](../lessons/00-setup/README.md)开始。
+> 全部答完大约 20 分钟。**怎么算答对**：不用一字不差，说出对照里那个**关键判断**就算过——比如第 5 题说得出「什么都没发生」，第 15 题说得出两个指标问的不是同一件事。说了个大概方向但漏掉关键判断的，算没答对，别给自己放水。
+>
+> 每组记一个分数，末尾有对照表。第一次读这门课的人不用做这一页，直接从[第 00 课](../lessons/00-setup/README.md)开始。
 
-## 一、模型边界与成本
+## 一、模型边界与成本（4 题）
 
 **1. 一个模型的上下文窗口是 128k，你的对话每轮输入 2000 token、输出 700 token。这个对话能进行多少轮？**
 
 <details><summary>对照</summary>
 
-问题在于「每轮输入」不是固定的。历史要重发，第 n 轮的实际输入是初始输入加上前面每一轮的输入输出累计。真正会爆的是最后一轮，估窗口要按峰值算，不是按单轮算。只算单轮的人，会在第八轮左右开始收到 400，而且只在长对话用户身上出现，很难复现。
+**47 轮。** 关键在于「每轮输入 2000」不等于每轮向模型发送 2000——历史要重发。
+
+第 n 轮发给模型的输入是 `(n-1) × (2000 + 700) + 2000`，加上这一轮的输出，峰值占用正好是 `n × 2700`。`128000 ÷ 2700 ≈ 47.4`，所以第 47 轮还装得下（126900），第 48 轮就溢出了（129600）。
+
+数字本身不重要，重要的是**按峰值算而不是按单轮算**。只按单轮估的人会以为能聊六十多轮，然后在长对话用户身上收到 400，而且很难复现。
 
 → [01 从模型到应用](../lessons/01-how-llms-work/README.md)
 </details>
@@ -49,7 +55,7 @@ part: 查阅
 
 > 这四题答不上：Part 1，尤其 [01](../lessons/01-how-llms-work/README.md) 和 [02](../lessons/02-model-api-structured-output-streaming/README.md)。
 
-## 二、工具与副作用
+## 二、工具与副作用（4 题）
 
 **5. 模型输出了一个 `transfer_money` 的 tool call。此时账上的钱动了没有？**
 
@@ -89,7 +95,7 @@ part: 查阅
 
 > 这四题答不上：[05 Tool Calling](../lessons/05-tool-calling/README.md)，以及[原则 06](../principles/06-side-effects-are-idempotent-and-auditable.md)。
 
-## 三、运行时与状态
+## 三、运行时与状态（6 题）
 
 **9. Agent 的状态存在哪？存对话历史够不够？**
 
@@ -147,7 +153,7 @@ part: 查阅
 
 > 这几题答不上：Part 2 的 [06](../lessons/06-agent-loop/README.md)、[07](../lessons/07-agent-state-and-runtime/README.md)、[08](../lessons/08-context-engineering-for-agents/README.md)。
 
-## 四、检索与记忆
+## 四、检索与记忆（5 题）
 
 **15. Recall@k 和 Hit@k 有什么区别？**
 
@@ -196,7 +202,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 > 这几题答不上：Part 3，以及 [04](../lessons/04-embeddings-and-vector-search/README.md)。
 
-## 五、评测、可观测与可靠性
+## 五、评测、可观测与可靠性（5 题）
 
 **20. 改了 prompt，跑了三个例子觉得更好了。这个结论的问题在哪？**
 
@@ -245,14 +251,27 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 > 这几题答不上：Part 4，尤其 [17](../lessons/17-evaluation/README.md)、[18](../lessons/18-observability/README.md)、[20](../lessons/20-security-governance/README.md)。
 
-## 怎么用这个结果
+## 算分
 
-| 情况 | 建议 |
-|---|---|
-| 大部分都答得上 | 挑答不上的那几组，只读对应课的「常见错误」和「取舍」两节 |
-| 某一组集中答不上 | 那个 Part 从头读，它内部是有依赖顺序的 |
-| 二、三组答不上 | 说明工具和运行时这层是薄的，从 [05](../lessons/05-tool-calling/README.md) 顺着读到 [08](../lessons/08-context-engineering-for-agents/README.md)，这四课是全课的骨架 |
-| 五组答不上 | 常见情况：做出过能跑的 demo，但没上过线。Part 4 值得完整读一遍 |
-| 大部分答不上 | 从 [第 00 课](../lessons/00-setup/README.md) 顺着读，别跳 |
+先按组记，再看总分。**分组的分数比总分有用**——总分 20 也可能藏着一整组的空白。
+
+| 总分（满分 24） | 说明 | 怎么读这门课 |
+|---|---|---|
+| 20 以上 | 生产经验比较完整 | 不用通读。只挑失分的那几题，读对应课的「常见错误」和「取舍」两节 |
+| 14–20 | 做过完整的东西，某几层还是薄的 | 看下面的分组诊断，缺哪块补哪块 |
+| 8–13 | 概念大多听过，落地细节没踩过 | 按 Part 顺序读，但可以跳过已经拿满分的那组对应的课 |
+| 8 以下 | 这一页不是给你写的，不用泄气 | 从 [第 00 课](../lessons/00-setup/README.md) 顺着读，别跳 |
+
+### 分组诊断
+
+| 哪一组失分多 | 通常意味着 | 从哪读 |
+|---|---|---|
+| 一（模型边界与成本） | 把模型当黑盒用，没算过账 | [01](../lessons/01-how-llms-work/README.md) · [02](../lessons/02-model-api-structured-output-streaming/README.md) |
+| 二（工具与副作用） | 工具调用当成"函数调用"来写 | [05](../lessons/05-tool-calling/README.md)，再看[原则 06](../principles/06-side-effects-are-idempotent-and-auditable.md) |
+| 三（运行时与状态） | 靠框架的默认行为在跑，没自己握过控制流 | [06](../lessons/06-agent-loop/README.md) → [08](../lessons/08-context-engineering-for-agents/README.md)，这三课是全课骨架 |
+| 四（检索与记忆） | RAG 搭起来过，但没量过它到底行不行 | [04](../lessons/04-embeddings-and-vector-search/README.md) · [13](../lessons/13-rag-end-to-end/README.md) |
+| 五（评测、可观测、可靠性） | 最常见的一种：demo 做得出来，线上撑不住 | Part 4 完整读，从 [17](../lessons/17-evaluation/README.md) 开始 |
+
+**二、三两组同时失分**是个明确信号：工具和运行时这层没打牢，先补这两组再谈其他，否则后面每一课都会架空。
 
 各 Part 的定位和完整出师标准见[课程总览](../lessons/README.md)。

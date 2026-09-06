@@ -48,7 +48,7 @@ sequenceDiagram
 | ① 注册表与白名单 | 模型编造了不存在的工具名，或调了这个场景不该碰的工具 | 回一个 `is_error` 结果，不抛异常 |
 | ② Schema 校验 | 参数缺字段、类型错、枚举值不在范围内 | 把校验错误原文回给模型，让它修 |
 | ③ 确认门 | 用户没明确要求的副作用被执行 | 暂停，问用户；拒绝也是一个正常结果 |
-| ④ 幂等键 | 超时重试导致副作用发生两次 | 同一个调用派生同一个键，外部系统识别重放 |
+| ④ 幂等键 | 副作用发生两次：一次调用的重试，或模型重发同一意图 | 两层键，一层从 `call.id` 派生，一层从业务确认派生 |
 
 注意 ① ② 的错误都是**回给模型**而不是抛给用户。模型拿到「unknown tool: delete_user_data」之后，通常会换一个存在的工具；拿到「unit must be celsius or fahrenheit」之后，通常会改参数。运行时不替它猜。
 
@@ -117,16 +117,17 @@ class ToolRegistry:
 
 `dispatch` 里还是要再查一遍，因为模型可能凭训练记忆调出一个你从没发过的工具名。两层都要有。
 
-### 守卫 ④：幂等键从调用本身派生
+### 守卫 ④：幂等键有两层，防的是两件事
+
+**第一层，重试幂等。** 同一次工具调用超时后重试，不能变成两笔。
 
 ```python
-def idempotency_key(call: ToolCall) -> str:
-    """同样的调用 id + 同样的规范化参数 => 同样的键。"""
-    canonical = json.dumps(call.arguments, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(f"{call.id}:{call.name}:{canonical}".encode()).hexdigest()[:16]
+def retry_key(call: ToolCall) -> str:
+    """一次工具调用一个键。call.id 是模型这次生成的，重试时不变。"""
+    return f"toolcall:{call.id}"
 
 async def run_transfer(bank, call, attempts=2, timeout=0.1) -> Message:
-    key = idempotency_key(call)
+    key = retry_key(call)
     for attempt in range(1, attempts + 1):
         try:
             result = await asyncio.wait_for(
@@ -137,11 +138,20 @@ async def run_transfer(bank, call, attempts=2, timeout=0.1) -> Message:
     return error(call, "transfer status unknown after retries")
 ```
 
-`sort_keys=True` 不是洁癖：`{"a":1,"b":2}` 和 `{"b":2,"a":1}` 是同一个意图，必须得到同一个键。
+超时的语义是「不知道做没做」，不是「没做」。带同一个键重试，外部系统返回 `replayed: True`，账本里仍然只有一笔。
 
-超时的语义是「不知道做没做」，不是「没做」。带幂等键重试，外部系统返回 `replayed: True`，账本里仍然只有一笔。
+**第二层，业务幂等。** 上面那个键挡不住另一种重复：模型在下一轮又发起一次同样的转账，`call.id` 是新的，键也是新的，银行会认为这是第二笔业务。用户点两次发送、Agent 恢复后重放一段历史，都会走到这里。
 
-注意这个键防的是**同一次调用的重试**。`call.id` 每次生成都不同，模型如果在下一轮重新发起一次转账，键也是新的，外部系统会认为这是第二笔业务。要挡住这种重复，幂等键得从业务意图派生——这个会话、这个订单、这一次用户确认——而不是从模型这次的调用派生。两种键防的是两件不同的事，副作用重的工具两种都要有。
+```python
+def business_key(confirmation_id: str, call: ToolCall) -> str:
+    """同一个业务意图只能发生一次，跨轮、跨会话重发都撞同一个键。"""
+    canonical = json.dumps(call.arguments, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(f"{confirmation_id}:{call.name}:{canonical}".encode()).hexdigest()[:16]
+```
+
+这一层的键**不能从 `call.id` 派生**，只能从业务侧真正稳定的东西派生：这一次用户确认的 id、这个订单号、这个审批单号。`sort_keys=True` 在这里才有意义——两次生成的参数字典顺序可能不同，但只要值一样就该被认成同一个意图。
+
+两层各防各的，副作用重的工具两层都要有。只做第一层，模型重发就多一笔；只做第二层，同一次调用的网络重试可能因为参数序列化的细微差别漏过去。
 
 ### 守卫 ③：确认门
 

@@ -33,7 +33,7 @@ class Tool:
     has_side_effects: bool          # decides everything below
 
 async def run_side_effect(call: ToolCall, tool: Tool, thread: Thread) -> Message:
-    key = idempotency_key(call)                         # same intent -> same key
+    key = idempotency_key(call, thread)                 # two layers: retry + business intent (lesson 05)
     if tool.needs_confirmation and not confirmed(thread, call.id):
         thread.append("human_input_requested", tool_call_id=call.id, question=describe(call))
         return PAUSE                                    # resume after the human answers
