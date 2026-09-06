@@ -57,7 +57,6 @@ flowchart LR
     B -- 否 --> G[504 / fallback]
 ```
 
-
 还有两件 SDK 不替你做的事。**重试**要区分能重试的（429 限流、超时）和不能重试的（400 请求错误，重发一百次结果一样），退避要指数增长并有上限。**成本**要按用量乘单价逐次记账，单价随时会变，放配置不放代码。
 
 ## 机制拆解
@@ -244,9 +243,7 @@ def record(self, label, usage, provider) -> float:
 
 另一条是流式的两个消费者：TTS 需要一边收文本一边合成，但设备动作命令必须等完整参数。同一条流，前者按句号切句立刻发声，后者只看最后一块。这两个需求写在一个回调里必然打架。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M1 API 骨架](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md)，SSE 流式与结构化错误。
 

@@ -4,7 +4,7 @@
 
 - 补全某一课：按 [AGENTS.md](./AGENTS.md) 第 3 节的流程，把一课从 `outline` 推到 `draft` 或 `complete`。
 - 修正错误：概念错、代码跑不通、链接断。
-- 加反例和练习：这两样最缺。
+- 加反例和一线经验：这两样最缺。
 - 改进学习入口、路径图、Demo 录制规范或项目展示，但不要用不存在的截图声称功能已经完成。
 - 完善 Framework Lab 的规格、评分证据和 Capstone 验收；优先补可运行证据，不扩张主线课程数量。
 
@@ -25,4 +25,4 @@
 
 ## 提交信息
 
-`<type>: <描述>`，type 用 `content`（正文）、`code`（示例代码）、`fix`、`docs`（仓库级文档）、`chore`。例如 `content: 完成第 05 课 Tool Calling 正文与练习`。
+`<type>: <描述>`，type 用 `content`（正文）、`code`（示例代码）、`fix`、`docs`（仓库级文档）、`chore`。例如 `content: 完成第 05 课 Tool Calling 正文`。

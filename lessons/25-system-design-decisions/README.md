@@ -52,7 +52,6 @@ flowchart LR
 | Workflow vs Agent | 能枚举步骤就 Workflow | 路径是否真的不可枚举；失败代价是否允许探索 |
 | 单体 vs 平台 | 第二个团队出现之前是单体 | 有没有真实的第二个消费者；配额和隔离是否已经成为事故来源 |
 
-
 ## 机制拆解
 
 ### 一、容量估算：假设是一张表，不是一段话
@@ -243,9 +242,7 @@ def flips(step: float = 0.10) -> list[str]:
 
 **后来第二个条件真的被触发过一次**，团队据此调整了冲突时的裁决规则，而不是争论方案对错。这就是退出条件的价值：它把「要不要改」从立场问题变成观测问题。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。最后一题是综合设计题，附参考答案骨架。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md)（还是草稿），那份多租户平台 RFC。
 

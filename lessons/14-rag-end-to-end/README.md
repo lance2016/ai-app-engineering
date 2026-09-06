@@ -65,7 +65,6 @@ flowchart LR
     V -- 是 --> O[带来源回答]
 ```
 
-
 ## 机制拆解
 
 ### 一、切块要看语义边界，不只看长度
@@ -260,9 +259,7 @@ def recall_at_k(retriever, golden, chunks, ks=(1, 3, 5)) -> dict[int, float]:
 
 托管的 file search 省事，但你看不到切块策略和检索参数，也算不了自己的 Recall@k。数据是核心资产时，这一层建议自己掌控。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md)，混合检索、引用与 Recall@k。
 

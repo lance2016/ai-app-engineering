@@ -66,7 +66,6 @@ flowchart LR
     X --> K[幂等键 + 审计]
 ```
 
-
 ## 机制拆解
 
 四个守卫，四段代码。注意它们的返回值**永远是一条工具结果消息**，成功和失败只差一个 `is_error`——调用方不需要写 try/except。
@@ -213,9 +212,7 @@ async def run_tool(store, call: ToolCall) -> Message:
 
 另一个教训：大模型在聊天正文里偶尔会写出格式完美的函数调用 JSON，一度被运行时解析执行。修法是只认工具调用通道，正文一律当文本。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，工具契约、确认门与幂等。
 

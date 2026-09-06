@@ -167,9 +167,7 @@ def readback(slots: dict) -> str:
 
 **延迟预算和打断，三个通用框架一个都不管**——它们的抽象层级在对话逻辑上，不在音频管道上。真正做这件事的是语音专用框架：[Pipecat](https://github.com/pipecat-ai/pipecat) 和 [LiveKit Agents](https://github.com/livekit/agents) 都把管道、打断和时间戳做成了一等公民，值得读它们的管道模型再决定自己写多少。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-06）。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md)（还是草稿）。
 

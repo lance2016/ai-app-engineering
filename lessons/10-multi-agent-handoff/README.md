@@ -48,7 +48,6 @@ OpenAI Agents SDK 把这叫 handoff，把「把另一个 Agent 当工具调用�
 
 **状态归运行时，Agent 拿视图。** 所有 Agent 的输出都进同一个线程，带 `agent` 标签。每个 Agent 调模型时拿到的是运行时算出来的视图。专家 Agent 抛异常，运行时记一条 `handoff_failed`，控制权回到 triage。
 
-
 ## 机制拆解
 
 ### 一、Handoff：策略住在运行时的一个过滤器里
@@ -190,9 +189,7 @@ OpenAI Agents SDK 把 handoff 做成了核心概念，它的 input filter 就是
 
 **每多一个模型，就多一处需要运行时守卫的地方。**
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，可选的 handoff 分支。
 

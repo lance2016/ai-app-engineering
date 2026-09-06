@@ -49,7 +49,6 @@ flowchart LR
 
 解析这一步下面用 markdown 示意。真实项目里 PDF、扫描件、PPT 要用专门的解析器：Docling 和 Unstructured 都能把多种格式转成带结构的元素（标题、段落、表格），输出形状和这里一样，后面的流程不变。
 
-
 ## 机制拆解
 
 ### 一、chunk 自带全套元数据
@@ -235,9 +234,7 @@ if any(stores.residue(source_id).values()):
 
 这类故障的特点是**不报错**：入库脚本成功退出，日志一片绿，只有用户会发现内容不对。这也是为什么数据层的检查必须是主动巡检，而不是等异常。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md)，文档版本与删除演练。
 

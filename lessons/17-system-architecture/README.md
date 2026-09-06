@@ -76,7 +76,6 @@ sequenceDiagram
 
 判断标准只有一条：**这个东西丢了能不能重建**。能重建的放 Redis，不能的放 PostgreSQL。热拷贝可以同时放两边，但权威只有一个。
 
-
 ## 机制拆解
 
 ### 一、每一跳是一个小函数，自带计时
@@ -232,9 +231,7 @@ def load_thread(thread_id, cache, repo) -> Thread | None:
 
 另一个和三种形态相关的经验：语音场景的模型输出是流式的，但设备端的动作指令必须等一个完整的工具调用才能下发。所以同一条响应里文本走流式、指令走「攒够再发」——两种形态在一个请求里并存。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [项目总览](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/README.md)，整条请求链和存储边界。
 

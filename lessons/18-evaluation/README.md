@@ -58,7 +58,6 @@ flowchart LR
     P --> E
 ```
 
-
 ## 机制拆解
 
 ### 一、Golden set：输入 + 断言 + 标签
@@ -238,9 +237,7 @@ def gate(current: dict, baseline: dict) -> list[str]:
 
 另一个教训是评测暴露了一个 flaky 的行为：某个选择阶段的点名结果不稳定。这不是 bug，是模型随机性。处理方式见上面「工程落地」那条——不处理它，团队很快就会开始无视红色的门禁，那比没有门禁更糟。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md)，golden set 回归与门禁。
 

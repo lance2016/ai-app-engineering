@@ -59,7 +59,6 @@ flowchart LR
     B -- 是 --> M
 ```
 
-
 ## 机制拆解
 
 ### 一、ContextBuilder：先放固定区段，再用剩余预算填历史
@@ -229,9 +228,7 @@ Claude Agent SDK 的自动压缩最省事，代价是压缩策略不在你手里
 
 另一个教训：长对话的历史裁剪一度只按条数。用户说过的一条关键约束被裁掉后，模型反复违反它。后来的做法就是上面的 `protected`——确定重要的约束由运行时单独维护，不依赖它恰好还在窗口里。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，ContextBuilder。
 

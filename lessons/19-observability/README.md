@@ -52,7 +52,6 @@ flowchart LR
 
 日志和 trace 的关系：日志是线性的、每条独立、便于 grep 和聚合；trace 有父子关系、便于看一次运行的全貌。两者用同一个 `run_id` 关联，**缺一个都不完整**。
 
-
 ## 机制拆解
 
 ### 一、结构化日志：一行一个 JSON
@@ -244,9 +243,7 @@ def build_payload() -> dict:
 
 顺带一个细节：span 属性里放状态对象时做了白名单，否则后端存储很快撑不住。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md)，OpenTelemetry 接线与故障演练。
 

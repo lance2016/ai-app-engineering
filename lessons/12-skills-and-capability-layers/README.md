@@ -48,7 +48,6 @@ flowchart LR
 
 **Skill 是你没写的代码，拿着你的工具在跑。** 它能指挥模型调用有副作用的工具，它的 `references/` 可以被替换，它的 `scripts/` 是真正会执行的程序。所以安装一个第三方 Skill 和安装一个依赖包是同一级别的事。
 
-
 ## 机制拆解
 
 ### 一、一个 Skill 长什么样
@@ -208,9 +207,7 @@ Skill 目前主要是 Anthropic 生态的概念，但**三级加载的思路和�
 
 踩的坑和本课说的一模一样：描述最初写成了功能介绍，导致模型在闲聊时也去加载玩法。后来把描述改写成「用户表现出 X 意图时」的判断条件，误触发率才降下来。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，那个 Skill 包。
 

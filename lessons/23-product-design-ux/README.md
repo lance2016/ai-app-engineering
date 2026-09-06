@@ -264,9 +264,7 @@ citations: list[str]     # ["refund-policy#0", "shipping#2"]
 
 另一个和撤销相关的经验：物理动作（移动、播放）几乎都不可逆或代价高，所以语音场景的确认比屏幕场景多得多。但确认的话术要短，否则用户会打断它——**用户打断确认本身又是一个需要处理的状态**。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md)（还是草稿），交互与反馈闭环的设计。
 

@@ -62,7 +62,6 @@ flowchart LR
 
 A 是其余两块的前提，B 和 C 谁先读都行。
 
-
 ## 机制拆解
 
 ### 一、失败分类决定要不要重试
@@ -323,9 +322,7 @@ SLO 是对用户的承诺，用可测量的指标表达：
 
 另一个经验和成本有关：一个多轮玩法的循环在特定用户输入下不收敛，每轮都带完整历史，直到步数上限才停。按会话计费加上 80% 告警之后，这类问题**在发生的当天就能看到**，而不是在账单上。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md)，限流、fallback、成本统计与容器化。
 

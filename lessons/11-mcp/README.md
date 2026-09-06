@@ -237,9 +237,7 @@ def call(client, tool):
 
 Claude Agent SDK 对 MCP 的支持最深，因为 Claude Code 本身就是 MCP host。官方文档：[MCP 规范](https://modelcontextprotocol.io/specification/latest) · [LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，MCP client 接入。
 

@@ -65,7 +65,6 @@ flowchart TD
     A --> G[测试轨迹与停止条件]
 ```
 
-
 ## 机制拆解
 
 五种模式，五段代码。读的时候注意**「模型做的事」和「代码做的事」的分界**：门、类别校验、聚合、计划上限、轮数上限，全是代码。这就是 workflow 比 Agent 可预测的原因。
@@ -224,9 +223,7 @@ LangGraph 是三个里唯一把 workflow 当一等公民的。如果你的系统
 
 这个 routing 的并行版本是第 10 课的 racing。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，那份「为什么还不需要自治 Agent」的选型记录。
 

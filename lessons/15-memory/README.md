@@ -52,7 +52,6 @@ flowchart LR
 
 **删除**按来源和主题定向删，删的时候写一条审计事件。
 
-
 ## 机制拆解
 
 ### 一、提取：来源是硬性字段
@@ -205,9 +204,7 @@ def forget(memories, user_id: str, subject: str, requested_by: str) -> list[Memo
 
 另一个经验是记忆里要标「用户明说」还是「模型推断」。推断出来的东西说错了，用户会觉得被冒犯；标明是推断并用可纠正的语气说出来，用户反而会主动更正——这本身就是一次高质量的记忆更新。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md)，记忆提取、冲突合并与删除。
 

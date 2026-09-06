@@ -20,8 +20,8 @@
   var STORE = "aiae.progress.v2";   // v1 的课号在 2026-09-06 重排后失效
   var PATH_STORE = "aiae.path.v1";
   var TOTAL = 26;
-  // /lessons/08-context-engineering-for-agents/  -- exercises pages and the
-  // lessons overview both fall outside this shape and stay unmarkable.
+  // /lessons/08-context-engineering-for-agents/  -- the lessons overview
+  // falls outside this shape and stays unmarkable.
   var LESSON_URL = /\/lessons\/(\d{2})-[^/]+\/(?:index\.html)?$/;
 
   function read(key) {

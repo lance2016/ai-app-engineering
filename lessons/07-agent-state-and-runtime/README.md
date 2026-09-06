@@ -59,7 +59,6 @@ stateDiagram-v2
     running --> failed: budget / provider error
 ```
 
-
 ## 机制拆解
 
 ### 一、事件是事实，其余全是推导
@@ -241,9 +240,7 @@ LangGraph 在这一层做得最完整，但要注意一个坑：节点内 `inter
 
 另一个和 double texting 直接相关的场景：语音输入天然会出现用户在机器人说话时插话。那里用的是 interrupt 策略，但保留了被打断之前已经完成的工具结果——和上面 interrupt 分支的做法一样。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M2 数据与状态](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m2-state-and-storage/README.md)，checkpoint 与 resume。
 

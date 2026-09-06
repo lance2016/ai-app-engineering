@@ -222,9 +222,7 @@ def cost_per_conversation(c, req) -> float:
 
 另一件是模型升级：供应商发了新版本，团队直接切过去，两天后发现意图识别的一类边界用例全挂了。之后每次升级先跑探针集——上面那套探针就是这么来的。
 
-## 练习
-
-见 [exercises.md](./exercises.md)。
+## 参考实现
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md)，成本账与 fallback。
 
