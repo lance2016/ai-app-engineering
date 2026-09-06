@@ -9,9 +9,70 @@ part: 总览
 
 这一页有两张地图，回答两个不同的问题。
 
-## 地图一：一个 AI 应用由哪些能力构成
+## 地图一：一个 AI 应用由哪些组件构成
 
 和读的顺序无关，这是**系统的结构**。做架构评审、排查线上问题、判断自己缺什么的时候，看这张。
+
+下面是一个生产级 AI 应用的全貌，每个组件后面标着它属于哪个 Part、哪几课。26 课在搭的就是这一张图，
+学完一个 Part，这张图上就多亮一块。
+
+<div class="sysfig" markdown="1">
+
+<div class="sys" markdown="1">
+
+<div class="sys__band" markdown="1">
+<p class="sys__bandname">01<span>请求入口</span></p>
+<div class="sys__nodes" markdown="span">
+[User<span>P5 · 23</span>](./23-product-design-ux/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[API<span>P4 · 17</span>](./17-system-architecture/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[Session<span>P2 · 07</span>](./07-agent-state-and-runtime/README.md){ .sysnode }
+</div>
+</div>
+
+<div class="sys__band" markdown="1">
+<p class="sys__bandname">02<span>运行时</span></p>
+<div class="sys__nodes" markdown="span">
+[Context Builder<span>P2 · 08</span>](./08-context-engineering-for-agents/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[Agent Runtime<span>P2 · 06 07 09</span>](./06-agent-loop/README.md){ .sysnode .sysnode--core }<span class="sys__arrow" aria-hidden="true"></span>[Tool Registry<span>P2 · 05 11 12</span>](./05-tool-calling/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[Model Gateway<span>P1 · 01 02</span>](./02-model-api-structured-output-streaming/README.md){ .sysnode }
+</div>
+<div class="sys__aside" markdown="span">
+[Fallback / Degrade<span>P4 · 20</span>](./20-reliability-cost-llmops/README.md){ .sysnode .sysnode--risk }
+<span class="sys__asidenote">下游超时、限流、模型不可用，走这条线</span>
+</div>
+</div>
+
+<div class="sys__band sys__band--async" markdown="1">
+<p class="sys__bandname">03<span>知识与记忆</span></p>
+<div class="sys__nodes" markdown="span">
+[RAG<span>P3 · 14</span>](./14-rag-end-to-end/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Memory<span>P3 · 15</span>](./15-memory/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Data Pipeline<span>P3 · 16</span>](./16-data-engineering/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Vector Index<span>P1 · 04</span>](./04-embeddings-and-vector-search/README.md){ .sysnode .sysnode--async }
+</div>
+<p class="sys__bandnote">虚线：被运行时按需调用，或者离线跑。它们不在主请求链上，但决定了回答的上限。</p>
+</div>
+
+<div class="sys__band sys__band--base" markdown="1">
+<p class="sys__bandname">04<span>平台底座</span></p>
+<div class="sys__nodes" markdown="span">
+[Evaluation<span>P4 · 18</span>](./18-evaluation/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Trace 与可观测<span>P4 · 19</span>](./19-observability/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Security<span>P4 · 21</span>](./21-security-governance/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Infrastructure<span>P4 · 22</span>](./22-model-adaptation-finetuning-inference/README.md){ .sysnode }
+</div>
+<p class="sys__bandnote">横切：每一层都要用到。缺了它，上面三层出了问题你只能看到最后那句错误回答。</p>
+</div>
+
+</div>
+
+<div class="legend" markdown="1">
+<p class="eyebrow eyebrow--sub">图例</p>
+<p class="legend__lede">全站的示意图共用这一套约定，看图之前不用先读图例。</p>
+<ul class="legend__list">
+<li><span class="lg lg--celadon"></span>青瓷色：当前路径、正常流程</li>
+<li><span class="lg lg--rust"></span>铁锈色：失败、风险、降级</li>
+<li><span class="lg lg--solid"></span>实线：运行时的同步流</li>
+<li><span class="lg lg--dashed"></span>虚线：可选调用、异步或离线</li>
+<li><span class="lg lg--rect"></span>矩形：一个组件</li>
+<li><span class="lg lg--circle"></span>圆形：一个概念</li>
+<li><span class="lg lg--diamond"></span>菱形：一次判断</li>
+</ul>
+</div>
+
+</div>
+
+把同一张图按「能力域」摊成一张表，就是下面这份检查清单：
 
 | 能力域 | 它回答什么 | 哪几课 | 缺了会怎样 |
 |---|---|---|---|

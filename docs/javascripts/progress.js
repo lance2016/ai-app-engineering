@@ -3,8 +3,10 @@
 
    Two halves that share one storage key:
    - every lesson page grows a "mark as learned" control at the end;
-   - the front page reads those marks back as a count, a 26-tick ruler and a
-     "continue" link.
+   - the front page reads those marks back into the hero: a count, a 26-tick
+     ruler, and the "continue" button beside "start". With nothing marked the
+     hero shows only "start", so a first-time reader is not shown an empty
+     progress panel.
 
    No account, no backend, no sync. localStorage can be unavailable (private
    windows, blocked site data), so every read and write is guarded and the
@@ -118,7 +120,7 @@
     var root = document.querySelector("[data-progress]");
     if (!root) return;
 
-    // The architecture map above already links every lesson, so it doubles as
+    // The contents list below already links every lesson, so it doubles as
     // the id -> url index and there is no second list to keep in sync.
     var links = {};
     Array.prototype.forEach.call(
@@ -183,7 +185,9 @@
       last.href = links[latest].getAttribute("href");
     }
 
-    var cont = root.querySelector("[data-prog-next]");
+    // The continue button sits in the hero, beside "start", so it is looked up
+    // on the document rather than inside [data-progress].
+    var cont = document.querySelector("[data-prog-next]");
     if (cont) {
       if (next) {
         cont.href = links[next].getAttribute("href");
@@ -192,6 +196,11 @@
         cont.href = links["25"].getAttribute("href");
         cont.textContent = "26 课全部标记完成 ✓";
       }
+      cont.hidden = false;
+      // Two primary buttons would compete; starting over steps back once
+      // there is something to resume.
+      var cta = cont.closest(".hero__cta");
+      if (cta) cta.classList.add("has-progress");
     }
 
     var reset = root.querySelector("[data-prog-reset]");
