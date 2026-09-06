@@ -101,7 +101,7 @@ for _ in range(4):                       # 步数上限，第 06 课会讲为什
         messages.append({"role": "tool", "tool_call_id": call.id, "content": result})
 ```
 
-这二十行里已经藏着后面十几课的全部主题：消息格式（第 02 课）、工具描述怎么写（第 05 课）、循环怎么停（第 06 课）、历史怎么裁剪（第 08 课）、这次调用花了多少钱（第 19 课）。
+这二十行里已经藏着后面十几课的全部主题：消息格式（第 02 课）、工具描述怎么写（第 05 课）、循环怎么停（第 06 课）、历史怎么裁剪（第 08 课）、这次调用花了多少钱（第 20 课）。
 
 换供应商只改两行：通义千问是 `base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"` 加 `model="qwen-plus"`，OpenAI 去掉 `base_url` 即可。它们都走 OpenAI 兼容协议，所以适配器这层抽象成本很低。
 

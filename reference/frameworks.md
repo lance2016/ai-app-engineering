@@ -32,7 +32,7 @@ updated: 2026-09-05
 | 状态存在哪、怎么恢复 | state 的数据结构是否显式；checkpoint 存哪、怎么换后端；恢复时是否重放副作用 | [07](../lessons/07-agent-state-and-runtime/README.md) |
 | 上下文怎么组装 | 历史裁剪和压缩是否可控；能否看到最终发给模型的完整消息 | [08](../lessons/08-context-engineering-for-agents/README.md) |
 | 多 Agent 怎么交接 | handoff 时历史给多少；子 Agent 的状态是否隔离；并行分支怎么汇合 | [10](../lessons/10-multi-agent-handoff/README.md) |
-| 出了问题怎么看 | 有没有原生 trace；能不能接 OpenTelemetry 而不是只接自家平台 | [18](../lessons/18-observability/README.md) |
+| 出了问题怎么看 | 有没有原生 trace；能不能接 OpenTelemetry 而不是只接自家平台 | [19](../lessons/19-observability/README.md) |
 
 **一个框架回答不上其中两个以上，说明它的抽象层把你需要看的东西盖住了。**
 
@@ -77,7 +77,7 @@ updated: 2026-09-05
 
 语音机器人项目用的是事件驱动的 workflow 框架，每个 `@step` 接收一类事件、产出下一类事件。
 
-好处是加一个分支只需要加一个 step，不用改别人的代码。踩过的坑是：**事件驱动让「当前走到哪一步」变得不直观**，排障时要靠 trace 而不是读代码。所以第 18 课的可观测性对事件驱动架构不是可选项。
+好处是加一个分支只需要加一个 step，不用改别人的代码。踩过的坑是：**事件驱动让「当前走到哪一步」变得不直观**，排障时要靠 trace 而不是读代码。所以第 19 课的可观测性对事件驱动架构不是可选项。
 
 另一个教训：框架的 agent 循环和自己写的双模型竞速逻辑叠在一起后，**谁负责停止变得模糊**，最后是把停止条件全部收回到自己的代码里才稳定。这印证了 factor 08——控制流自己拿着。
 

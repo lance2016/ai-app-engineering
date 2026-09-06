@@ -3,7 +3,7 @@
 
    Two halves that share one storage key:
    - every lesson page grows a "mark as learned" control at the end;
-   - the front page reads those marks back as a count, a 24-tick ruler and a
+   - the front page reads those marks back as a count, a 26-tick ruler and a
      "continue" link.
 
    No account, no backend, no sync. localStorage can be unavailable (private
@@ -17,9 +17,9 @@
 (function () {
   "use strict";
 
-  var STORE = "aiae.progress.v1";
+  var STORE = "aiae.progress.v2";   // v1 的课号在 2026-09-06 重排后失效
   var PATH_STORE = "aiae.path.v1";
-  var TOTAL = 24;
+  var TOTAL = 26;
   // /lessons/08-context-engineering-for-agents/  -- exercises pages and the
   // lessons overview both fall outside this shape and stay unmarkable.
   var LESSON_URL = /\/lessons\/(\d{2})-[^/]+\/(?:index\.html)?$/;
@@ -189,8 +189,8 @@
         cont.href = links[next].getAttribute("href");
         cont.textContent = "继续第 " + next + " 课 →";
       } else {
-        cont.href = links["23"].getAttribute("href");
-        cont.textContent = "24 课全部标记完成 ✓";
+        cont.href = links["25"].getAttribute("href");
+        cont.textContent = "26 课全部标记完成 ✓";
       }
     }
 

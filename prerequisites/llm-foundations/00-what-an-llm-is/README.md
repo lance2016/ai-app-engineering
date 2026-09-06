@@ -39,7 +39,7 @@ flowchart LR
 7. **同一个基座，不同的后训练，行为差别很大。** 这是为什么同一家的 chat 模型和 instruct 模型对工具调用的意愿不一样。
 8. **模型规模、数据量、算力三者要匹配。** 扩展定律说的是"按比例一起加"，不是"参数越多越好"。对应用工程师的意义：小模型加好数据在窄任务上常常打赢大模型。
 9. **"涌现能力"是描述现象，不是解释。** 规模到某个点某些任务突然能做了。工程上的含义是：不要假设小模型能做大模型能做的每件事，也不要假设大模型在你的任务上一定更好，测。
-10. **推理成本按 token 计，输入和输出价格不同。** 输入便宜、输出贵，而且历史每轮都算输入。这是主线第 08 课 Context Engineering 和第 19 课成本控制的经济学基础。
+10. **推理成本按 token 计，输入和输出价格不同。** 输入便宜、输出贵，而且历史每轮都算输入。这是主线第 08 课 Context Engineering 和第 20 课成本控制的经济学基础。
 
 ## 动手
 
@@ -51,7 +51,7 @@ flowchart LR
 
 ## 它在 AI 应用里用在哪
 
-- 要点 1 和 3 是主线 [第 01 课](../../../lessons/01-how-llms-work/README.md) 讨论"能力边界"的起点，也是 [第 13 课 RAG](../../../lessons/13-rag-end-to-end/README.md) 存在的理由。
+- 要点 1 和 3 是主线 [第 01 课](../../../lessons/01-how-llms-work/README.md) 讨论"能力边界"的起点，也是 [第 14 课 RAG](../../../lessons/14-rag-end-to-end/README.md) 存在的理由。
 - 要点 2 → [第 07 课 State 与 Runtime](../../../lessons/07-agent-state-and-runtime/README.md)。
 - 要点 10 → [第 08 课 Context Engineering](../../../lessons/08-context-engineering-for-agents/README.md)。
 

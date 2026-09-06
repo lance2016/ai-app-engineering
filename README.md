@@ -32,7 +32,7 @@
 | 会 Python 和后端，调通过模型 API，但停在「demo 能跑」，不知道离上线还差什么 | 从第 00 课顺着读，缺的那一圈骨架就是 Part 4 的内容 |
 | 在用 LangChain 或 LangGraph，却说不清框架替你做了哪些决定 | 每课用普通 Python 讲同一个机制，末尾一张表对照三个框架的叫法 |
 | 要做 AI 应用的架构评审或技术选型，需要一份判断依据 | [课程总览](./lessons/README.md)的能力域清单，加 [12 条工程原则](./principles/README.md) |
-| 线上出了问题，只能看到最后那句错误回答 | 失败分层定位贯穿全课，第 17、18 课给证据链 |
+| 线上出了问题，只能看到最后那句错误回答 | 失败分层定位贯穿全课，第 18、19 课给证据链 |
 
 **不适合三种情况。** 想要 `git clone` 就能跑的项目——去[参考实现仓库](https://github.com/lance2016/ai-app-engineering-ref)；想学怎么训练或微调模型——这里只讲到应用工程师做决策的深度；不写代码只想了解 AI 能做什么——正文全是机制和示意代码。
 
@@ -48,10 +48,10 @@
 | **想直接看结论** | 学完每个 Part 后回看[工程原则](./principles/README.md) | [12 条工程原则](./principles/README.md)是全课的压缩版 |
 | **正在选框架** | 学完 Part 2 再看 | [框架一览与选型标准](./reference/frameworks.md) |
 
-[前置 · LLM 原理](./prerequisites/README.md)那一组是**可选的补充**，不是必修：主线 24 课在需要的地方会点名引用它（那一组还是草稿，比主线薄）。
+[前置 · LLM 原理](./prerequisites/README.md)那一组是**可选的补充**，不是必修：主线 26 课在需要的地方会点名引用它（那一组还是草稿，比主线薄）。
 不确定自己的底子够不够，看一眼[进课程前该有的能力清单](./reference/foundations.md)；每个 Part 在搭什么、学完怎么算过关，见[课程总览](./lessons/README.md)。
 
-## 24 课
+## 26 课
 
 每课 1～2.5 小时（第 00 课半小时），结构固定：为什么需要 → 心智模型 → 机制拆解 → 常见错误 → 取舍 → 工程落地 → 框架映射 → 一线经验 → 练习。
 
@@ -78,7 +78,7 @@
 
 ### Part 2 Tool 与 Agent
 
-**学完之后。** 应用有了工具、循环、状态、上下文组装和能力接入，可以自己走多步完成一个任务。
+**学完之后。** 应用有了工具、循环、状态、上下文组装和能力接入，可以自己走多步完成一个任务，并且见过这套零件在一个真实产品里怎么拼。
 
 | # | 课程 | 一句话 |
 |---|---|---|
@@ -90,6 +90,7 @@
 | 10 | [多智能体、Handoff 与 Racing](./lessons/10-multi-agent-handoff/README.md) | 多个 Agent 如何分工、交接和并行竞速；状态归谁、历史给多少 |
 | 11 | [MCP：模型上下文协议](./lessons/11-mcp/README.md) | 能力怎么接入：生命周期、能力发现、两条错误通道、断连处理 |
 | 12 | [Skill 与能力生态分层](./lessons/12-skills-and-capability-layers/README.md) | Tool、MCP、Skill、Plugin、A2A 各管什么；渐进式加载与供应链钉死 |
+| 13 | [Agent Harness：把前八课装进一个真实系统](./lessons/13-agent-harness/README.md) | 编码 Agent 拆解：工具界面、权限分级、hook、上下文寿命 |
 
 ### Part 3 知识与记忆
 
@@ -97,9 +98,9 @@
 
 | # | 课程 | 一句话 |
 |---|---|---|
-| 13 | [RAG 端到端](./lessons/13-rag-end-to-end/README.md) | 解析、切块、索引、混合检索、重排、生成、引用，七步每步怎么坏、怎么测 |
-| 14 | [Memory：提取、整合与检索](./lessons/14-memory/README.md) | 会话、任务、长期记忆的边界；提取、冲突合并、过期和删除 |
-| 15 | [数据工程与数据质量](./lessons/15-data-engineering/README.md) | 版本、新鲜度、权限和删除演练，决定 RAG 上限的不是模型而是数据 |
+| 14 | [RAG 端到端](./lessons/14-rag-end-to-end/README.md) | 解析、切块、索引、混合检索、重排、生成、引用，七步每步怎么坏、怎么测 |
+| 15 | [Memory：提取、整合与检索](./lessons/15-memory/README.md) | 会话、任务、长期记忆的边界；提取、冲突合并、过期和删除 |
+| 16 | [数据工程与数据质量](./lessons/16-data-engineering/README.md) | 版本、新鲜度、权限和删除演练，决定 RAG 上限的不是模型而是数据 |
 
 ### Part 4 生产工程
 
@@ -107,12 +108,12 @@
 
 | # | 课程 | 一句话 |
 |---|---|---|
-| 16 | [AI 应用系统架构与端到端数据流](./lessons/16-system-architecture/README.md) | 从客户端到模型再回来的一条完整请求链，以及存储边界 |
-| 17 | [评测：Golden Set、LLM Judge 与 Agent Eval](./lessons/17-evaluation/README.md) | 没有评测集就没有「变好了」；切片、kappa、轨迹断言、回归门禁 |
-| 18 | [可观测性：从日志到 LLM Trace](./lessons/18-observability/README.md) | 结构化日志、OpenTelemetry GenAI 语义约定、四种故障在 trace 里的样子 |
-| 19 | [可靠性、成本、部署与 LLMOps](./lessons/19-reliability-cost-llmops/README.md) | 超时、重试、限流、熔断、fallback、成本预算、SLO、容器与灰度 |
-| 20 | [安全与治理](./lessons/20-security-governance/README.md) | 提示注入、越权、数据泄露、沙箱、供应链、多租户边界、数据生命周期 |
-| 21 | [模型适配、微调与推理服务](./lessons/21-model-adaptation-finetuning-inference/README.md) | 什么时候该微调、显存怎么算、托管和自建的成本临界点 |
+| 17 | [AI 应用系统架构与端到端数据流](./lessons/17-system-architecture/README.md) | 从客户端到模型再回来的一条完整请求链，以及存储边界 |
+| 18 | [评测：Golden Set、LLM Judge 与 Agent Eval](./lessons/18-evaluation/README.md) | 没有评测集就没有「变好了」；切片、kappa、轨迹断言、回归门禁 |
+| 19 | [可观测性：从日志到 LLM Trace](./lessons/19-observability/README.md) | 结构化日志、OpenTelemetry GenAI 语义约定、四种故障在 trace 里的样子 |
+| 20 | [可靠性、成本、部署与 LLMOps](./lessons/20-reliability-cost-llmops/README.md) | 超时、重试、限流、熔断、fallback、成本预算、SLO、容器与灰度 |
+| 21 | [安全与治理](./lessons/21-security-governance/README.md) | 提示注入、越权、数据泄露、沙箱、供应链、多租户边界、数据生命周期 |
+| 22 | [模型适配、微调与推理服务](./lessons/22-model-adaptation-finetuning-inference/README.md) | 什么时候该微调、显存怎么算、托管和自建的成本临界点 |
 
 ### Part 5 产品与技术决策
 
@@ -120,13 +121,14 @@
 
 | # | 课程 | 一句话 |
 |---|---|---|
-| 22 | [AI 产品设计与交互](./lessons/22-product-design-ux/README.md) | 流式 UI 状态机、确认与撤销、引用展示、带切片的反馈闭环 |
-| 23 | [系统设计与技术决策](./lessons/23-system-design-decisions/README.md) | 容量估算、决策矩阵的敏感性、带退出条件的 ADR |
+| 23 | [AI 产品设计与交互](./lessons/23-product-design-ux/README.md) | 流式 UI 状态机、确认与撤销、引用展示、带切片的反馈闭环 |
+| 24 | [语音应用：链路、延迟预算与打断](./lessons/24-voice-agents/README.md) | 级联还是端到端、一秒的预算怎么分、打断之后历史该记什么 |
+| 25 | [系统设计与技术决策](./lessons/25-system-design-decisions/README.md) | 容量估算、决策矩阵的敏感性、带退出条件的 ADR |
 
 ## 仓库结构
 
 ```text
-├── lessons/          主线 24 课，每课 README + exercises.md
+├── lessons/          主线 26 课，每课 README + exercises.md
 ├── prerequisites/    前置 · LLM 原理 F00–F07，八篇
 ├── principles/       12 条工程原则，一条一个文件
 ├── reference/        术语表、技术选型、框架一览、外部资料

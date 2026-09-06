@@ -54,8 +54,8 @@ flowchart LR
 ## 它在 AI 应用里用在哪
 
 - 索引、维度选择与 pgvector → [第 04 课](../../../lessons/04-embeddings-and-vector-search/README.md)
-- 混合检索与重排 → [第 13 课 RAG](../../../lessons/13-rag-end-to-end/README.md)
-- 记忆召回 → [第 14 课 Memory](../../../lessons/14-memory/README.md)
+- 混合检索与重排 → [第 14 课 RAG](../../../lessons/14-rag-end-to-end/README.md)
+- 记忆召回 → [第 15 课 Memory](../../../lessons/15-memory/README.md)
 
 ## 延伸阅读
 

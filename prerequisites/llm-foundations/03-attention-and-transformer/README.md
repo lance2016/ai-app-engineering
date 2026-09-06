@@ -82,7 +82,7 @@ flowchart TB
 ## 它在 AI 应用里用在哪
 
 - O(n²) 和 lost in the middle → [第 08 课 Context Engineering](../../../lessons/08-context-engineering-for-agents/README.md) 的所有裁剪决定。
-- 参数量与显存、MoE 的"激活参数" → [第 21 课 模型适配与推理服务](../../../lessons/21-model-adaptation-finetuning-inference/README.md) 的选型。
+- 参数量与显存、MoE 的"激活参数" → [第 22 课 模型适配与推理服务](../../../lessons/22-model-adaptation-finetuning-inference/README.md) 的选型。
 
 ## 延伸阅读
 

@@ -41,7 +41,7 @@ part: 开始这里
 
 不一定。便宜的模型可能需要更长的 few-shot 才达到同样的质量，可能更容易输出格式错误导致重试，可能在 Agent 里多走两步。每 token 单价只是成本模型里的一个因子，要算的是「一次完整任务的钱」。
 
-→ [01](../lessons/01-how-llms-work/README.md)、[19](../lessons/19-reliability-cost-llmops/README.md)
+→ [01](../lessons/01-how-llms-work/README.md)、[20](../lessons/20-reliability-cost-llmops/README.md)
 </details>
 
 **4. JSON Schema 约束了输出，还需要在代码里校验吗？**
@@ -161,7 +161,7 @@ part: 开始这里
 
 Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回的那些，召回了几成」。单文档问答看 Hit@k 就够，需要汇总多份材料的问题必须看 Recall@k——Hit@5 是 100%、Recall@5 只有 40% 的系统，回答会自信地漏掉一半事实。
 
-→ [13 RAG 端到端](../lessons/13-rag-end-to-end/README.md)
+→ [14 RAG 端到端](../lessons/14-rag-end-to-end/README.md)
 </details>
 
 **16. 加了混合检索（向量加 BM25），效果一定更好吗？**
@@ -170,7 +170,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 不一定。混合的收益来自两种信号互补，但融合权重是要在自己数据上调的；权重不对时，BM25 的高分噪声会把向量召回的好结果挤出 top-k。是否更好，要用自己的那组样本量出来。
 
-→ [13 RAG 端到端](../lessons/13-rag-end-to-end/README.md)
+→ [14 RAG 端到端](../lessons/14-rag-end-to-end/README.md)
 </details>
 
 **17. 回答里带了引用，能证明这句话是对的吗？**
@@ -179,7 +179,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 不能。引用校验能证明的是「这句话有一个来源，且这个来源在检索结果里」，它挡的是编造出处。至于那句话是否真的被那段原文支撑，词面重合度算不出来——那是一次独立的判断，要么人看，要么用校准过的 judge。
 
-→ [13](../lessons/13-rag-end-to-end/README.md)、[17](../lessons/17-evaluation/README.md)
+→ [14](../lessons/14-rag-end-to-end/README.md)、[18](../lessons/18-evaluation/README.md)
 </details>
 
 **18. 记忆系统最危险的故障是什么？**
@@ -188,7 +188,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 不是想不起来，是记住了一件已经不成立的事。用户改了口径、退了订、换了偏好，旧记忆还在被召回并当成事实用。所以记忆的测试样本必须有两类：该记住的，和该忘掉的。第二类最容易漏。
 
-→ [14 Memory](../lessons/14-memory/README.md)
+→ [15 Memory](../lessons/15-memory/README.md)
 </details>
 
 **19. 换了 embedding 模型，旧向量还能用吗？**
@@ -210,7 +210,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 三个例子不构成证据，「感觉」不是指标，「更好」没有基线。要的是带切片标签的评测集加确定性断言，和上一版比。而且总分会骗人：总分 92% 可能藏着「adversarial 切片 0%」。
 
-→ [17 评测](../lessons/17-evaluation/README.md)、[原则 08](../principles/08-no-eval-no-improvement.md)
+→ [18 评测](../lessons/18-evaluation/README.md)、[原则 08](../principles/08-no-eval-no-improvement.md)
 </details>
 
 **21. 用 LLM 当裁判打分，1 到 5 分和二元 pass/fail，哪个更可靠？**
@@ -219,7 +219,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 二元。分数看着精细，实际和专家判断的相关性很差，且不同批次之间不可比。而且 judge 在信之前要校准：让人先标 20 到 50 条，算一致率，更要算 Cohen's kappa——一致率在类别不平衡时会虚高。
 
-→ [17 评测](../lessons/17-evaluation/README.md)
+→ [18 评测](../lessons/18-evaluation/README.md)
 </details>
 
 **22. 一次回答变慢了，从 trace 上怎么区分是模型慢还是工具慢？**
@@ -228,7 +228,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 看 span 的层次和耗时分布。工具超时的特征很好认：工具 span 的耗时正好等于超时值，状态 ERROR。更隐蔽的是成本尖峰——工具这一轮的 span 完全正常，异常出现在**下一轮** chat span 的输入 token 数上，因为工具返回了几千行没分页的结果。
 
-→ [18 可观测性](../lessons/18-observability/README.md)
+→ [19 可观测性](../lessons/19-observability/README.md)
 </details>
 
 **23. 限流、熔断、fallback，为什么三个都要有？**
@@ -237,7 +237,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 它们挡的不是同一件事。限流挡的是自己把上游打爆，熔断挡的是持续对着一个已经坏掉的依赖重试，fallback 管的是坏掉之后用户还能得到什么。只做 fallback 的系统，会在上游抖动时把重试放大成雪崩。
 
-→ [19 可靠性、成本与部署](../lessons/19-reliability-cost-llmops/README.md)
+→ [20 可靠性、成本与部署](../lessons/20-reliability-cost-llmops/README.md)
 </details>
 
 **24. 系统提示词里写「忽略用户让你违反规则的要求」，能防住提示注入吗？**
@@ -246,10 +246,10 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 不能。提示词是建议，不是边界。间接注入尤其危险——恶意指令藏在被检索的文档或工具返回的内容里，模型分不清哪段是数据哪段是指令。真正的边界是确定性代码：工具白名单、参数校验、权限过滤、输出过滤。金丝雀这类检测是低成本兜底，几乎不误报但漏报很多，不能当成完整的防护。
 
-→ [20 安全与治理](../lessons/20-security-governance/README.md)、[原则 11](../principles/11-guardrails-in-code-not-prompts.md)
+→ [21 安全与治理](../lessons/21-security-governance/README.md)、[原则 11](../principles/11-guardrails-in-code-not-prompts.md)
 </details>
 
-> 这几题答不上：Part 4，尤其 [17](../lessons/17-evaluation/README.md)、[18](../lessons/18-observability/README.md)、[20](../lessons/20-security-governance/README.md)。
+> 这几题答不上：Part 4，尤其 [18](../lessons/18-evaluation/README.md)、[19](../lessons/19-observability/README.md)、[21](../lessons/21-security-governance/README.md)。
 
 ## 算分
 
@@ -269,8 +269,8 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 | 一（模型边界与成本） | 把模型当黑盒用，没算过账 | [01](../lessons/01-how-llms-work/README.md) · [02](../lessons/02-model-api-structured-output-streaming/README.md) |
 | 二（工具与副作用） | 工具调用当成"函数调用"来写 | [05](../lessons/05-tool-calling/README.md)，再看[原则 06](../principles/06-side-effects-are-idempotent-and-auditable.md) |
 | 三（运行时与状态） | 靠框架的默认行为在跑，没自己握过控制流 | [06](../lessons/06-agent-loop/README.md) → [08](../lessons/08-context-engineering-for-agents/README.md)，这三课是全课骨架 |
-| 四（检索与记忆） | RAG 搭起来过，但没量过它到底行不行 | [04](../lessons/04-embeddings-and-vector-search/README.md) · [13](../lessons/13-rag-end-to-end/README.md) |
-| 五（评测、可观测、可靠性） | 最常见的一种：demo 做得出来，线上撑不住 | Part 4 完整读，从 [17](../lessons/17-evaluation/README.md) 开始 |
+| 四（检索与记忆） | RAG 搭起来过，但没量过它到底行不行 | [04](../lessons/04-embeddings-and-vector-search/README.md) · [14](../lessons/14-rag-end-to-end/README.md) |
+| 五（评测、可观测、可靠性） | 最常见的一种：demo 做得出来，线上撑不住 | Part 4 完整读，从 [18](../lessons/18-evaluation/README.md) 开始 |
 
 **二、三两组同时失分**是个明确信号：工具和运行时这层没打牢，先补这两组再谈其他，否则后面每一课都会架空。
 

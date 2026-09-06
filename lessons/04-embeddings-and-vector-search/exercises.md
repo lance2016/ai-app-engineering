@@ -39,7 +39,7 @@ def sliding(text, size=2, overlap=1):
     return [" ".join(sents[i:i + size]) for i in range(0, len(sents) - overlap, step)]
 ```
 
-没有最优切块，只有适合当前查询类型的切块。问答类查询偏好小块精准命中，摘要类查询需要大块保留上下文。第 13 课会用 Recall@k 把这个选择变成可以测量的。
+没有最优切块，只有适合当前查询类型的切块。问答类查询偏好小块精准命中，摘要类查询需要大块保留上下文。第 14 课会用 Recall@k 把这个选择变成可以测量的。
 
 </details>
 

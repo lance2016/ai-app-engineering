@@ -38,7 +38,7 @@
 
 进入函数时记 `started = time.monotonic()`，每次准备 `sleep(delay)` 前检查 `time.monotonic() - started + delay > deadline_seconds`，超了就 `raise`。
 
-为什么要这个：面向用户的请求有一个用户能忍的上限，次数限制不知道这件事。第 06 课的时间预算和第 19 课的超时策略都建立在这一条上。
+为什么要这个：面向用户的请求有一个用户能忍的上限，次数限制不知道这件事。第 06 课的时间预算和第 20 课的超时策略都建立在这一条上。
 
 </details>
 
@@ -69,6 +69,6 @@ avg input per call = 3200   avg output per call = 80
 
 <details><summary>参考答案</summary>
 
-大多数供应商在 temperature 0 下输出高度一致但不保证逐字节相同，批处理、浮点误差、模型版本静默更新都可能让结果有微小差异。所以评测（第 17 课）不能只靠 temperature 0 来消除方差，还是要多跑几次看分布。
+大多数供应商在 temperature 0 下输出高度一致但不保证逐字节相同，批处理、浮点误差、模型版本静默更新都可能让结果有微小差异。所以评测（第 18 课）不能只靠 temperature 0 来消除方差，还是要多跑几次看分布。
 
 </details>

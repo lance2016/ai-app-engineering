@@ -223,4 +223,4 @@ Skill 目前主要是 Anthropic 生态的概念，但**三级加载的思路和�
 
 ---
 
-[← 上一课 11](../11-mcp/README.md) · [下一课 13 →](../13-rag-end-to-end/README.md)
+[← 上一课 11](../11-mcp/README.md) · [下一课 13 →](../13-agent-harness/README.md)

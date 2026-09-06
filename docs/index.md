@@ -19,7 +19,7 @@ hide:
 写给已经会 Python 和后端、能调通模型 API，但不知道离上线还差什么的开发者。
 
 <ul class="hero__meta">
-<li>24 Lessons</li>
+<li>26 Lessons</li>
 <li>6 Parts</li>
 <li>Framework Agnostic</li>
 <li>Production Oriented</li>
@@ -42,7 +42,7 @@ hide:
 <div class="stackfig__layer"><span class="stackfig__part">Part 2</span><span class="stackfig__name">Tool &amp; Agent Runtime</span></div>
 <div class="stackfig__layer stackfig__layer--base"><span class="stackfig__part">Part 1</span><span class="stackfig__name">Model &amp; Context</span></div>
 </div>
-<p class="stackfig__note">一个 AI 应用是一层一层搭起来的。地基在最下面，24 课从地基开始。</p>
+<p class="stackfig__note">一个 AI 应用是一层一层搭起来的。地基在最下面，26 课从地基开始。</p>
 </figure>
 
 </header>
@@ -77,7 +77,7 @@ hide:
 
 <section class="band" id="map" markdown="1">
 
-<p class="eyebrow">ARCHITECTURE MAP · 24 LESSONS</p>
+<p class="eyebrow">ARCHITECTURE MAP · 26 LESSONS</p>
 
 ## 课程地图
 
@@ -122,8 +122,8 @@ hide:
 <span class="amap__part">Part 2 · Tool 与 Agent</span>
 </div>
 <div class="amap__detail" markdown="1">
-<p class="amap__lessons" markdown="span">[05](lessons/05-tool-calling/README.md){ .amap__lesson data-lesson="05" } [06](lessons/06-agent-loop/README.md){ .amap__lesson data-lesson="06" } [07](lessons/07-agent-state-and-runtime/README.md){ .amap__lesson data-lesson="07" } [08](lessons/08-context-engineering-for-agents/README.md){ .amap__lesson data-lesson="08" } [09](lessons/09-workflow-vs-agent/README.md){ .amap__lesson data-lesson="09" } [10](lessons/10-multi-agent-handoff/README.md){ .amap__lesson data-lesson="10" } [11](lessons/11-mcp/README.md){ .amap__lesson data-lesson="11" } [12](lessons/12-skills-and-capability-layers/README.md){ .amap__lesson data-lesson="12" }</p>
-<p class="amap__topics">工具契约与幂等 · Agent 循环 · 状态与运行时 · 上下文组装 · Workflow 还是 Agent · 多智能体交接 · MCP · Skill 分层</p>
+<p class="amap__lessons" markdown="span">[05](lessons/05-tool-calling/README.md){ .amap__lesson data-lesson="05" } [06](lessons/06-agent-loop/README.md){ .amap__lesson data-lesson="06" } [07](lessons/07-agent-state-and-runtime/README.md){ .amap__lesson data-lesson="07" } [08](lessons/08-context-engineering-for-agents/README.md){ .amap__lesson data-lesson="08" } [09](lessons/09-workflow-vs-agent/README.md){ .amap__lesson data-lesson="09" } [10](lessons/10-multi-agent-handoff/README.md){ .amap__lesson data-lesson="10" } [11](lessons/11-mcp/README.md){ .amap__lesson data-lesson="11" } [12](lessons/12-skills-and-capability-layers/README.md){ .amap__lesson data-lesson="12" } [13](lessons/13-agent-harness/README.md){ .amap__lesson data-lesson="13" }</p>
+<p class="amap__topics">工具契约与幂等 · Agent 循环 · 状态与运行时 · 上下文组装 · Workflow 还是 Agent · 多智能体交接 · MCP · Skill 分层 · Harness 拆解</p>
 <p class="amap__gain">应用能自己走多步完成一个任务，执行和状态握在确定性代码手里。</p>
 </div>
 </div>
@@ -137,7 +137,7 @@ hide:
 <span class="amap__part">Part 3 · 知识与记忆</span>
 </div>
 <div class="amap__detail" markdown="1">
-<p class="amap__lessons" markdown="span">[13](lessons/13-rag-end-to-end/README.md){ .amap__lesson data-lesson="13" } [14](lessons/14-memory/README.md){ .amap__lesson data-lesson="14" } [15](lessons/15-data-engineering/README.md){ .amap__lesson data-lesson="15" }</p>
+<p class="amap__lessons" markdown="span">[14](lessons/14-rag-end-to-end/README.md){ .amap__lesson data-lesson="14" } [15](lessons/15-memory/README.md){ .amap__lesson data-lesson="15" } [16](lessons/16-data-engineering/README.md){ .amap__lesson data-lesson="16" }</p>
 <p class="amap__topics">RAG 端到端 · 记忆的提取与合并 · 数据版本与新鲜度</p>
 <p class="amap__gain">应用能用上不在模型权重里的知识，并且知道怎么管这批数据。</p>
 </div>
@@ -152,7 +152,7 @@ hide:
 <span class="amap__part">Part 4 · 生产工程</span>
 </div>
 <div class="amap__detail" markdown="1">
-<p class="amap__lessons" markdown="span">[16](lessons/16-system-architecture/README.md){ .amap__lesson data-lesson="16" } [17](lessons/17-evaluation/README.md){ .amap__lesson data-lesson="17" } [18](lessons/18-observability/README.md){ .amap__lesson data-lesson="18" } [19](lessons/19-reliability-cost-llmops/README.md){ .amap__lesson data-lesson="19" } [20](lessons/20-security-governance/README.md){ .amap__lesson data-lesson="20" } [21](lessons/21-model-adaptation-finetuning-inference/README.md){ .amap__lesson data-lesson="21" }</p>
+<p class="amap__lessons" markdown="span">[17](lessons/17-system-architecture/README.md){ .amap__lesson data-lesson="17" } [18](lessons/18-evaluation/README.md){ .amap__lesson data-lesson="18" } [19](lessons/19-observability/README.md){ .amap__lesson data-lesson="19" } [20](lessons/20-reliability-cost-llmops/README.md){ .amap__lesson data-lesson="20" } [21](lessons/21-security-governance/README.md){ .amap__lesson data-lesson="21" } [22](lessons/22-model-adaptation-finetuning-inference/README.md){ .amap__lesson data-lesson="22" }</p>
 <p class="amap__topics">系统架构与数据流 · 评测与回归门禁 · Trace 与可观测性 · 可靠性与成本 · 安全与治理 · 微调与推理服务</p>
 <p class="amap__gain">一个 demo 和一个生产系统的差距，全在这一层。</p>
 </div>
@@ -167,8 +167,8 @@ hide:
 <span class="amap__part">Part 5 · 产品与技术决策</span>
 </div>
 <div class="amap__detail" markdown="1">
-<p class="amap__lessons" markdown="span">[22](lessons/22-product-design-ux/README.md){ .amap__lesson data-lesson="22" } [23](lessons/23-system-design-decisions/README.md){ .amap__lesson data-lesson="23" }</p>
-<p class="amap__topics">流式交互与确认撤销 · 容量估算 · 带退出条件的 ADR</p>
+<p class="amap__lessons" markdown="span">[23](lessons/23-product-design-ux/README.md){ .amap__lesson data-lesson="23" } [24](lessons/24-voice-agents/README.md){ .amap__lesson data-lesson="24" } [25](lessons/25-system-design-decisions/README.md){ .amap__lesson data-lesson="25" }</p>
+<p class="amap__topics">流式交互与确认撤销 · 语音链路与延迟预算 · 容量估算 · 带退出条件的 ADR</p>
 <p class="amap__gain">能独立设计一个 AI 应用，写得出一份别人能审的技术决策。</p>
 </div>
 </div>
@@ -220,7 +220,7 @@ hide:
 <p class="path__label">RECOMMENDED PATH · 先找洞，再补课</p>
 <ol class="tl" markdown="1">
 <li markdown="span">**先做 [24 题自测](reference/diagnostic.md)**，二十分钟。题目按 Part 分组，答不上的那几组就是你的洞。</li>
-<li markdown="span">**按结果挑 Part 读**，不用从头。做过 RAG 的人最常缺的是 Part 2 的运行时控制（[06](lessons/06-agent-loop/README.md) · [07](lessons/07-agent-state-and-runtime/README.md) · [08](lessons/08-context-engineering-for-agents/README.md)）和 Part 4 的评测（[17](lessons/17-evaluation/README.md)）。</li>
+<li markdown="span">**按结果挑 Part 读**，不用从头。做过 RAG 的人最常缺的是 Part 2 的运行时控制（[06](lessons/06-agent-loop/README.md) · [07](lessons/07-agent-state-and-runtime/README.md) · [08](lessons/08-context-engineering-for-agents/README.md)）和 Part 4 的评测（[18](lessons/18-evaluation/README.md)）。</li>
 <li markdown="span">**用 [12 条工程原则](principles/README.md)对照现有项目。** 每条都有反例和正确形态，对不上的那条就去读它指向的课。</li>
 <li markdown="span">**在选框架**，直接看[框架一览与选型标准](reference/frameworks.md)，不必等读完 Part 2。</li>
 </ol>
@@ -229,11 +229,11 @@ hide:
 <article class="path" data-path="c" markdown="1">
 <p class="path__label">RECOMMENDED PATH · PRODUCTION TRACK</p>
 <ol class="tl" markdown="1">
-<li markdown="span">**从 [16 系统架构](lessons/16-system-architecture/README.md)开始**，先把一次请求经过哪些跳、每一跳回答什么问题摆清楚。</li>
-<li markdown="span">**先建证据链，再谈优化。** [18 可观测性](lessons/18-observability/README.md)给 trace，[17 评测](lessons/17-evaluation/README.md)给「凭什么说变好了」。顺序别反：没有 trace 的评测查不出原因。</li>
-<li markdown="span">**再补兜底。** [19 可靠性与成本](lessons/19-reliability-cost-llmops/README.md)讲限流、熔断、fallback 各挡哪一类失败；[20 安全与治理](lessons/20-security-governance/README.md)讲边界为什么必须由代码执行。</li>
+<li markdown="span">**从 [17 系统架构](lessons/17-system-architecture/README.md)开始**，先把一次请求经过哪些跳、每一跳回答什么问题摆清楚。</li>
+<li markdown="span">**先建证据链，再谈优化。** [19 可观测性](lessons/19-observability/README.md)给 trace，[18 评测](lessons/18-evaluation/README.md)给「凭什么说变好了」。顺序别反：没有 trace 的评测查不出原因。</li>
+<li markdown="span">**再补兜底。** [20 可靠性与成本](lessons/20-reliability-cost-llmops/README.md)讲限流、熔断、fallback 各挡哪一类失败；[21 安全与治理](lessons/21-security-governance/README.md)讲边界为什么必须由代码执行。</li>
 <li markdown="span">**回头补 [08 上下文工程](lessons/08-context-engineering-for-agents/README.md)。** 线上「模型忘事」和成本尖峰，多数是这一层的问题。</li>
-<li markdown="span">**最后读 [23 系统设计与技术决策](lessons/23-system-design-decisions/README.md)**，把容量估算和 ADR 补齐；原则 [07](principles/07-locate-failures-by-layer.md) · [08](principles/08-no-eval-no-improvement.md) · [09](principles/09-trace-is-first-class.md) · [10](principles/10-cost-and-latency-are-design-constraints.md) 是这条路线的压缩版。</li>
+<li markdown="span">**最后读 [25 系统设计与技术决策](lessons/25-system-design-decisions/README.md)**，把容量估算和 ADR 补齐；原则 [07](principles/07-locate-failures-by-layer.md) · [08](principles/08-no-eval-no-improvement.md) · [09](principles/09-trace-is-first-class.md) · [10](principles/10-cost-and-latency-are-design-constraints.md) 是这条路线的压缩版。</li>
 </ol>
 </article>
 
@@ -248,7 +248,7 @@ hide:
 <div class="prog" data-progress>
 <p class="prog__empty">还没有标记过任何一课。每一课页面的底部有一个「标记为已掌握」，记录只存在这台设备的浏览器里——不上传，不需要登录，换设备不同步。</p>
 <div class="prog__body" hidden>
-<p class="prog__count"><strong data-prog-done>0</strong><span class="prog__total">/ 24 Lessons</span></p>
+<p class="prog__count"><strong data-prog-done>0</strong><span class="prog__total">/ 26 Lessons</span></p>
 <div class="prog__ruler" data-prog-ruler></div>
 <p class="prog__last">LAST · <a data-prog-last href="#"></a></p>
 <p class="prog__next"><a class="md-button md-button--primary" data-prog-next href="#">Continue Learning →</a></p>
@@ -262,16 +262,16 @@ hide:
 
 <p class="eyebrow">BUILD THE SYSTEM</p>
 
-## 24 课在搭同一个系统
+## 26 课在搭同一个系统
 
-<p class="band__lede">这不是 24 个孤立的知识点。下面是一个生产级 AI 应用的全貌，每个组件后面标着它属于哪个 Part——学完一个 Part，这张图上就多亮一块。</p>
+<p class="band__lede">这不是 26 个孤立的知识点。下面是一个生产级 AI 应用的全貌，每个组件后面标着它属于哪个 Part——学完一个 Part，这张图上就多亮一块。</p>
 
 <div class="sys" markdown="1">
 
 <div class="sys__band" markdown="1">
 <p class="sys__bandname">01<span>请求入口</span></p>
 <div class="sys__nodes" markdown="span">
-[User<span>P5 · 22</span>](lessons/22-product-design-ux/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[API<span>P4 · 16</span>](lessons/16-system-architecture/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[Session<span>P2 · 07</span>](lessons/07-agent-state-and-runtime/README.md){ .sysnode }
+[User<span>P5 · 22</span>](lessons/23-product-design-ux/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[API<span>P4 · 16</span>](lessons/17-system-architecture/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[Session<span>P2 · 07</span>](lessons/07-agent-state-and-runtime/README.md){ .sysnode }
 </div>
 </div>
 
@@ -281,7 +281,7 @@ hide:
 [Context Builder<span>P2 · 08</span>](lessons/08-context-engineering-for-agents/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[Agent Runtime<span>P2 · 06 07 09</span>](lessons/06-agent-loop/README.md){ .sysnode .sysnode--core }<span class="sys__arrow" aria-hidden="true"></span>[Tool Registry<span>P2 · 05 11 12</span>](lessons/05-tool-calling/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[Model Gateway<span>P1 · 01 02</span>](lessons/02-model-api-structured-output-streaming/README.md){ .sysnode }
 </div>
 <div class="sys__aside" markdown="span">
-[Fallback / Degrade<span>P4 · 19</span>](lessons/19-reliability-cost-llmops/README.md){ .sysnode .sysnode--risk }
+[Fallback / Degrade<span>P4 · 19</span>](lessons/20-reliability-cost-llmops/README.md){ .sysnode .sysnode--risk }
 <span class="sys__asidenote">下游超时、限流、模型不可用，走这条线</span>
 </div>
 </div>
@@ -289,7 +289,7 @@ hide:
 <div class="sys__band sys__band--async" markdown="1">
 <p class="sys__bandname">03<span>知识与记忆</span></p>
 <div class="sys__nodes" markdown="span">
-[RAG<span>P3 · 13</span>](lessons/13-rag-end-to-end/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Memory<span>P3 · 14</span>](lessons/14-memory/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Data Pipeline<span>P3 · 15</span>](lessons/15-data-engineering/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Vector Index<span>P1 · 04</span>](lessons/04-embeddings-and-vector-search/README.md){ .sysnode .sysnode--async }
+[RAG<span>P3 · 13</span>](lessons/14-rag-end-to-end/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Memory<span>P3 · 14</span>](lessons/15-memory/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Data Pipeline<span>P3 · 15</span>](lessons/16-data-engineering/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Vector Index<span>P1 · 04</span>](lessons/04-embeddings-and-vector-search/README.md){ .sysnode .sysnode--async }
 </div>
 <p class="sys__bandnote">虚线：被运行时按需调用，或者离线跑。它们不在主请求链上，但决定了回答的上限。</p>
 </div>
@@ -297,7 +297,7 @@ hide:
 <div class="sys__band sys__band--base" markdown="1">
 <p class="sys__bandname">04<span>平台底座</span></p>
 <div class="sys__nodes" markdown="span">
-[Evaluation<span>P4 · 17</span>](lessons/17-evaluation/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Trace<span>P4 · 18</span>](lessons/18-observability/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Observability<span>P4 · 18</span>](lessons/18-observability/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Security<span>P4 · 20</span>](lessons/20-security-governance/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Infrastructure<span>P4 · 19 21</span>](lessons/21-model-adaptation-finetuning-inference/README.md){ .sysnode }
+[Evaluation<span>P4 · 17</span>](lessons/18-evaluation/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Trace<span>P4 · 18</span>](lessons/19-observability/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Observability<span>P4 · 18</span>](lessons/19-observability/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Security<span>P4 · 20</span>](lessons/21-security-governance/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Infrastructure<span>P4 · 19 21</span>](lessons/22-model-adaptation-finetuning-inference/README.md){ .sysnode }
 </div>
 <p class="sys__bandnote">横切：每一层都要用到。缺了它，上面三层出了问题你只能看到最后那句错误回答。</p>
 </div>
@@ -332,7 +332,7 @@ hide:
 
 **代码是插图。** 示意代码二三十行，省略 import、日志和错误处理，不能直接运行。想要能跑的，看[参考实现仓库](https://github.com/lance2016/ai-app-engineering-ref)。
 
-**每课都留一块能进评测集的东西。** 「工程落地」的最后一条固定是「怎么测」，评测不是第 17 课才开始的事。
+**每课都留一块能进评测集的东西。** 「工程落地」的最后一条固定是「怎么测」，评测不是第 18 课才开始的事。
 
 </div>
 

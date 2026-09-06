@@ -83,7 +83,7 @@
 - [Anthropic · Writing effective tools for AI agents](https://www.anthropic.com/engineering/writing-tools-for-agents)（访问日期 2026-09-06）：工具的名字、描述和返回值怎么写，模型才用得对。第 05 课「工具是契约」落到字面上的部分。
 - [Anthropic · How we built our multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system)（访问日期 2026-09-06）：多 Agent 的收益和它的 token 代价，第 10 课判断「要不要再加一个 Agent」时看这篇。
 - [Anthropic · Claude Code best practices](https://www.anthropic.com/engineering/claude-code-best-practices)（访问日期 2026-09-06）：从使用约定反推一个成熟 harness 的设计，第 06、12 课。
-- [OpenAI · A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)（PDF，访问日期 2026-09-06）：单 Agent 什么时候该拆成多 Agent，以及 guardrail 的分层，第 09、20 课。
+- [OpenAI · A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)（PDF，访问日期 2026-09-06）：单 Agent 什么时候该拆成多 Agent，以及 guardrail 的分层，第 09、21 课。
 
 ## 论文
 

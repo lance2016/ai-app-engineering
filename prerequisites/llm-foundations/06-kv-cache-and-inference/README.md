@@ -44,13 +44,13 @@ flowchart LR
 |---|---|---|
 | [`code/01_kv_cache_memory.py`](./code/01_kv_cache_memory.py) | 有无 GQA 的两个 7B 配置在 4k / 32k / 128k 上下文下的 KV cache 显存；一张 24GB 卡能装几路 32k 请求 | `uv run python prerequisites/llm-foundations/06-kv-cache-and-inference/code/01_kv_cache_memory.py` |
 
-没有 GQA 的 7B 模型，128k 上下文的 KV cache 是 64GB，单张卡装不下。用 GQA 后是 16GB。这就是为什么 GQA 成了标配，也是为什么"支持 128k 上下文"和"能以合理成本跑 128k"是两回事。主线第 21 课的显存估算器把权重和 KV cache 两项合在一起算。
+没有 GQA 的 7B 模型，128k 上下文的 KV cache 是 64GB，单张卡装不下。用 GQA 后是 16GB。这就是为什么 GQA 成了标配，也是为什么"支持 128k 上下文"和"能以合理成本跑 128k"是两回事。主线第 22 课的显存估算器把权重和 KV cache 两项合在一起算。
 
 ## 它在 AI 应用里用在哪
 
 - TTFT 与输入长度、prompt caching → [第 08 课 Context Engineering](../../../lessons/08-context-engineering-for-agents/README.md)
-- 自部署 vs 托管、量化选型 → [第 21 课](../../../lessons/21-model-adaptation-finetuning-inference/README.md)
-- 延迟预算 → [第 19 课](../../../lessons/19-reliability-cost-llmops/README.md)
+- 自部署 vs 托管、量化选型 → [第 22 课](../../../lessons/22-model-adaptation-finetuning-inference/README.md)
+- 延迟预算 → [第 20 课](../../../lessons/20-reliability-cost-llmops/README.md)
 
 ## 延伸阅读
 

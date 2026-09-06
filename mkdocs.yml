@@ -120,20 +120,22 @@ nav:
           - 10 多智能体、Handoff 与 Racing: lessons/10-multi-agent-handoff/README.md
           - 11 MCP：模型上下文协议: lessons/11-mcp/README.md
           - 12 Skill 与能力生态分层: lessons/12-skills-and-capability-layers/README.md
+          - 13 Agent Harness：把前八课装进一个真实系统: lessons/13-agent-harness/README.md
       - "Part 3 知识与记忆":
-          - 13 RAG 端到端: lessons/13-rag-end-to-end/README.md
-          - 14 Memory：提取、整合与检索: lessons/14-memory/README.md
-          - 15 数据工程与数据质量: lessons/15-data-engineering/README.md
+          - 14 RAG 端到端: lessons/14-rag-end-to-end/README.md
+          - 15 Memory：提取、整合与检索: lessons/15-memory/README.md
+          - 16 数据工程与数据质量: lessons/16-data-engineering/README.md
       - "Part 4 生产工程":
-          - 16 AI 应用系统架构与端到端数据流: lessons/16-system-architecture/README.md
-          - 17 评测：Golden Set、LLM Judge 与 Agent Eval: lessons/17-evaluation/README.md
-          - 18 可观测性：从日志到 LLM Trace: lessons/18-observability/README.md
-          - 19 可靠性、成本、部署与 LLMOps: lessons/19-reliability-cost-llmops/README.md
-          - 20 安全与治理: lessons/20-security-governance/README.md
-          - 21 模型适配、微调与推理服务: lessons/21-model-adaptation-finetuning-inference/README.md
+          - 17 AI 应用系统架构与端到端数据流: lessons/17-system-architecture/README.md
+          - 18 评测：Golden Set、LLM Judge 与 Agent Eval: lessons/18-evaluation/README.md
+          - 19 可观测性：从日志到 LLM Trace: lessons/19-observability/README.md
+          - 20 可靠性、成本、部署与 LLMOps: lessons/20-reliability-cost-llmops/README.md
+          - 21 安全与治理: lessons/21-security-governance/README.md
+          - 22 模型适配、微调与推理服务: lessons/22-model-adaptation-finetuning-inference/README.md
       - "Part 5 产品与技术决策":
-          - 22 AI 产品设计与交互: lessons/22-product-design-ux/README.md
-          - 23 系统设计与技术决策: lessons/23-system-design-decisions/README.md
+          - 23 AI 产品设计与交互: lessons/23-product-design-ux/README.md
+          - 24 语音应用：链路、延迟预算与打断: lessons/24-voice-agents/README.md
+          - 25 系统设计与技术决策: lessons/25-system-design-decisions/README.md
   # 前置只在主线点名引用时才需要，所以排在主线之后，标题里写明可选。
   - 补充基础 · LLM 原理（可选）:
       - 这一组要不要读: prerequisites/README.md

@@ -48,7 +48,7 @@ async def run_side_effect(call: ToolCall, tool: Tool, thread: Thread) -> Message
 ## 对照
 
 - 参考：[12-factor-agents · factor 07 Contact humans with tools](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-07-contact-humans-with-tools.md)（访问日期 2026-09-04）
-- 相关课程：[05 Tool Calling](../lessons/05-tool-calling/README.md)（幂等键与确认门的代码）、[07 Agent State 与 Runtime](../lessons/07-agent-state-and-runtime/README.md)（暂停恢复与事件记录）、[19 可靠性、成本、部署与 LLMOps](../lessons/19-reliability-cost-llmops/README.md)（重试策略）
+- 相关课程：[05 Tool Calling](../lessons/05-tool-calling/README.md)（幂等键与确认门的代码）、[07 Agent State 与 Runtime](../lessons/07-agent-state-and-runtime/README.md)（暂停恢复与事件记录）、[20 可靠性、成本、部署与 LLMOps](../lessons/20-reliability-cost-llmops/README.md)（重试策略）
 
 ---
 
