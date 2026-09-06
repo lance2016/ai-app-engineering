@@ -11,6 +11,7 @@
 | Agent | 目标 + 模型决策 + 工具 + 状态 + 循环 + 边界。模型只负责建议下一步，执行、预算、停止都归运行时 | 06, 07 |
 | BM25 | 基于词频和文档长度的关键词打分算法，稀疏检索的事实标准；对精确匹配强，对同义改写弱 | 13 |
 | Build vs Buy | 自建还是采购的决策。课程的做法是写出假设和退出条件，而不是比功能清单 | 23 |
+| Chat Completions | OpenAI 2023 年定型的调用接口，`messages` 进、`choices` 出。国产模型和 vLLM、Ollama 都兼容它，所以是跨供应商的默认选择 | 00, 02 |
 | checkpoint | Agent 在某一步的完整状态快照。课程里就是事件线程存盘，用于暂停、恢复和回放 | 07 |
 | chunk | 文档切成的检索单元。大小决定召回粒度，带来源、版本、权限标签和内容哈希 | 04, 13, 15 |
 | compaction | 把老对话压成摘要以腾出上下文窗口，同时完整日志另存、关键事实不交给摘要 | 08 |
@@ -34,6 +35,7 @@
 | LLM Judge | 用模型给模型输出打分。必须用人工标注校准，从分歧案例改 judge 的 prompt | 17 |
 | LoRA | 只训练一组低秩增量矩阵的微调方法，显存和存储远小于全量微调 | 21 |
 | MCP | Model Context Protocol，能力的接入协议：运行时启动时发现别的进程暴露的工具，按统一格式调用。不替代第 05 课的任何守卫 | 11 |
+| Messages API | Claude 的调用接口。`system` 和 `max_tokens` 是顶层字段，`content` 是块列表，工具结果挂在 user 消息里 | 00, 02 |
 | ModelAdapter | 课程里的模型接口协议，只有 complete 和 stream；fake、DeepSeek、DashScope、OpenAI 都在它后面 | 00, 02 |
 | OpenTelemetry GenAI 语义约定 | trace 属性的标准命名，如 gen_ai.request.model、gen_ai.usage.input_tokens，让不同工具能读同一份 trace | 18 |
 | Orchestrator-Workers | 一个模型拆任务并分派给多个 worker，再汇总。和 parallelization 的区别是子任务由模型动态决定 | 09 |
@@ -49,6 +51,7 @@
 | racing | 两个模型并行处理同一输入，按规则取舍。一个超时时要有确定的兜底 | 10 |
 | RAG | 检索增强生成：解析、切块、索引、检索、重排、生成、引用七步流水线，每步有自己独有的坏法 | 13 |
 | Recall@k | 前 k 个检索结果里命中了多少应该命中的，是检索层的核心离线指标 | 13, 17 |
+| Responses API | OpenAI 的新端点，`input` 进、`output` 条目出。独有的是服务端存对话历史（`previous_response_id`）和内置工具 | 00 |
 | Routing | 先分类再分发到不同的处理路径，分类可以是模型也可以是规则 | 09 |
 | RRF | Reciprocal Rank Fusion，按名次倒数融合多路检索结果，不需要归一化分数 | 13 |
 | Runtime | 执行 Agent 循环的宿主：调工具、存状态、控预算、处理中断。模型不在其中 | 06, 07 |

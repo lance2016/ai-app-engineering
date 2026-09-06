@@ -67,3 +67,23 @@ resp = openai_client.chat.completions.create(model="gpt-4o", messages=msgs)
 正确的形态是业务层只看到 `await model.complete(messages, tools=...)`，上面三件事在适配器里做一次。这就是第 12 条原则。
 
 </details>
+
+## 练习 5：给三个场景各选一套接口
+
+不写代码。下面三个需求，分别该用 Chat Completions、Responses 还是 Claude Messages？说出决定性的那个理由。
+
+1. 一个内部工具，要在 DeepSeek、通义千问和公司自建的 vLLM 之间随时切换，用来对比效果。
+2. 一个客服助手，对话经常超过五十轮，团队只用 OpenAI，也不打算自己实现网页搜索。
+3. 一个合同审查系统，要把整份 PDF 连同上一轮的思考过程一起送回模型继续追问。
+
+<details><summary>答案</summary>
+
+1. **Chat Completions。** 决定性理由是 vLLM——自建推理服务实现的就是这套协议，它是唯一三边都认的格式。用 Responses 意味着自建那条路直接断掉。
+
+2. **Responses。** 五十轮以上的对话，每轮重发全部历史的带宽和延迟都很可观，`previous_response_id` 正好省掉这一块；不自己做搜索，内置工具也白拿。代价要认：历史怎么裁你看不见，将来想做第 08 课那种精细的上下文管理会很别扭。
+
+3. **Claude Messages。** 「把上一轮的思考过程原样带回」这件事只有它有明确契约——thinking 块要连签名一起回传，少一个字符就报错。真正的坑不在选型，在适配器：一个把 `content` 拍平成字符串的适配器，会在这里悄悄把思考块丢掉，症状是模型在多轮工具调用中途「忘了自己刚才在想什么」，而且只在推理模型上复现。第 02 课会展开。
+
+三题的共同点：决定接口的从来不是「哪个新」，是**你要不要跨供应商**，以及**状态该由谁持有**。
+
+</details>

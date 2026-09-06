@@ -1,26 +1,120 @@
 ---
 status: complete
 part: Part 0 起步
-estimated_time: 约 30 分钟
+estimated_time: 约 45 分钟
 ---
 
 # 00 起步：怎么读这门课，怎么接第一个模型
 
-> 这门课讲机制和取舍，不是一个可以 clone 下来跑的项目。课文里的代码都是为了说清楚一件事，不为了运行。这一课先说清楚这个定位，再给你一段能直接复制去跑的最小模型调用。
+> 一次模型调用就是一次 HTTP POST。市面上有三套主流的请求格式，字段名互不相同，做的却是同一件事。这一课把它们摆在一起看清楚，再跑通一次真实的工具调用往返。
 
 ## 为什么需要
 
-大部分 AI 应用教程会先让你装一堆东西。等环境装好，注意力已经耗在依赖冲突上了。这门课反过来：先把机制讲清楚，你再决定用什么框架、什么供应商去落地。
+打开任何一家模型厂商的文档，第一页都是「几行代码调通」。问题在于各家的几行代码长得都不一样，而且 OpenAI 自己就有两套：老的 Chat Completions 和新的 Responses。你照着抄能跑，但换一家就得重抄一遍，也说不清哪些差异是本质的、哪些只是命名。
 
-所以你需要先知道两件事：课文里的代码该怎么读，以及最小的真实模型调用长什么样。
+先看清这三套接口的形状，后面所有课才有共同的底座：消息是什么、工具结果算谁说的话、状态存在谁那里。
 
 ## 学习目标
 
+- 能说出 Chat Completions、Responses、Claude Messages 三套接口的关键差异，以及各自该在什么场景选
+- 能用二十行代码完成一次真实的工具调用往返
 - 知道课文里的代码是示意还是可运行，不会去找一个不存在的仓库目录
 - 能说清「模型适配器」这个抽象为什么值得从第一天就有
-- 能用二十行代码完成一次真实的工具调用往返
 
 ## 心智模型
+
+### 一次调用就是一次 POST
+
+不管用哪家 SDK，底下都是同一件事：把一段 JSON 发到一个 URL，收回一段 JSON。SDK 只负责拼请求体、带上 key、把响应转成对象。
+
+请求体里永远只有四类东西：**对话内容**（历史消息）、**可用的工具**（一组 JSON Schema）、**抽样参数**（temperature、输出上限）、**模型名**。响应里永远只有两类：模型说的话，或者模型想调的工具。
+
+分歧全在字段名和嵌套结构上。
+
+### 三套接口，一件事
+
+同一个请求——「用简洁的语气回答深圳天气」——三套接口的写法：
+
+=== "OpenAI Chat Completions"
+
+    ```python
+    from openai import OpenAI
+
+    client = OpenAI()
+    resp = client.chat.completions.create(
+        model="gpt-5.5",
+        messages=[
+            {"role": "system", "content": "You are terse."},   # ← 系统提示是消息列表里的一条
+            {"role": "user", "content": "深圳现在天气怎么样？"},
+        ],
+    )
+    print(resp.choices[0].message.content)
+    ```
+
+=== "OpenAI Responses"
+
+    ```python
+    from openai import OpenAI
+
+    client = OpenAI()
+    resp = client.responses.create(
+        model="gpt-5.5",
+        instructions="You are terse.",        # ← 系统提示是顶层字段，不在对话里
+        input="深圳现在天气怎么样？",           # ← 单轮可以直接给一个字符串
+    )
+    print(resp.output_text)                   # ← 帮你把返回条目里的文本拼好了
+    ```
+
+=== "Claude Messages"
+
+    ```python
+    from anthropic import Anthropic
+
+    client = Anthropic()
+    resp = client.messages.create(
+        model="claude-opus-5",
+        max_tokens=1024,                      # ← 这个字段必填，漏了直接 400
+        system="You are terse.",              # ← 系统提示是顶层字段
+        messages=[{"role": "user", "content": "深圳现在天气怎么样？"}],
+    )
+    print("".join(b.text for b in resp.content if b.type == "text"))
+    ```
+
+差异摊开看：
+
+| | Chat Completions | Responses | Claude Messages |
+|---|---|---|---|
+| 端点 | `POST /v1/chat/completions` | `POST /v1/responses` | `POST /v1/messages` |
+| 对话输入 | `messages` 列表 | `input`，字符串或条目列表 | `messages` 列表 |
+| 系统提示 | 列表里 `role="system"` 的一条 | 顶层 `instructions` | 顶层 `system` |
+| 返回 | `choices[0].message` | `output` 条目列表，`output_text` 是快捷方式 | `content` 块列表 |
+| 工具定义 | `{"type": "function", "function": {…}}`，嵌一层 | `{"type": "function", "name": …, "parameters": …}`，平铺 | `{"name": …, "input_schema": …}` |
+| 工具结果回传 | 一条 `role="tool"` 消息，认 `tool_call_id` | 一个 `function_call_output` 条目，认 `call_id` | 一条 **`role="user"`** 消息里的 `tool_result` 块，认 `tool_use_id` |
+| 输出上限字段 | `max_completion_tokens`，可选 | `max_output_tokens`，可选 | `max_tokens`，**必填** |
+| 服务端存历史 | 不存，每次重发全部 | `store` 加 `previous_response_id` | 不存，每次重发全部 |
+
+最后两行最容易咬人。**Claude 把工具结果算成用户说的话**，因为它的协议里只有 user 和 assistant 两种角色；工具结果是「外部世界带回来的信息」，所以挂在 user 那边。适配器如果按 OpenAI 的习惯造一条 `role="tool"`，Claude 直接报错。
+
+**为什么 OpenAI 有两套。** Chat Completions 2023 年定型，早已成了事实标准——DeepSeek、通义千问、vLLM、Ollama 都实现了它，所以「OpenAI 兼容」这四个字才有意义。Responses 是后来推出的新端点，把两件老接口做不了的事收了进来：对话历史可以存在服务端（下一轮只传 `previous_response_id`），以及网页搜索、文件检索、代码执行这类内置工具直接在同一个请求里声明。OpenAI 明确说 Chat Completions 会长期支持，不是弃用关系。
+
+选哪套，只看一个问题：**你要不要跨供应商。** 要，就用 Chat Completions，它的兼容层最宽；只用 OpenAI 并且想要服务端状态或内置工具，用 Responses；用 Claude 就是 Messages，没有第二个选项。这门课后面的示意代码统一用 Chat Completions 的形状，因为它最通用。
+
+### 所以适配器要在第一天就有
+
+```mermaid
+flowchart LR
+    L[应用代码] --> A[ModelAdapter.complete]
+    A --> F[FakeAdapter<br/>按剧本回答]
+    A --> R[真实供应商<br/>DeepSeek / 通义 / OpenAI / Claude]
+```
+
+`ModelAdapter` 就一个方法：给它一串消息和可选的工具列表，返回一个响应。响应里要么是文本，要么是一组工具调用请求。上面那张表里的差异，全部关在这一层里面消化。
+
+这不是过度设计。第 12 条工程原则就是「模型是可替换的适配器」：模型换代的速度远快于业务代码，任何直接调供应商 SDK 的地方，将来都是一次改动。
+
+**fake adapter 是它的第一个实现。** 按剧本回答：告诉它「第一次回一个工具调用，第二次回一句话」，它就照做。不需要 key，测试能在 CI 里跑；行为确定，可以写断言；想演示「模型输出了非法参数」，直接在剧本里写一个非法参数，不用求真模型犯错。代价是它不会思考——讲机制用 fake，看效果用真模型，这是贯穿全课的做法。
+
+### 课文里的代码是哪一种
 
 一门课里的代码有三种。这门课只有前两种：
 
@@ -32,38 +126,16 @@ estimated_time: 约 30 分钟
 
 看到 `## 机制拆解` 下面的代码，默认它跑不起来——它引用的类型和函数是为了让你看懂逻辑而虚构的。这是刻意的：把 import、日志、错误处理都塞进去，一段二十行能讲清的机制会变成两百行。
 
-### 所有代码都通过同一个接口和模型说话
-
-```mermaid
-flowchart LR
-    L[应用代码] --> A[ModelAdapter.complete]
-    A --> F[FakeAdapter<br/>按剧本回答]
-    A --> R[真实供应商<br/>DeepSeek / 通义 / OpenAI / Claude]
-```
-
-`ModelAdapter` 就一个方法：给它一串消息和可选的工具列表，返回一个响应。响应里要么是文本，要么是一组工具调用请求。哪家供应商在后面，调用方不关心。
-
-这不是过度设计。第 12 条工程原则就是「模型是可替换的适配器」：模型换代的速度远快于你的业务代码，任何直接调供应商 SDK 的地方，将来都是一次改动。
-
-
-**fake adapter 值得单说。** 它按剧本回答：你告诉它「第一次回一个工具调用，第二次回一句话」，它就照做。好处有三个：
-
-1. 不需要 API Key，测试能在 CI 里跑。
-2. 行为确定，可以写断言，可以复现失败。
-3. 想演示「模型输出了非法参数」这类反例，直接在剧本里写一个非法参数，不用求真模型犯错。
-
-代价是它不会思考。讲机制用 fake，看效果用真模型——这是贯穿全课的做法。
-
 ## 机制拆解
 
-这一课的代码是个例外：它**能直接复制去跑**。想亲手跑一次真实调用，只需要一个包和一个 key。国内直接可访问的是 DeepSeek，在 <https://platform.deepseek.com> 申请。
+这一课的代码是个例外：它**能直接复制去跑**。国内直接可访问的是 DeepSeek，在 <https://platform.deepseek.com> 申请 key。
 
 ```bash
 pip install openai
 export DEEPSEEK_API_KEY=sk-...
 ```
 
-一次完整的工具调用往返，二十来行：
+### 一、一次完整的工具调用往返
 
 ```python
 import json, os
@@ -103,21 +175,42 @@ for _ in range(4):                       # 步数上限，第 06 课会讲为什
 
 这二十行里已经藏着后面十几课的全部主题：消息格式（第 02 课）、工具描述怎么写（第 05 课）、循环怎么停（第 06 课）、历史怎么裁剪（第 08 课）、这次调用花了多少钱（第 20 课）。
 
-换供应商只改两行：通义千问是 `base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"` 加 `model="qwen-plus"`，OpenAI 去掉 `base_url` 即可。它们都走 OpenAI 兼容协议，所以适配器这层抽象成本很低。
+换供应商只改两行：通义千问是 `base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"` 加 `model="qwen-plus"`，OpenAI 去掉 `base_url` 即可。它们走的都是 Chat Completions 协议。
+
+### 二、同一个往返在 Claude 上的写法
+
+机制一模一样，形状不一样。只看回传那两行：
+
+```python
+messages.append({"role": "assistant", "content": reply.content})   # ← 原样带回，别拍平成字符串
+messages.append({"role": "user", "content": [{                     # ← 工具结果算「用户说的话」
+    "type": "tool_result",
+    "tool_use_id": call.id,        # ← 不叫 tool_call_id
+    "content": json.dumps(result),
+}]})
+```
+
+循环的退出条件也换了名字：OpenAI 看 `reply.tool_calls` 是不是空，Claude 看 `resp.stop_reason == "tool_use"`。
+
+把这两段并排读一遍，适配器要抹平的到底是什么就具体了：不是「协议不同」这种空话，是六七个字段名和一个角色归属的判断。
 
 ## 常见错误
 
 - **`RuntimeError: DEEPSEEK_API_KEY is not set`**：环境变量没设，或者设在了另一个终端窗口里。
 - **`openai.AuthenticationError`**：key 和 base URL 不是同一家的。DeepSeek 的 key 只能配 `https://api.deepseek.com`。
+- **拿 Responses 的字段去调兼容接口**：国产模型和 vLLM、Ollama 实现的都是 Chat Completions，`client.responses.create` 打过去是 404。反过来，把 `instructions` 塞进 `messages` 也不会报错，只是那句话被当成了普通用户消息。
+- **`resp.content[0].text` 在 Claude 上取到空字符串**：`content` 是块列表，开了思考的模型第一块是 thinking 块，正文在后面。按 `b.type == "text"` 过滤，不要按下标取。
 - **`ImportError: Using SOCKS proxy, but the 'socksio' package is not installed`**：终端里设了 `all_proxy=socks5://...`，httpx 会跟着走代理。DeepSeek 和通义都不需要代理，跑的时候去掉即可：`env -u all_proxy -u http_proxy -u https_proxy python x.py`。
 - **401 但 key 是从别处复制来的**：先用 `curl` 直接打接口确认 key 有效，再怀疑代码。写这一课时就踩过一次，环境变量里放着一个早已失效的 key。
 - **模型没调工具，直接回答了**：`description` 写得不够明确，或者模型判断不需要。这是正常现象，第 05 课讲怎么写工具描述。
 
 ## 取舍
 
-**用 fake 换确定性，失去真实行为。** 讲机制时这笔交易划算；判断「这个提示词效果好不好」时，fake 一点用都没有。
+**服务端存历史省带宽，代价是状态不在你手里。** Responses 的 `previous_response_id` 让你不用每轮重发全部历史，长对话省下的 token 很可观。但历史长什么样、裁掉了哪些，你看不见也改不了——而第 08 课整课都在讲「上下文该由运行时自己裁」。要精细控制上下文的系统，宁可自己存。
 
 **选 DeepSeek 做默认是可访问性的取舍，不是能力判断。** 不同供应商在工具调用上的行为有差异：参数 JSON 偶尔不合法、是否支持一轮返回多个调用、`description` 多长会被截断。这些差异是第 05 课校验守卫存在的理由。
+
+**用 fake 换确定性，失去真实行为。** 讲机制时这笔交易划算；判断「这个提示词效果好不好」时，fake 一点用都没有。
 
 ## 框架映射
 
@@ -126,9 +219,10 @@ for _ in range(4):                       # 步数上限，第 06 课会讲为什
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
 | 模型适配器 | `init_chat_model` / LangChain 的 chat model | model provider | SDK 直接绑 Claude |
+| 接口选择 | 由 chat model 实现决定，调用方无感 | 可切 Chat Completions 或 Responses | 只有 Messages |
 | 剧本式 fake | 自己实现一个 chat model | 自己实现 `Model` 协议 | 伪造 transport 层 |
 
-官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
+官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-06）。
 
 ## 练习
 
@@ -138,8 +232,11 @@ for _ in range(4):                       # 步数上限，第 06 课会讲为什
 
 ## 延伸阅读
 
+- [OpenAI · Chat Completions API 参考](https://platform.openai.com/docs/api-reference/chat)（访问日期 2026-09-06）：事实标准的完整字段表。看清楚它，才看得懂「OpenAI 兼容」承诺了什么。
+- [OpenAI · Responses API 参考](https://platform.openai.com/docs/api-reference/responses)（访问日期 2026-09-06）：重点看 `previous_response_id` 和内置工具那两节，这是它和老接口真正的分界。
+- [Anthropic · Messages API 参考](https://platform.claude.com/docs/en/api/messages)（访问日期 2026-09-06）：注意 `system` 和 `max_tokens` 是顶层字段，以及 `content` 的块结构。
 - [DeepSeek API 文档 · Function Calling](https://api-docs.deepseek.com/guides/function_calling)（访问日期 2026-09-04）：确认它的工具调用格式和 OpenAI 一致。
-- [Anthropic · Tool use overview](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview)（访问日期 2026-09-04）：看 `tool_use` → 执行 → `tool_result` 那一个往返。Claude 的字段名和 OpenAI 不同，机制完全一样——这正是适配器要抹平的那层差异。
+- [Anthropic · Tool use overview](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview)（访问日期 2026-09-04）：看 `tool_use` → 执行 → `tool_result` 那一个往返，和上面 DeepSeek 那篇对着读。
 
 ---
 

@@ -495,6 +495,16 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 /* The front page is a different job -- browsing, not reading -- and lives in
    home.css. Nothing about it belongs in the reading skin. */
 
+/* --- tabbed blocks -------------------------------------------------------- */
+
+/* Used where one idea has several concrete forms -- the same call written
+   against three provider APIs, say. Material's defaults already sit on the
+   skin's tones (ink label, ink-2 when inactive, a hairline baseline); only the
+   moving bar needs changing, because it is a "you are here" mark and rule 3
+   spends celadon on exactly those. */
+
+.md-typeset .tabbed-labels::before { background: var(--ws-celadon); }
+
 /* --- quality floor -------------------------------------------------------- */
 
 :focus-visible {
