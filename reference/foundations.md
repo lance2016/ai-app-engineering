@@ -9,7 +9,8 @@ part: 开始这里
 >
 > 分三档：**必备**指不会就读不下去；**用到再学**指遇到那一课再补，半小时够；**可选**指补了有好处、不补也不影响主线。
 >
-> 每项都写了「这门课哪里用到它」——这一页不是通用学习清单，只列这门课真正会碰到的部分。链接都是官方文档入口。
+> 每项都写了「这门课哪里用到它」——这一页不是通用学习清单，只列这门课真正会碰到的部分。
+> 每节末尾的「去哪学」只给入口和该读的范围，这一页本身不教这些东西。
 
 ## Python
 
@@ -25,10 +26,20 @@ part: 开始这里
 | `asyncio` 的取消与超时 | 用到再学 | 第 06 课的步数预算、第 19 课的超时控制 |
 | `contextvars` | 可选 | 第 18 课让子 span 找到父 span 用的就是它，有个跨线程池不传播的坑 |
 
-- [Python 官方教程](https://docs.python.org/3/tutorial/)（访问日期 2026-09-06）
-- [`typing` 模块文档](https://docs.python.org/3/library/typing.html)（访问日期 2026-09-06）
-- [`asyncio` 文档](https://docs.python.org/3/library/asyncio.html)（访问日期 2026-09-06）：只需要看 coroutine、task、`gather`、`wait_for` 四节
-- [Pydantic 文档](https://docs.pydantic.dev/latest/)（访问日期 2026-09-06）
+**去哪学。** 这里只给入口和范围，别整本读。
+
+| 想补的项 | 去哪学 | 读哪几节 |
+|---|---|---|
+| 类型注解 | [mypy 类型速查表](https://mypy.readthedocs.io/en/stable/cheat_sheet_py3.html) | 整页，十分钟看完，比 `typing` 文档快 |
+| 泛型、Protocol、TypedDict | [`typing` 模块文档](https://docs.python.org/3/library/typing.html) | 需要时查，不通读 |
+| dataclass、异常、生成器 | [Python 官方教程](https://docs.python.org/3/tutorial/) | 异常、类、生成器三章 |
+| `async` / `await` | [`asyncio` 文档](https://docs.python.org/3/library/asyncio.html) | coroutine、task、`gather`、`wait_for` 四节 |
+| 取消与超时 | [`asyncio` 任务文档](https://docs.python.org/3/library/asyncio-task.html) | Timeouts 一节 |
+| 上下文管理器 | [`contextlib` 文档](https://docs.python.org/3/library/contextlib.html) | `@contextmanager` 一个装饰器就够 |
+| Pydantic v2 | [Pydantic 文档](https://docs.pydantic.dev/latest/) | Models 与 Validators 两章 |
+
+访问日期均为 2026-09-06。想找一份按这门课的用法写成的 Python 代码来读，[参考实现](https://github.com/lance2016/ai-app-engineering-ref)就是：
+类型注解、dataclass、async、pytest 在里面都以这门课需要的形态出现，比看教程的玩具例子直接。
 
 ## 后端
 
@@ -46,12 +57,21 @@ part: 开始这里
 | WebSocket | 可选 | 双向实时场景。这门课的例子用 SSE 就够 |
 | 消息队列 | 可选 | 第 19 课长任务那一节会提到，不展开 |
 
-- [MDN · HTTP 指南](https://developer.mozilla.org/en-US/docs/Web/HTTP)（访问日期 2026-09-06）
-- [MDN · Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events)（访问日期 2026-09-06）
-- [PostgreSQL 官方文档](https://www.postgresql.org/docs/current/)（访问日期 2026-09-06）：索引和事务两章
-- [pgvector](https://github.com/pgvector/pgvector)（访问日期 2026-09-06）：第 04 课直接用它建表
-- [FastAPI 文档](https://fastapi.tiangolo.com/)（访问日期 2026-09-06）
-- [pytest 文档](https://docs.pytest.org/)（访问日期 2026-09-06）
+**去哪学。**
+
+| 想补的项 | 去哪学 | 读哪几节 |
+|---|---|---|
+| HTTP 与状态码 | [MDN · HTTP 指南](https://developer.mozilla.org/en-US/docs/Web/HTTP) | 方法与状态码两节 |
+| SSE | [MDN · Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) | 整页，很短 |
+| SQL、索引、事务 | [PostgreSQL 官方文档](https://www.postgresql.org/docs/current/) | 索引和事务两章 |
+| pgvector | [pgvector](https://github.com/pgvector/pgvector) | README 的建表与查询两节，第 04 课直接用 |
+| 配置与环境变量 | [The Twelve-Factor App](https://12factor.net/) | Config 一条 |
+| FastAPI 的并发模型 | [FastAPI · Concurrency and async](https://fastapi.tiangolo.com/async/) | 整页；它解释了什么时候该写 `def` 而不是 `async def` |
+| Redis 用法 | [Redis 开发文档](https://redis.io/docs/latest/develop/) | 数据类型与过期两节 |
+| Docker 与 compose | [Docker 入门](https://docs.docker.com/get-started/) | 到 compose 为止，编排不用看 |
+| pytest | [pytest 文档](https://docs.pytest.org/) | fixture 一章 |
+
+访问日期均为 2026-09-06。
 
 ## 算法与计算机基础
 
@@ -67,8 +87,17 @@ part: 开始这里
 | ANN 索引原理（HNSW） | 可选 | 第 04 课会用它，但调参靠实测，不靠推导 |
 | 图与 BFS/DFS | 可选 | 第 09 课 workflow 是有向图，理解「图」这个说法有帮助 |
 
-- [前置 · LLM 原理](../prerequisites/README.md)：模型侧的基础在这里，八篇，不需要线性代数
-- [pgvector 的索引说明](https://github.com/pgvector/pgvector#indexing)（访问日期 2026-09-06）：HNSW 参数的含义
+**去哪学。**
+
+| 想补的项 | 去哪学 | 读哪几节 |
+|---|---|---|
+| 复杂度直觉 | [Big-O cheat sheet](https://www.bigocheatsheet.com/) | 只看常见数据结构那张表 |
+| 向量、点积、余弦 | [前置 F02](../prerequisites/llm-foundations/02-embeddings/README.md) | 全篇，配一个纯标准库的小实验 |
+| top-k 与堆 | [`heapq` 文档](https://docs.python.org/3/library/heapq.html) | `nlargest` 一个函数就够 |
+| HNSW 参数的含义 | [pgvector 的索引说明](https://github.com/pgvector/pgvector#indexing) | `m` 与 `ef_construction` 两个参数 |
+| HNSW 原理（可选） | [HNSW 论文](https://arxiv.org/abs/1603.09320) | 摘要与图 1 |
+
+访问日期均为 2026-09-06。模型侧的基础全部在[前置 · LLM 原理](../prerequisites/README.md)，八篇，不需要线性代数。
 
 ## 不需要的东西
 
