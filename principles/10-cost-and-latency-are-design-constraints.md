@@ -49,7 +49,7 @@ class RequestBudget:
 ## 对照
 
 - 参考：[12-factor-agents · factor 11 Trigger from anywhere](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-11-trigger-from-anywhere.md)（访问日期 2026-09-04，「outer loop agents 可以跑 5 到 90 分钟」那一段说明为什么预算必须是显式的）；[ai-agents-for-beginners · 16 Deploying Scalable Agents](https://github.com/microsoft/ai-agents-for-beginners/blob/main/16-deploying-scalable-agents/README.md)（访问日期 2026-09-04，Cost Optimisation 一节的三个杠杆）
-- 相关课程：[20 可靠性、成本、部署与 LLMOps](../lessons/20-reliability-cost-llmops/README.md)、[06 Agent 循环与控制流](../lessons/06-agent-loop/README.md)
+- 相关课程：[20 可靠性、成本、部署与 LLMOps](../lessons/reliability-cost-llmops/README.md)、[06 Agent 循环与控制流](../lessons/agent-loop/README.md)
 
 ---
 

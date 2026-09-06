@@ -52,7 +52,7 @@ with tracer.span(f"execute_tool {call.name}", **{"gen_ai.tool.name": call.name})
 ## 对照
 
 - 参考：[OpenTelemetry GenAI semantic conventions](https://github.com/open-telemetry/semantic-conventions-genai)（访问日期 2026-09-04），`docs/gen-ai/gen-ai-spans.md` 与 `gen-ai-agent-spans.md`；[OpenTelemetry 属性注册表 · gen_ai](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/registry/attributes/gen-ai.md)（访问日期 2026-09-04），看哪些名字已标 deprecated；[Arize Phoenix](https://github.com/Arize-ai/phoenix) 与 [Langfuse](https://github.com/langfuse/langfuse)（访问日期 2026-09-04），两者都基于 OpenTelemetry 接入
-- 相关课程：[19 可观测性](../lessons/19-observability/README.md)
+- 相关课程：[19 可观测性](../lessons/observability/README.md)
 
 ---
 

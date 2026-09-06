@@ -42,7 +42,7 @@ for call in reply.tool_calls:                  # never parse actions out of repl
 ## 对照
 
 - 参考：[12-factor-agents · factor 01](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-01-natural-language-to-tool-calls.md)、[factor 04](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-04-tools-are-structured-outputs.md)（访问日期 2026-09-04）
-- 相关课程：[05 Tool Calling](../lessons/05-tool-calling/README.md)、[06 Agent 循环与控制流](../lessons/06-agent-loop/README.md)
+- 相关课程：[05 Tool Calling](../lessons/tool-calling/README.md)、[06 Agent 循环与控制流](../lessons/agent-loop/README.md)
 
 ---
 

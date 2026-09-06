@@ -48,7 +48,7 @@ def result(call, content, *, is_error=False) -> Message:
 ## 对照
 
 - 参考：[12-factor-agents · factor 04](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-04-tools-are-structured-outputs.md)（访问日期 2026-09-04）；[Anthropic · Tool use overview](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview)（访问日期 2026-09-04），看 `input_schema` 和 `tool_result` 的 `is_error` 字段
-- 相关课程：[05 Tool Calling](../lessons/05-tool-calling/README.md)、[11 MCP](../lessons/11-mcp/README.md)
+- 相关课程：[05 Tool Calling](../lessons/tool-calling/README.md)、[11 MCP](../lessons/mcp/README.md)
 
 ---
 

@@ -52,7 +52,7 @@ def gate(current, baseline, max_drop=0.10) -> list[str]:
 ## 对照
 
 - 参考：[Hamel Husain · Your AI Product Needs Evals](https://hamel.dev/blog/posts/evals/)（访问日期 2026-09-04），Level 1/2/3 的分层和「pass rate is a product decision」；[Hamel Husain · Creating a LLM-as-a-Judge](https://hamel.dev/blog/posts/llm-judge/)（访问日期 2026-09-04），二元 pass/fail 加 critique；[openai-cookbook · examples/evaluation](https://github.com/openai/openai-cookbook/tree/main/examples/evaluation)（访问日期 2026-09-04），看 `use-cases/regression.ipynb` 的组织方式
-- 相关课程：[18 评测](../lessons/18-evaluation/README.md)
+- 相关课程：[18 评测](../lessons/evaluation/README.md)
 
 ---
 

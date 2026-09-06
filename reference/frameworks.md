@@ -27,12 +27,12 @@ updated: 2026-09-05
 
 | 问题 | 看什么 | 对应课 |
 |---|---|---|
-| 工具怎么定义、参数怎么校验、错误怎么回给模型 | 有没有 schema 校验；工具异常是抛出还是变成结果；能否按请求控制可见工具 | [05](../lessons/05-tool-calling/README.md) |
-| 循环由谁控制、怎么停 | 能不能自己写循环；有没有步数 / token / 时间预算；能不能在任意一步跳出 | [06](../lessons/06-agent-loop/README.md) |
-| 状态存在哪、怎么恢复 | state 的数据结构是否显式；checkpoint 存哪、怎么换后端；恢复时是否重放副作用 | [07](../lessons/07-agent-state-and-runtime/README.md) |
-| 上下文怎么组装 | 历史裁剪和压缩是否可控；能否看到最终发给模型的完整消息 | [08](../lessons/08-context-engineering-for-agents/README.md) |
-| 多 Agent 怎么交接 | handoff 时历史给多少；子 Agent 的状态是否隔离；并行分支怎么汇合 | [10](../lessons/10-multi-agent-handoff/README.md) |
-| 出了问题怎么看 | 有没有原生 trace；能不能接 OpenTelemetry 而不是只接自家平台 | [19](../lessons/19-observability/README.md) |
+| 工具怎么定义、参数怎么校验、错误怎么回给模型 | 有没有 schema 校验；工具异常是抛出还是变成结果；能否按请求控制可见工具 | [05](../lessons/tool-calling/README.md) |
+| 循环由谁控制、怎么停 | 能不能自己写循环；有没有步数 / token / 时间预算；能不能在任意一步跳出 | [06](../lessons/agent-loop/README.md) |
+| 状态存在哪、怎么恢复 | state 的数据结构是否显式；checkpoint 存哪、怎么换后端；恢复时是否重放副作用 | [07](../lessons/agent-state-and-runtime/README.md) |
+| 上下文怎么组装 | 历史裁剪和压缩是否可控；能否看到最终发给模型的完整消息 | [08](../lessons/context-engineering-for-agents/README.md) |
+| 多 Agent 怎么交接 | handoff 时历史给多少；子 Agent 的状态是否隔离；并行分支怎么汇合 | [10](../lessons/multi-agent-handoff/README.md) |
+| 出了问题怎么看 | 有没有原生 trace；能不能接 OpenTelemetry 而不是只接自家平台 | [19](../lessons/observability/README.md) |
 
 **一个框架回答不上其中两个以上，说明它的抽象层把你需要看的东西盖住了。**
 

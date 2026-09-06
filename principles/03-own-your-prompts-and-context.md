@@ -53,7 +53,7 @@ reply = await model.complete(window, tools=specs)
 ## 对照
 
 - 参考：[12-factor-agents · factor 02 Own your prompts](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-02-own-your-prompts.md)、[factor 03 Own your context window](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-03-own-your-context-window.md)（访问日期 2026-09-04）；[Anthropic · Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)（访问日期 2026-09-04）
-- 相关课程：[03 Prompt Engineering](../lessons/03-prompt-engineering/README.md)、[08 Agent 的 Context Engineering](../lessons/08-context-engineering-for-agents/README.md)
+- 相关课程：[03 Prompt Engineering](../lessons/prompt-engineering/README.md)、[08 Agent 的 Context Engineering](../lessons/context-engineering-for-agents/README.md)
 
 ---
 

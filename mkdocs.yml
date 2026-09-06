@@ -70,6 +70,36 @@ plugins:
   - search:
       separator: '[\s​\-,，。？！；：、（）《》]+'
   - glightbox
+  # 2026-09-06：课程目录去掉了数字前缀，编号改由 nav 位置决定。这批重定向接住
+  # 旧地址（外部链接、书签、搜索结果），插新课不会再产生新的一批。
+  - redirects:
+      redirect_maps:
+        lessons/00-setup/README.md: lessons/setup/README.md
+        lessons/01-how-llms-work/README.md: lessons/how-llms-work/README.md
+        lessons/02-model-api-structured-output-streaming/README.md: lessons/model-api-structured-output-streaming/README.md
+        lessons/03-prompt-engineering/README.md: lessons/prompt-engineering/README.md
+        lessons/04-embeddings-and-vector-search/README.md: lessons/embeddings-and-vector-search/README.md
+        lessons/05-tool-calling/README.md: lessons/tool-calling/README.md
+        lessons/06-agent-loop/README.md: lessons/agent-loop/README.md
+        lessons/07-agent-state-and-runtime/README.md: lessons/agent-state-and-runtime/README.md
+        lessons/08-context-engineering-for-agents/README.md: lessons/context-engineering-for-agents/README.md
+        lessons/09-workflow-vs-agent/README.md: lessons/workflow-vs-agent/README.md
+        lessons/10-multi-agent-handoff/README.md: lessons/multi-agent-handoff/README.md
+        lessons/11-mcp/README.md: lessons/mcp/README.md
+        lessons/12-skills-and-capability-layers/README.md: lessons/skills-and-capability-layers/README.md
+        lessons/13-agent-harness/README.md: lessons/agent-harness/README.md
+        lessons/14-rag-end-to-end/README.md: lessons/rag-end-to-end/README.md
+        lessons/15-memory/README.md: lessons/memory/README.md
+        lessons/16-data-engineering/README.md: lessons/data-engineering/README.md
+        lessons/17-system-architecture/README.md: lessons/system-architecture/README.md
+        lessons/18-evaluation/README.md: lessons/evaluation/README.md
+        lessons/19-observability/README.md: lessons/observability/README.md
+        lessons/20-reliability-cost-llmops/README.md: lessons/reliability-cost-llmops/README.md
+        lessons/21-security-governance/README.md: lessons/security-governance/README.md
+        lessons/22-model-adaptation-finetuning-inference/README.md: lessons/model-adaptation-finetuning-inference/README.md
+        lessons/23-product-design-ux/README.md: lessons/product-design-ux/README.md
+        lessons/24-voice-agents/README.md: lessons/voice-agents/README.md
+        lessons/25-system-design-decisions/README.md: lessons/system-design-decisions/README.md
 
 markdown_extensions:
   - admonition
@@ -103,37 +133,37 @@ nav:
   - 课程总览: lessons/README.md
   - 主线课程:
       - "Part 0 起步":
-          - 00 起步: lessons/00-setup/README.md
+          - 00 起步: lessons/setup/README.md
       - "Part 1 模型与上下文":
-          - 01 模型选型与成本: lessons/01-how-llms-work/README.md
-          - 02 调用、结构化输出与流式: lessons/02-model-api-structured-output-streaming/README.md
-          - 03 Prompt Engineering: lessons/03-prompt-engineering/README.md
-          - 04 Embedding 与向量检索: lessons/04-embeddings-and-vector-search/README.md
+          - 01 模型选型与成本: lessons/how-llms-work/README.md
+          - 02 调用、结构化输出与流式: lessons/model-api-structured-output-streaming/README.md
+          - 03 Prompt Engineering: lessons/prompt-engineering/README.md
+          - 04 Embedding 与向量检索: lessons/embeddings-and-vector-search/README.md
       - "Part 2 Tool 与 Agent":
-          - 05 Tool Calling: lessons/05-tool-calling/README.md
-          - 06 Agent 循环与控制流: lessons/06-agent-loop/README.md
-          - 07 Agent State 与 Runtime: lessons/07-agent-state-and-runtime/README.md
-          - 08 Context Engineering: lessons/08-context-engineering-for-agents/README.md
-          - 09 Workflow 还是 Agent: lessons/09-workflow-vs-agent/README.md
-          - 10 多智能体与 Handoff: lessons/10-multi-agent-handoff/README.md
-          - 11 MCP: lessons/11-mcp/README.md
-          - 12 Skill 与能力分层: lessons/12-skills-and-capability-layers/README.md
-          - 13 Agent Harness: lessons/13-agent-harness/README.md
+          - 05 Tool Calling: lessons/tool-calling/README.md
+          - 06 Agent 循环与控制流: lessons/agent-loop/README.md
+          - 07 Agent State 与 Runtime: lessons/agent-state-and-runtime/README.md
+          - 08 Context Engineering: lessons/context-engineering-for-agents/README.md
+          - 09 Workflow 还是 Agent: lessons/workflow-vs-agent/README.md
+          - 10 多智能体与 Handoff: lessons/multi-agent-handoff/README.md
+          - 11 MCP: lessons/mcp/README.md
+          - 12 Skill 与能力分层: lessons/skills-and-capability-layers/README.md
+          - 13 Agent Harness: lessons/agent-harness/README.md
       - "Part 3 知识与记忆":
-          - 14 RAG 端到端: lessons/14-rag-end-to-end/README.md
-          - 15 Memory: lessons/15-memory/README.md
-          - 16 数据工程: lessons/16-data-engineering/README.md
+          - 14 RAG 端到端: lessons/rag-end-to-end/README.md
+          - 15 Memory: lessons/memory/README.md
+          - 16 数据工程: lessons/data-engineering/README.md
       - "Part 4 生产工程":
-          - 17 系统架构与数据流: lessons/17-system-architecture/README.md
-          - 18 评测: lessons/18-evaluation/README.md
-          - 19 可观测性: lessons/19-observability/README.md
-          - 20 可靠性与成本: lessons/20-reliability-cost-llmops/README.md
-          - 21 安全与治理: lessons/21-security-governance/README.md
-          - 22 微调与推理服务: lessons/22-model-adaptation-finetuning-inference/README.md
+          - 17 系统架构与数据流: lessons/system-architecture/README.md
+          - 18 评测: lessons/evaluation/README.md
+          - 19 可观测性: lessons/observability/README.md
+          - 20 可靠性与成本: lessons/reliability-cost-llmops/README.md
+          - 21 安全与治理: lessons/security-governance/README.md
+          - 22 微调与推理服务: lessons/model-adaptation-finetuning-inference/README.md
       - "Part 5 产品与技术决策":
-          - 23 产品设计与交互: lessons/23-product-design-ux/README.md
-          - 24 语音应用: lessons/24-voice-agents/README.md
-          - 25 系统设计与技术决策: lessons/25-system-design-decisions/README.md
+          - 23 产品设计与交互: lessons/product-design-ux/README.md
+          - 24 语音应用: lessons/voice-agents/README.md
+          - 25 系统设计与技术决策: lessons/system-design-decisions/README.md
   # 两类都不是必修，只在需要时才查，所以排在主线之后。分类留着，以后各自还会加内容。
   - 补充基础:
       - 概述: prerequisites/README.md

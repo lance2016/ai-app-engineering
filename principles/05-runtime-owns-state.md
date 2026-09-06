@@ -54,7 +54,7 @@ class Thread:
 ## 对照
 
 - 参考：[12-factor-agents · factor 05](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-05-unify-execution-state.md)、[factor 12](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-12-stateless-reducer.md)（访问日期 2026-09-04）；[langchain-academy · module-2 state schema 与 reducers](https://github.com/langchain-ai/langchain-academy/tree/main/module-2)（访问日期 2026-09-04）
-- 相关课程：[07 Agent State 与 Runtime](../lessons/07-agent-state-and-runtime/README.md)、[15 Memory](../lessons/15-memory/README.md)
+- 相关课程：[07 Agent State 与 Runtime](../lessons/agent-state-and-runtime/README.md)、[15 Memory](../lessons/memory/README.md)
 
 ---
 

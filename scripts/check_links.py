@@ -5,21 +5,25 @@ Scans every .md file in the repo (except templates/, whose links are
 placeholders). External links (http, mailto) and pure anchors are skipped.
 
 Two checks. The first is that the target exists. The second is that a link
-written as `[14 RAG 端到端](../14-rag-end-to-end/README.md)` agrees with itself:
-the 2026-09-06 renumber moved paths but left seven labels naming the old
-lesson, and a check that only resolves paths stays green through that.
-Exit code 1 when either fails.
+written as `[14 RAG 端到端](../rag-end-to-end/README.md)` names the number that
+lesson actually has. Directories carry no number any more -- the nav in
+mkdocs.yml does -- so a lesson inserted in the middle leaves labels all over
+the repo naming whichever lesson used to sit at that number, and a check that
+only resolves paths stays green through it. Exit code 1 when either fails.
 """
 
 import re
 import sys
 from pathlib import Path
 
+from sync_numbering import order
+
 ROOT = Path(__file__).resolve().parents[1]
 SKIP_DIRS = {".git", ".venv", "node_modules", ".pytest_cache", "templates"}
 LINK_RE = re.compile(r"\]\(([^)\s]+)\)")
-# [NN 标题](../NN-slug/...) -- the label's lesson number must match the path's.
-NUMBERED_RE = re.compile(r"\[(\d{2})[^\]]*\]\((?:\.\./)+(\d{2})-[a-z0-9-]+/")
+# [NN 标题](.../slug/README.md) -- the label's number must match the nav's.
+NUMBERED_RE = re.compile(r"\[(\d{2})[^\]]*\]\([^)]*?([a-z0-9-]+)/README\.md")
+NUMBER_OF = {slug: f"{i:02d}" for i, slug in enumerate(order())}
 # Fenced code blocks contain regexes and shell that look like links; skip them.
 FENCE_RE = re.compile(r"^```", re.MULTILINE)
 
@@ -59,9 +63,14 @@ def broken_links(md: Path) -> list[str]:
 
 
 def mislabelled(md: Path) -> list[str]:
-    """Links whose label names a different lesson than the path they point at."""
+    """Links whose label names a different lesson than the one they point at."""
     text = strip_code_blocks(md.read_text(encoding="utf-8"))
-    return [f"[{label} ...] -> {path}-..." for label, path in NUMBERED_RE.findall(text) if label != path]
+    bad = []
+    for label, slug in NUMBERED_RE.findall(text):
+        want = NUMBER_OF.get(slug)   # not a lesson (a prerequisite, say): skip
+        if want and label != want:
+            bad.append(f"[{label} ...] -> {slug}, which is {want}")
+    return bad
 
 
 def main() -> int:

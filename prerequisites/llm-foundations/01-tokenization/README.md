@@ -54,9 +54,9 @@ flowchart LR
 
 ## 它在 AI 应用里用在哪
 
-- token 计费和估算 → [第 02 课](../../../lessons/02-model-api-structured-output-streaming/README.md) 的成本记录、[第 20 课](../../../lessons/20-reliability-cost-llmops/README.md) 的成本预算。
-- 上下文是 token 数 → [第 08 课](../../../lessons/08-context-engineering-for-agents/README.md) 的裁剪与压缩。
-- 特殊 token 与工具调用协议 → [第 05 课](../../../lessons/05-tool-calling/README.md)。
+- token 计费和估算 → [第 02 课](../../../lessons/model-api-structured-output-streaming/README.md) 的成本记录、[第 20 课](../../../lessons/reliability-cost-llmops/README.md) 的成本预算。
+- 上下文是 token 数 → [第 08 课](../../../lessons/context-engineering-for-agents/README.md) 的裁剪与压缩。
+- 特殊 token 与工具调用协议 → [第 05 课](../../../lessons/tool-calling/README.md)。
 
 ## 延伸阅读
 

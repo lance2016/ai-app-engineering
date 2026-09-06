@@ -42,7 +42,7 @@
 
 |  | 没做过 AI 应用 | 做过 RAG 或 Agent |
 |---|---|---|
-| **第一步** | 从 [00 起步](./lessons/00-setup/README.md) 顺着读 | 先看[课程总览](./lessons/README.md)的能力域清单，对照手上的项目 |
+| **第一步** | 从 [00 起步](./lessons/setup/README.md) 顺着读 | 先看[课程总览](./lessons/README.md)的能力域清单，对照手上的项目 |
 | **然后** | Part 1 → Part 5 按推荐顺序走完 | 每个 Part 开头有三到五题，答不上就读那个 Part |
 | **模型原理** | token、attention、KV cache 不熟，先补[补充基础里的 LLM 原理八篇](./prerequisites/README.md) | 读到「前置 F0x」的引用再回查 |
 | **想直接看结论** | 学完每个 Part 后回看[工程原则](./principles/README.md) | [12 条工程原则](./principles/README.md)是全课的压缩版 |
@@ -63,7 +63,7 @@
 
 | # | 课程 | 一句话 |
 |---|---|---|
-| 00 | [起步：怎么读这门课，怎么接第一个模型](./lessons/00-setup/README.md) | 课程定位，加一段能直接复制去跑的最小模型调用 |
+| 00 | [起步：怎么读这门课，怎么接第一个模型](./lessons/setup/README.md) | 课程定位，加一段能直接复制去跑的最小模型调用 |
 
 ### Part 1 模型与上下文
 
@@ -71,10 +71,10 @@
 
 | # | 课程 | 一句话 |
 |---|---|---|
-| 01 | [从模型到应用：能力边界、成本模型与选型](./lessons/01-how-llms-work/README.md) | 把模型当有规格书的部件：硬约束过滤、能力探针、每段对话的成本模型 |
-| 02 | [模型调用、结构化输出与流式](./lessons/02-model-api-structured-output-streaming/README.md) | 拆开一次调用：消息格式、参数、JSON Schema 约束、流式增量、重试与成本 |
-| 03 | [Prompt Engineering 与单次调用的上下文](./lessons/03-prompt-engineering/README.md) | 系统指令、few-shot、输出约束、prompt 版本化与回归门禁 |
-| 04 | [Embedding 与向量检索基础](./lessons/04-embeddings-and-vector-search/README.md) | 选模型和维度、暴力检索到什么规模换索引、切块怎样改变召回、pgvector |
+| 01 | [从模型到应用：能力边界、成本模型与选型](./lessons/how-llms-work/README.md) | 把模型当有规格书的部件：硬约束过滤、能力探针、每段对话的成本模型 |
+| 02 | [模型调用、结构化输出与流式](./lessons/model-api-structured-output-streaming/README.md) | 拆开一次调用：消息格式、参数、JSON Schema 约束、流式增量、重试与成本 |
+| 03 | [Prompt Engineering 与单次调用的上下文](./lessons/prompt-engineering/README.md) | 系统指令、few-shot、输出约束、prompt 版本化与回归门禁 |
+| 04 | [Embedding 与向量检索基础](./lessons/embeddings-and-vector-search/README.md) | 选模型和维度、暴力检索到什么规模换索引、切块怎样改变召回、pgvector |
 
 ### Part 2 Tool 与 Agent
 
@@ -82,15 +82,15 @@
 
 | # | 课程 | 一句话 |
 |---|---|---|
-| 05 | [Tool Calling：从 Schema 到副作用](./lessons/05-tool-calling/README.md) | 工具调用成功包含三件事：选对工具、参数有效、外部系统真的做了且只做了一次 |
-| 06 | [Agent 循环与控制流](./lessons/06-agent-loop/README.md) | 观察、决策、行动的最小循环；停止条件、预算、失败分类与恢复 |
-| 07 | [Agent State 与 Runtime](./lessons/07-agent-state-and-runtime/README.md) | 状态是一份事件记录；checkpoint、暂停恢复、人工介入、double texting |
-| 08 | [Agent 的 Context Engineering](./lessons/08-context-engineering-for-agents/README.md) | 每一轮怎么组装上下文：裁剪、压缩、工具结果整形、缓存友好的布局 |
-| 09 | [Workflow 还是 Agent：架构模式](./lessons/09-workflow-vs-agent/README.md) | 五种 workflow 模式，以及什么时候才真的需要自治 Agent |
-| 10 | [多智能体、Handoff 与 Racing](./lessons/10-multi-agent-handoff/README.md) | 多个 Agent 如何分工、交接和并行竞速；状态归谁、历史给多少 |
-| 11 | [MCP：模型上下文协议](./lessons/11-mcp/README.md) | 能力怎么接入：生命周期、能力发现、两条错误通道、断连处理 |
-| 12 | [Skill 与能力生态分层](./lessons/12-skills-and-capability-layers/README.md) | Tool、MCP、Skill、Plugin、A2A 各管什么；渐进式加载与供应链钉死 |
-| 13 | [Agent Harness：把前八课装进一个真实系统](./lessons/13-agent-harness/README.md) | 编码 Agent 拆解：工具界面、权限分级、hook、上下文寿命 |
+| 05 | [Tool Calling：从 Schema 到副作用](./lessons/tool-calling/README.md) | 工具调用成功包含三件事：选对工具、参数有效、外部系统真的做了且只做了一次 |
+| 06 | [Agent 循环与控制流](./lessons/agent-loop/README.md) | 观察、决策、行动的最小循环；停止条件、预算、失败分类与恢复 |
+| 07 | [Agent State 与 Runtime](./lessons/agent-state-and-runtime/README.md) | 状态是一份事件记录；checkpoint、暂停恢复、人工介入、double texting |
+| 08 | [Agent 的 Context Engineering](./lessons/context-engineering-for-agents/README.md) | 每一轮怎么组装上下文：裁剪、压缩、工具结果整形、缓存友好的布局 |
+| 09 | [Workflow 还是 Agent：架构模式](./lessons/workflow-vs-agent/README.md) | 五种 workflow 模式，以及什么时候才真的需要自治 Agent |
+| 10 | [多智能体、Handoff 与 Racing](./lessons/multi-agent-handoff/README.md) | 多个 Agent 如何分工、交接和并行竞速；状态归谁、历史给多少 |
+| 11 | [MCP：模型上下文协议](./lessons/mcp/README.md) | 能力怎么接入：生命周期、能力发现、两条错误通道、断连处理 |
+| 12 | [Skill 与能力生态分层](./lessons/skills-and-capability-layers/README.md) | Tool、MCP、Skill、Plugin、A2A 各管什么；渐进式加载与供应链钉死 |
+| 13 | [Agent Harness：把前八课装进一个真实系统](./lessons/agent-harness/README.md) | 编码 Agent 拆解：工具界面、权限分级、hook、上下文寿命 |
 
 ### Part 3 知识与记忆
 
@@ -98,9 +98,9 @@
 
 | # | 课程 | 一句话 |
 |---|---|---|
-| 14 | [RAG 端到端](./lessons/14-rag-end-to-end/README.md) | 解析、切块、索引、混合检索、重排、生成、引用，七步每步怎么坏、怎么测 |
-| 15 | [Memory：提取、整合与检索](./lessons/15-memory/README.md) | 会话、任务、长期记忆的边界；提取、冲突合并、过期和删除 |
-| 16 | [数据工程与数据质量](./lessons/16-data-engineering/README.md) | 版本、新鲜度、权限和删除演练，决定 RAG 上限的不是模型而是数据 |
+| 14 | [RAG 端到端](./lessons/rag-end-to-end/README.md) | 解析、切块、索引、混合检索、重排、生成、引用，七步每步怎么坏、怎么测 |
+| 15 | [Memory：提取、整合与检索](./lessons/memory/README.md) | 会话、任务、长期记忆的边界；提取、冲突合并、过期和删除 |
+| 16 | [数据工程与数据质量](./lessons/data-engineering/README.md) | 版本、新鲜度、权限和删除演练，决定 RAG 上限的不是模型而是数据 |
 
 ### Part 4 生产工程
 
@@ -108,12 +108,12 @@
 
 | # | 课程 | 一句话 |
 |---|---|---|
-| 17 | [AI 应用系统架构与端到端数据流](./lessons/17-system-architecture/README.md) | 从客户端到模型再回来的一条完整请求链，以及存储边界 |
-| 18 | [评测：Golden Set、LLM Judge 与 Agent Eval](./lessons/18-evaluation/README.md) | 没有评测集就没有「变好了」；切片、kappa、轨迹断言、回归门禁 |
-| 19 | [可观测性：从日志到 LLM Trace](./lessons/19-observability/README.md) | 结构化日志、OpenTelemetry GenAI 语义约定、四种故障在 trace 里的样子 |
-| 20 | [可靠性、成本、部署与 LLMOps](./lessons/20-reliability-cost-llmops/README.md) | 超时、重试、限流、熔断、fallback、成本预算、SLO、容器与灰度 |
-| 21 | [安全与治理](./lessons/21-security-governance/README.md) | 提示注入、越权、数据泄露、沙箱、供应链、多租户边界、数据生命周期 |
-| 22 | [模型适配、微调与推理服务](./lessons/22-model-adaptation-finetuning-inference/README.md) | 什么时候该微调、显存怎么算、托管和自建的成本临界点 |
+| 17 | [AI 应用系统架构与端到端数据流](./lessons/system-architecture/README.md) | 从客户端到模型再回来的一条完整请求链，以及存储边界 |
+| 18 | [评测：Golden Set、LLM Judge 与 Agent Eval](./lessons/evaluation/README.md) | 没有评测集就没有「变好了」；切片、kappa、轨迹断言、回归门禁 |
+| 19 | [可观测性：从日志到 LLM Trace](./lessons/observability/README.md) | 结构化日志、OpenTelemetry GenAI 语义约定、四种故障在 trace 里的样子 |
+| 20 | [可靠性、成本、部署与 LLMOps](./lessons/reliability-cost-llmops/README.md) | 超时、重试、限流、熔断、fallback、成本预算、SLO、容器与灰度 |
+| 21 | [安全与治理](./lessons/security-governance/README.md) | 提示注入、越权、数据泄露、沙箱、供应链、多租户边界、数据生命周期 |
+| 22 | [模型适配、微调与推理服务](./lessons/model-adaptation-finetuning-inference/README.md) | 什么时候该微调、显存怎么算、托管和自建的成本临界点 |
 
 ### Part 5 产品与技术决策
 
@@ -121,9 +121,9 @@
 
 | # | 课程 | 一句话 |
 |---|---|---|
-| 23 | [AI 产品设计与交互](./lessons/23-product-design-ux/README.md) | 流式 UI 状态机、确认与撤销、引用展示、带切片的反馈闭环 |
-| 24 | [语音应用：链路、延迟预算与打断](./lessons/24-voice-agents/README.md) | 级联还是端到端、一秒的预算怎么分、打断之后历史该记什么 |
-| 25 | [系统设计与技术决策](./lessons/25-system-design-decisions/README.md) | 容量估算、决策矩阵的敏感性、带退出条件的 ADR |
+| 23 | [AI 产品设计与交互](./lessons/product-design-ux/README.md) | 流式 UI 状态机、确认与撤销、引用展示、带切片的反馈闭环 |
+| 24 | [语音应用：链路、延迟预算与打断](./lessons/voice-agents/README.md) | 级联还是端到端、一秒的预算怎么分、打断之后历史该记什么 |
+| 25 | [系统设计与技术决策](./lessons/system-design-decisions/README.md) | 容量估算、决策矩阵的敏感性、带退出条件的 ADR |
 
 ## 仓库结构
 

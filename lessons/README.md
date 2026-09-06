@@ -25,17 +25,17 @@ part: 总览
 <div class="sys__band" markdown="1">
 <p class="sys__bandname">01<span>请求入口</span></p>
 <div class="sys__nodes" markdown="span">
-[User<span>P5 · 23</span>](./23-product-design-ux/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[API<span>P4 · 17</span>](./17-system-architecture/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[Session<span>P2 · 07</span>](./07-agent-state-and-runtime/README.md){ .sysnode }
+[User<span>P5 · 23</span>](./product-design-ux/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[API<span>P4 · 17</span>](./system-architecture/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[Session<span>P2 · 07</span>](./agent-state-and-runtime/README.md){ .sysnode }
 </div>
 </div>
 
 <div class="sys__band" markdown="1">
 <p class="sys__bandname">02<span>运行时</span></p>
 <div class="sys__nodes" markdown="span">
-[Context Builder<span>P2 · 08</span>](./08-context-engineering-for-agents/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[Agent Runtime<span>P2 · 06 07 09</span>](./06-agent-loop/README.md){ .sysnode .sysnode--core }<span class="sys__arrow" aria-hidden="true"></span>[Tool Registry<span>P2 · 05 11 12</span>](./05-tool-calling/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[Model Gateway<span>P1 · 01 02</span>](./02-model-api-structured-output-streaming/README.md){ .sysnode }
+[Context Builder<span>P2 · 08</span>](./context-engineering-for-agents/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[Agent Runtime<span>P2 · 06 07 09</span>](./agent-loop/README.md){ .sysnode .sysnode--core }<span class="sys__arrow" aria-hidden="true"></span>[Tool Registry<span>P2 · 05 11 12</span>](./tool-calling/README.md){ .sysnode }<span class="sys__arrow" aria-hidden="true"></span>[Model Gateway<span>P1 · 01 02</span>](./model-api-structured-output-streaming/README.md){ .sysnode }
 </div>
 <div class="sys__aside" markdown="span">
-[Fallback / Degrade<span>P4 · 20</span>](./20-reliability-cost-llmops/README.md){ .sysnode .sysnode--risk }
+[Fallback / Degrade<span>P4 · 20</span>](./reliability-cost-llmops/README.md){ .sysnode .sysnode--risk }
 <span class="sys__asidenote">下游超时、限流、模型不可用，走这条线</span>
 </div>
 </div>
@@ -43,7 +43,7 @@ part: 总览
 <div class="sys__band sys__band--async" markdown="1">
 <p class="sys__bandname">03<span>知识与记忆</span></p>
 <div class="sys__nodes" markdown="span">
-[RAG<span>P3 · 14</span>](./14-rag-end-to-end/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Memory<span>P3 · 15</span>](./15-memory/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Data Pipeline<span>P3 · 16</span>](./16-data-engineering/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Vector Index<span>P1 · 04</span>](./04-embeddings-and-vector-search/README.md){ .sysnode .sysnode--async }
+[RAG<span>P3 · 14</span>](./rag-end-to-end/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Memory<span>P3 · 15</span>](./memory/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Data Pipeline<span>P3 · 16</span>](./data-engineering/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Vector Index<span>P1 · 04</span>](./embeddings-and-vector-search/README.md){ .sysnode .sysnode--async }
 </div>
 <p class="sys__bandnote">虚线：被运行时按需调用，或者离线跑。它们不在主请求链上，但决定了回答的上限。</p>
 </div>
@@ -51,7 +51,7 @@ part: 总览
 <div class="sys__band sys__band--base" markdown="1">
 <p class="sys__bandname">04<span>平台底座</span></p>
 <div class="sys__nodes" markdown="span">
-[Evaluation<span>P4 · 18</span>](./18-evaluation/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Trace 与可观测<span>P4 · 19</span>](./19-observability/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Security<span>P4 · 21</span>](./21-security-governance/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Infrastructure<span>P4 · 22</span>](./22-model-adaptation-finetuning-inference/README.md){ .sysnode }
+[Evaluation<span>P4 · 18</span>](./evaluation/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Trace 与可观测<span>P4 · 19</span>](./observability/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Security<span>P4 · 21</span>](./security-governance/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Infrastructure<span>P4 · 22</span>](./model-adaptation-finetuning-inference/README.md){ .sysnode }
 </div>
 <p class="sys__bandnote">横切：每一层都要用到。缺了它，上面三层出了问题你只能看到最后那句错误回答。</p>
 </div>
@@ -120,7 +120,7 @@ flowchart TB
 
 | 课 | 一句话 |
 |---|---|
-| [00](./00-setup/README.md) | Chat Completions、Responses、Claude Messages 的对比，加一段能直接复制去跑的工具调用往返 |
+| [00](./setup/README.md) | Chat Completions、Responses、Claude Messages 的对比，加一段能直接复制去跑的工具调用往返 |
 
 **出师标准。** 答不上就回去看括号里那一课。
 
@@ -152,7 +152,7 @@ flowchart TB
 
 数字本身不重要，重要的是**按峰值算而不是按单轮算**。只按单轮估的人会以为能聊六十多轮，然后在长对话用户身上收到 400，而且很难复现。
 
-→ [01](./01-how-llms-work/README.md)
+→ [01](./how-llms-work/README.md)
 </details>
 
 **2. 模型在 benchmark 上分数很高，为什么不能直接用来判断它适合你的应用？**
@@ -162,7 +162,7 @@ flowchart TB
 
 榜单测的是别人的任务。真实模型在自己的探针上往往参差：算术过了，数字母挂了；能写 JSON，但拒绝承认不知道。要的是一组「一个提示加一个确定性检查」的探针，跑在自己真正依赖的能力上。
 
-→ [01](./01-how-llms-work/README.md)
+→ [01](./how-llms-work/README.md)
 </details>
 
 **3. 换一个更便宜的模型，成本一定会降吗？**
@@ -172,7 +172,7 @@ flowchart TB
 
 不一定。便宜的模型可能需要更长的 few-shot 才达到同样的质量，可能更容易输出格式错误导致重试，可能在 Agent 里多走两步。每 token 单价只是成本模型里的一个因子，要算的是「一次完整任务的钱」。
 
-→ [01](./01-how-llms-work/README.md) · [20](./20-reliability-cost-llmops/README.md)
+→ [01](./how-llms-work/README.md) · [20](./reliability-cost-llmops/README.md)
 </details>
 
 **4. JSON Schema 约束了输出，还需要在代码里校验吗？**
@@ -182,7 +182,7 @@ flowchart TB
 
 需要。约束降低了出错概率，不等于消除。而且 schema 只管结构，管不了值的业务合法性——日期格式对，不代表那是一个存在的日期；枚举值合法，不代表在当前场景下允许。校验失败时把错误原文回给模型让它改，比抛给用户强。
 
-→ [02](./02-model-api-structured-output-streaming/README.md)
+→ [02](./model-api-structured-output-streaming/README.md)
 </details>
 
 **5. 换了 embedding 模型，旧向量还能用吗？**
@@ -192,17 +192,17 @@ flowchart TB
 
 不能。不同模型的向量空间不可比，混在一起检索出的名次没有意义。必须重建全部向量，而且每条向量要记录它是哪个模型哪个版本产生的，迁移期间新旧共存要按版本过滤。
 
-→ [04](./04-embeddings-and-vector-search/README.md)
+→ [04](./embeddings-and-vector-search/README.md)
 </details>
 
 </details>
 
 | 课 | 一句话 |
 |---|---|
-| [01](./01-how-llms-work/README.md) | 硬约束过滤、能力探针、每段对话的成本模型 |
-| [02](./02-model-api-structured-output-streaming/README.md) | 消息格式、JSON Schema 约束、流式增量、重试 |
-| [03](./03-prompt-engineering/README.md) | 系统指令、few-shot、prompt 版本化与回归门禁 |
-| [04](./04-embeddings-and-vector-search/README.md) | 选模型和维度、暴力检索到什么规模换索引、pgvector |
+| [01](./how-llms-work/README.md) | 硬约束过滤、能力探针、每段对话的成本模型 |
+| [02](./model-api-structured-output-streaming/README.md) | 消息格式、JSON Schema 约束、流式增量、重试 |
+| [03](./prompt-engineering/README.md) | 系统指令、few-shot、prompt 版本化与回归门禁 |
+| [04](./embeddings-and-vector-search/README.md) | 选模型和维度、暴力检索到什么规模换索引、pgvector |
 
 **出师标准。**
 
@@ -234,7 +234,7 @@ flowchart TB
 
 没有。到这一步为止只是一段结构化 JSON，说「我想调这个工具」。之后每一步都是确定性代码：查注册表、校验参数、判断要不要确认、带幂等键执行。**动作只能从工具调用通道取**——用正则从模型正文里捞 JSON 出来执行，是最常见的事故来源之一。
 
-→ [05](./05-tool-calling/README.md)
+→ [05](./tool-calling/README.md)
 </details>
 
 **2. 幂等键从工具调用的参数哈希派生，够不够？**
@@ -244,7 +244,7 @@ flowchart TB
 
 不够，而且方向反了。从 `call.id` 加参数派生，防的是**同一次调用超时后的重试**。模型如果在下一轮重新发起同一笔转账，`call.id` 是新的，键也是新的，外部系统会认为这是第二笔业务。要挡这种重复，得再有一个从业务意图派生的键——这个会话、这个订单、这一次用户确认。两种键防两件事。
 
-→ [05](./05-tool-calling/README.md) · [原则 06](../principles/06-side-effects-are-idempotent-and-auditable.md)
+→ [05](./tool-calling/README.md) · [原则 06](../principles/06-side-effects-are-idempotent-and-auditable.md)
 </details>
 
 **3. Agent 的状态存在哪？存对话历史够不够？**
@@ -254,7 +254,7 @@ flowchart TB
 
 不够。状态的事实来源是一份 append-only 的事件线程：走到哪一步、在等什么、剩多少预算、哪个工具调用还没回结果，都从它推导。对话历史只是这份线程的一种渲染。状态归运行时持有，不归模型、不归框架、不归前端。
 
-→ [07](./07-agent-state-and-runtime/README.md) · [原则 05](../principles/05-runtime-owns-state.md)
+→ [07](./agent-state-and-runtime/README.md) · [原则 05](../principles/05-runtime-owns-state.md)
 </details>
 
 **4. 上下文窗口还剩很多空间，是不是就该多塞点历史进去？**
@@ -264,7 +264,7 @@ flowchart TB
 
 不是。窗口是注意力预算不是容器：多一个 token，模型分给其他 token 的注意力就少一点，中段内容的召回尤其容易掉。目标是在预算内放进信号最强的一组 token，不是塞满。
 
-→ [08](./08-context-engineering-for-agents/README.md)
+→ [08](./context-engineering-for-agents/README.md)
 </details>
 
 **5. 两个 Agent 的方案，什么时候比一个 Agent 差？**
@@ -274,22 +274,22 @@ flowchart TB
 
 绝大多数时候。多一个 Agent 就多一层交接、一份要决定归属的状态、一个「历史给多少」的问题，以及互相推诿的可能。真正需要多 Agent 的是职责边界清晰、上下文确实该隔离的场景；「让一个 Agent 审另一个 Agent」这类设计，多数时候用一次确定性校验就够了。
 
-→ [09](./09-workflow-vs-agent/README.md) · [10](./10-multi-agent-handoff/README.md)
+→ [09](./workflow-vs-agent/README.md) · [10](./multi-agent-handoff/README.md)
 </details>
 
 </details>
 
 | 课 | 一句话 |
 |---|---|
-| [05](./05-tool-calling/README.md) | 选对工具、参数有效、外部系统真的做了且只做了一次 |
-| [06](./06-agent-loop/README.md) | 最小循环；停止条件、预算、失败分类与恢复 |
-| [07](./07-agent-state-and-runtime/README.md) | 状态是一份事件记录；checkpoint、暂停恢复、人工介入 |
-| [08](./08-context-engineering-for-agents/README.md) | 裁剪、压缩、工具结果整形、缓存友好的布局 |
-| [09](./09-workflow-vs-agent/README.md) | 五种 workflow 模式，什么时候才真的需要自治 Agent |
-| [10](./10-multi-agent-handoff/README.md) | 分工、交接和并行竞速；状态归谁、历史给多少 |
-| [11](./11-mcp/README.md) | 能力接入：生命周期、能力发现、两条错误通道 |
-| [12](./12-skills-and-capability-layers/README.md) | Tool、MCP、Skill、Plugin、A2A 各管什么 |
-| [13](./13-agent-harness/README.md) | 编码 Agent 拆解：工具界面、权限分级、hook、上下文寿命 |
+| [05](./tool-calling/README.md) | 选对工具、参数有效、外部系统真的做了且只做了一次 |
+| [06](./agent-loop/README.md) | 最小循环；停止条件、预算、失败分类与恢复 |
+| [07](./agent-state-and-runtime/README.md) | 状态是一份事件记录；checkpoint、暂停恢复、人工介入 |
+| [08](./context-engineering-for-agents/README.md) | 裁剪、压缩、工具结果整形、缓存友好的布局 |
+| [09](./workflow-vs-agent/README.md) | 五种 workflow 模式，什么时候才真的需要自治 Agent |
+| [10](./multi-agent-handoff/README.md) | 分工、交接和并行竞速；状态归谁、历史给多少 |
+| [11](./mcp/README.md) | 能力接入：生命周期、能力发现、两条错误通道 |
+| [12](./skills-and-capability-layers/README.md) | Tool、MCP、Skill、Plugin、A2A 各管什么 |
+| [13](./agent-harness/README.md) | 编码 Agent 拆解：工具界面、权限分级、hook、上下文寿命 |
 
 **出师标准。**
 
@@ -325,7 +325,7 @@ flowchart TB
 
 Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回的那些，召回了几成」。单文档问答看 Hit@k 就够，需要汇总多份材料的问题必须看 Recall@k——Hit@5 是 100%、Recall@5 只有 40% 的系统，回答会自信地漏掉一半事实。
 
-→ [14](./14-rag-end-to-end/README.md)
+→ [14](./rag-end-to-end/README.md)
 </details>
 
 **2. 加了混合检索（向量加 BM25），效果一定更好吗？**
@@ -335,7 +335,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 不一定。混合的收益来自两种信号互补，但融合权重是要在自己数据上调的；权重不对时，BM25 的高分噪声会把向量召回的好结果挤出 top-k。是否更好，要用自己的那组样本量出来。
 
-→ [14](./14-rag-end-to-end/README.md)
+→ [14](./rag-end-to-end/README.md)
 </details>
 
 **3. 回答里带了引用，能证明这句话是对的吗？**
@@ -345,7 +345,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 不能。引用校验能证明的是「这句话有一个来源，且这个来源在检索结果里」，它挡的是编造出处。至于那句话是否真的被那段原文支撑，词面重合度算不出来——那是一次独立的判断，要么人看，要么用校准过的 judge。
 
-→ [14](./14-rag-end-to-end/README.md) · [18](./18-evaluation/README.md)
+→ [14](./rag-end-to-end/README.md) · [18](./evaluation/README.md)
 </details>
 
 **4. 记忆系统最危险的故障是什么？**
@@ -355,16 +355,16 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 不是想不起来，是记住了一件已经不成立的事。用户改了口径、退了订、换了偏好，旧记忆还在被召回并当成事实用。所以记忆的测试样本必须有两类：该记住的，和该忘掉的。第二类最容易漏。
 
-→ [15](./15-memory/README.md)
+→ [15](./memory/README.md)
 </details>
 
 </details>
 
 | 课 | 一句话 |
 |---|---|
-| [14](./14-rag-end-to-end/README.md) | 解析、切块、索引、混合检索、重排、生成、引用 |
-| [15](./15-memory/README.md) | 会话、任务、长期记忆的边界；提取、冲突合并、过期 |
-| [16](./16-data-engineering/README.md) | 版本、新鲜度、权限和删除演练 |
+| [14](./rag-end-to-end/README.md) | 解析、切块、索引、混合检索、重排、生成、引用 |
+| [15](./memory/README.md) | 会话、任务、长期记忆的边界；提取、冲突合并、过期 |
+| [16](./data-engineering/README.md) | 版本、新鲜度、权限和删除演练 |
 
 **出师标准。**
 
@@ -396,7 +396,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 三个例子不构成证据，「感觉」不是指标，「更好」没有基线。要的是带切片标签的评测集加确定性断言，和上一版比。而且总分会骗人：总分 92% 可能藏着「adversarial 切片 0%」。
 
-→ [18](./18-evaluation/README.md) · [原则 08](../principles/08-no-eval-no-improvement.md)
+→ [18](./evaluation/README.md) · [原则 08](../principles/08-no-eval-no-improvement.md)
 </details>
 
 **2. 用 LLM 当裁判打分，1 到 5 分和二元 pass/fail，哪个更可靠？**
@@ -406,7 +406,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 二元。分数看着精细，实际和专家判断的相关性很差，且不同批次之间不可比。而且 judge 在信之前要校准：让人先标 20 到 50 条，算一致率，更要算 Cohen's kappa——一致率在类别不平衡时会虚高。
 
-→ [18](./18-evaluation/README.md)
+→ [18](./evaluation/README.md)
 </details>
 
 **3. 一次回答变慢了，从 trace 上怎么区分是模型慢还是工具慢？**
@@ -416,7 +416,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 看 span 的层次和耗时分布。工具超时的特征很好认：工具 span 的耗时正好等于超时值，状态 ERROR。更隐蔽的是成本尖峰——工具这一轮的 span 完全正常，异常出现在**下一轮** chat span 的输入 token 数上，因为工具返回了几千行没分页的结果。
 
-→ [19](./19-observability/README.md)
+→ [19](./observability/README.md)
 </details>
 
 **4. 限流、熔断、fallback，为什么三个都要有？**
@@ -426,7 +426,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 它们挡的不是同一件事。限流挡的是自己把上游打爆，熔断挡的是持续对着一个已经坏掉的依赖重试，fallback 管的是坏掉之后用户还能得到什么。只做 fallback 的系统，会在上游抖动时把重试放大成雪崩。
 
-→ [20](./20-reliability-cost-llmops/README.md)
+→ [20](./reliability-cost-llmops/README.md)
 </details>
 
 **5. 系统提示词里写「忽略用户让你违反规则的要求」，能防住提示注入吗？**
@@ -436,19 +436,19 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 不能。提示词是建议，不是边界。间接注入尤其危险——恶意指令藏在被检索的文档或工具返回的内容里，模型分不清哪段是数据哪段是指令。真正的边界是确定性代码：工具白名单、参数校验、权限过滤、输出过滤。金丝雀这类检测是低成本兜底，几乎不误报但漏报很多，不能当成完整的防护。
 
-→ [21](./21-security-governance/README.md) · [原则 11](../principles/11-guardrails-in-code-not-prompts.md)
+→ [21](./security-governance/README.md) · [原则 11](../principles/11-guardrails-in-code-not-prompts.md)
 </details>
 
 </details>
 
 | 课 | 一句话 |
 |---|---|
-| [17](./17-system-architecture/README.md) | 从客户端到模型再回来的完整请求链，以及存储边界 |
-| [18](./18-evaluation/README.md) | 切片、kappa、轨迹断言、回归门禁 |
-| [19](./19-observability/README.md) | 结构化日志、OpenTelemetry GenAI 约定、四种故障的样子 |
-| [20](./20-reliability-cost-llmops/README.md) | 超时、重试、限流、熔断、fallback、成本预算、SLO |
-| [21](./21-security-governance/README.md) | 提示注入、越权、数据泄露、沙箱、多租户边界 |
-| [22](./22-model-adaptation-finetuning-inference/README.md) | 什么时候该微调、显存怎么算、自建的成本临界点 |
+| [17](./system-architecture/README.md) | 从客户端到模型再回来的完整请求链，以及存储边界 |
+| [18](./evaluation/README.md) | 切片、kappa、轨迹断言、回归门禁 |
+| [19](./observability/README.md) | 结构化日志、OpenTelemetry GenAI 约定、四种故障的样子 |
+| [20](./reliability-cost-llmops/README.md) | 超时、重试、限流、熔断、fallback、成本预算、SLO |
+| [21](./security-governance/README.md) | 提示注入、越权、数据泄露、沙箱、多租户边界 |
+| [22](./model-adaptation-finetuning-inference/README.md) | 什么时候该微调、显存怎么算、自建的成本临界点 |
 
 **出师标准。**
 
@@ -483,7 +483,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 先写状态转移表再写渲染，这类问题会暴露在表上，而不是在用户投诉里。
 
-→ [23](./23-product-design-ux/README.md)
+→ [23](./product-design-ux/README.md)
 </details>
 
 **2. 语音机器人说到一半被用户打断，接下来写进对话历史的应该是什么？**
@@ -495,7 +495,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 这类问题特别难查：文本 trace 上每一轮都自洽，模型输出也正常，只有用户觉得「它在胡说」。要发现它，历史里必须记下这一轮实际播出到哪里。
 
-→ [24](./24-voice-agents/README.md)
+→ [24](./voice-agents/README.md)
 </details>
 
 **3. 一份 ADR 里最容易缺的是哪一部分？**
@@ -505,16 +505,16 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 退出条件。决定和后果多数人写得出，「什么情况下重开这个决定」写得出的很少。没有退出条件的 ADR 会变成教条，情况变了没人敢改。反过来，**写不出退出条件，通常说明还没想清楚为什么选它**——它把「要不要改」从立场问题变成观测问题。写完最好对应到一个仪表盘或一条告警，否则没人盯。
 
-→ [25](./25-system-design-decisions/README.md)
+→ [25](./system-design-decisions/README.md)
 </details>
 
 </details>
 
 | 课 | 一句话 |
 |---|---|
-| [23](./23-product-design-ux/README.md) | 流式 UI 状态机、确认与撤销、引用展示、反馈闭环 |
-| [24](./24-voice-agents/README.md) | 级联还是端到端、一秒的预算怎么分、打断之后历史记什么 |
-| [25](./25-system-design-decisions/README.md) | 容量估算、决策矩阵的敏感性、带退出条件的 ADR |
+| [23](./product-design-ux/README.md) | 流式 UI 状态机、确认与撤销、引用展示、反馈闭环 |
+| [24](./voice-agents/README.md) | 级联还是端到端、一秒的预算怎么分、打断之后历史记什么 |
+| [25](./system-design-decisions/README.md) | 容量估算、决策矩阵的敏感性、带退出条件的 ADR |
 
 **出师标准。**
 

@@ -52,7 +52,7 @@ def locate(case, trace) -> str:
 ## 对照
 
 - 参考：[Hamel Husain · Your AI Product Needs Evals](https://hamel.dev/blog/posts/evals/)（访问日期 2026-09-04），"critically examine your traces and failure modes"那一段；[ai-agents-for-beginners · 10 AI Agents in Production](https://github.com/microsoft/ai-agents-for-beginners/blob/main/10-ai-agents-production/README.md)（访问日期 2026-09-04）的 root-cause analysis 一节
-- 相关课程：[14 RAG](../lessons/14-rag-end-to-end/README.md)、[16 数据工程](../lessons/16-data-engineering/README.md)、[18 评测](../lessons/18-evaluation/README.md)、[19 可观测性](../lessons/19-observability/README.md)
+- 相关课程：[14 RAG](../lessons/rag-end-to-end/README.md)、[16 数据工程](../lessons/data-engineering/README.md)、[18 评测](../lessons/evaluation/README.md)、[19 可观测性](../lessons/observability/README.md)
 
 ---
 

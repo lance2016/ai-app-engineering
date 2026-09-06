@@ -52,9 +52,9 @@ flowchart LR
 
 ## 它在 AI 应用里用在哪
 
-- 要点 1 和 3 是主线 [第 01 课](../../../lessons/01-how-llms-work/README.md) 讨论「能力边界」的起点，也是 [第 14 课 RAG](../../../lessons/14-rag-end-to-end/README.md) 存在的理由。
-- 要点 2 → [第 07 课 State 与 Runtime](../../../lessons/07-agent-state-and-runtime/README.md)。
-- 要点 10 → [第 08 课 Context Engineering](../../../lessons/08-context-engineering-for-agents/README.md)。
+- 要点 1 和 3 是主线 [第 01 课](../../../lessons/how-llms-work/README.md) 讨论「能力边界」的起点，也是 [第 14 课 RAG](../../../lessons/rag-end-to-end/README.md) 存在的理由。
+- 要点 2 → [第 07 课 State 与 Runtime](../../../lessons/agent-state-and-runtime/README.md)。
+- 要点 10 → [第 08 课 Context Engineering](../../../lessons/context-engineering-for-agents/README.md)。
 
 ## 延伸阅读
 

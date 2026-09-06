@@ -41,7 +41,7 @@ async def handle_refund(request):
 ## 对照
 
 - 参考：[Anthropic · Building effective agents](https://www.anthropic.com/research/building-effective-agents)（访问日期 2026-09-04）；[12-factor-agents · factor 08 Own your control flow](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-08-own-your-control-flow.md)（访问日期 2026-09-04）
-- 相关课程：[09 Workflow 还是 Agent](../lessons/09-workflow-vs-agent/README.md)、[06 Agent 循环与控制流](../lessons/06-agent-loop/README.md)
+- 相关课程：[09 Workflow 还是 Agent](../lessons/workflow-vs-agent/README.md)、[06 Agent 循环与控制流](../lessons/agent-loop/README.md)
 
 ---
 

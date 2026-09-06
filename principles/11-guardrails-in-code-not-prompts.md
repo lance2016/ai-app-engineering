@@ -51,7 +51,7 @@ def bind_identity(ctx: RequestContext, call: ToolCall) -> ToolCall:
 ## 对照
 
 - 参考：[OWASP Top 10 for LLM Applications 2025](https://genai.owasp.org/llm-top-10/)（访问日期 2026-09-04，LLM01 Prompt Injection、LLM06 Excessive Agency、LLM07 System Prompt Leakage 三条直接对应上表）；[ai-agents-for-beginners · 06 Building Trustworthy Agents](https://github.com/microsoft/ai-agents-for-beginners/blob/main/06-building-trustworthy-agents/README.md)（访问日期 2026-09-04，Understanding Threats 一节）
-- 相关课程：[21 安全与治理](../lessons/21-security-governance/README.md)、[05 Tool Calling](../lessons/05-tool-calling/README.md)
+- 相关课程：[21 安全与治理](../lessons/security-governance/README.md)、[05 Tool Calling](../lessons/tool-calling/README.md)
 
 ---
 

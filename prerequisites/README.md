@@ -2,7 +2,7 @@
 
 > 这里的东西**都不是必修**，分两类：**工程能力**回答「读这门课的代码需要会什么」，**算法基础**回答「模型和检索为什么这样工作」。缺哪块补哪块，不用通读。
 >
-> 底子够的人直接去 [第 00 课](../lessons/00-setup/README.md)；读主线时遇到「前置 F0x」的引用，再回来看对应那篇。
+> 底子够的人直接去 [第 00 课](../lessons/setup/README.md)；读主线时遇到「前置 F0x」的引用，再回来看对应那篇。
 
 ## 一、工程能力
 
@@ -66,11 +66,11 @@
 
 | 你的情况 | 建议 |
 |---|---|
-| 必备项基本都有，没做过 AI 应用 | [第 00 课](../lessons/00-setup/README.md)顺着读 |
+| 必备项基本都有，没做过 AI 应用 | [第 00 课](../lessons/setup/README.md)顺着读 |
 | 做过 AI 应用，想查漏补缺 | 看[课程总览](../lessons/README.md)，每个 Part 开头有几道题，答不上就读那个 Part |
 | 模型原理不熟（token、attention、KV cache） | 上面那八篇 |
 | 必备项缺得比较多 | 先补 Python 的类型注解、dataclass、async 三项和 SQL，其余边读边补 |
 
 ---
 
-[主线第 00 课 →](../lessons/00-setup/README.md)
+[主线第 00 课 →](../lessons/setup/README.md)

@@ -10,6 +10,7 @@ docs = [
     "jieba>=0.42.1",
     "mkdocs-glightbox>=0.5.2",
     "mkdocs-material>=9.5",
+    "mkdocs-redirects>=1.2.3",
 ]
 dev = [
     "pyyaml>=6.0.3",

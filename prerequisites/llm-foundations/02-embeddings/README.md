@@ -51,15 +51,15 @@ flowchart LR
 
 **拿 LLM 的 embedding 层当文本向量用。** 取最后一层隐状态做平均，效果通常远不如专门的 embedding 模型——后者是为「整段文本的相似度」训练的，前者不是。
 
-**查询和文档用了不同的前缀。** E5 系列要 `query: ` 和 `passage: `，bge 的中文检索要带指令前缀。写错、漏写、两边不一致，**接口都不会报错**，只是召回悄悄掉一截。这类问题只有 Recall@k 能发现（[第 14 课](../../../lessons/14-rag-end-to-end/README.md)）。
+**查询和文档用了不同的前缀。** E5 系列要 `query: ` 和 `passage: `，bge 的中文检索要带指令前缀。写错、漏写、两边不一致，**接口都不会报错**，只是召回悄悄掉一截。这类问题只有 Recall@k 能发现（[第 14 课](../../../lessons/rag-end-to-end/README.md)）。
 
 **把余弦分数当成绝对的相关性阈值。** 「0.8 以上算相关」这种规则是跟着模型走的：同一批数据换一个模型，最高分可能只有 0.6，阈值一卡就把对的结果全挡在外面。阈值要在自己的数据上标定，**换模型必须重新标定**——这和「换模型要重建向量」是同一件事的两面。
 
 ## 它在 AI 应用里用在哪
 
-- 索引、维度选择与 pgvector → [第 04 课](../../../lessons/04-embeddings-and-vector-search/README.md)
-- 混合检索与重排 → [第 14 课 RAG](../../../lessons/14-rag-end-to-end/README.md)
-- 记忆召回 → [第 15 课 Memory](../../../lessons/15-memory/README.md)
+- 索引、维度选择与 pgvector → [第 04 课](../../../lessons/embeddings-and-vector-search/README.md)
+- 混合检索与重排 → [第 14 课 RAG](../../../lessons/rag-end-to-end/README.md)
+- 记忆召回 → [第 15 课 Memory](../../../lessons/memory/README.md)
 
 ## 延伸阅读
 

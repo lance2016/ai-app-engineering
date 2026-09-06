@@ -16,6 +16,8 @@ jobs:
           enable-cache: true
       - name: Install
         run: uv sync --all-groups
+      - name: Lesson numbers match the nav
+        run: uv run python scripts/sync_numbering.py --check
       - name: Relative links resolve
         run: uv run python scripts/check_links.py
       - name: Complete units meet the template

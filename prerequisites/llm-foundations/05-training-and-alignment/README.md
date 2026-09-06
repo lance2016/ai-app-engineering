@@ -62,10 +62,10 @@ flowchart LR
 
 ## 它在 AI 应用里用在哪
 
-- system prompt 为什么有效、边界在哪 → [第 03 课 Prompt Engineering](../../../lessons/03-prompt-engineering/README.md)
-- 工具调用能力的来源 → [第 05 课](../../../lessons/05-tool-calling/README.md) 守卫存在的理由
-- 分类器在 Agent 里的位置 → [第 09 课 Routing](../../../lessons/09-workflow-vs-agent/README.md)、[第 21 课 安全过滤](../../../lessons/21-security-governance/README.md)
-- 该 prompt、该 RAG 还是该微调 → [第 22 课](../../../lessons/22-model-adaptation-finetuning-inference/README.md) 的决策树
+- system prompt 为什么有效、边界在哪 → [第 03 课 Prompt Engineering](../../../lessons/prompt-engineering/README.md)
+- 工具调用能力的来源 → [第 05 课](../../../lessons/tool-calling/README.md) 守卫存在的理由
+- 分类器在 Agent 里的位置 → [第 09 课 Routing](../../../lessons/workflow-vs-agent/README.md)、[第 21 课 安全过滤](../../../lessons/security-governance/README.md)
+- 该 prompt、该 RAG 还是该微调 → [第 22 课](../../../lessons/model-adaptation-finetuning-inference/README.md) 的决策树
 
 ## 延伸阅读
 

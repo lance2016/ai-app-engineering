@@ -9,7 +9,7 @@
 | 层 | 目录 | 形式 |
 |---|---|---|
 | 补充基础 | `prerequisites/` | 分两类：**工程能力**（`engineering-foundations.md`）和**算法基础**（`algorithm-foundations.md` 加 `llm-foundations/` 的 F00–F07 八篇）。前两者是学习索引，只指路不教；八篇讲 LLM 原理 |
-| 主线 | `lessons/` | 26 课 00–25，每课一个 `README.md` |
+| 主线 | `lessons/` | 26 课，每课一个 `README.md`。目录名不带编号，编号由 `mkdocs.yml` 的 nav 位置决定 |
 | 原则 | `principles/` | 12 条，一条一个文件，12-factor-agents 风格 |
 | 查阅 | `reference/` | 术语表、技术选型、框架一览、外部资料、诊断题 |
 
@@ -28,8 +28,23 @@
 ## 2. 硬性目录规则
 
 1. **不新增一级目录。** 新内容只能进 `prerequisites/ lessons/ principles/ reference/`。
-2. **`lessons/` 编号严格等于学习顺序。** 不允许在末尾追加编号来塞新主题。真要新课，和维护者确认后整体重排。
-3. **目录名英文 kebab-case，标题中文。** 不改已有目录名，改名会断所有链接。
+2. **课程顺序只写在 `mkdocs.yml` 的 nav 里。** 目录名不带编号（`lessons/tool-calling/`），课号 00–25 由 nav 的位置算出来。要插一课就插在 nav 里该在的位置，不要为了避免重排把它挂在末尾。
+3. **目录名英文 kebab-case，标题中文。** 不改已有目录名：目录名就是这一课的永久身份，URL、书签和读者的学习进度全挂在它上面。
+
+### 2.1 怎么加一课
+
+```bash
+mkdir lessons/<slug> && $EDITOR lessons/<slug>/README.md   # 1. 写课
+# 2. mkdocs.yml 的 nav 里插一行，位置就是学习顺序，编号随便写，脚本会纠
+uv run python scripts/sync_numbering.py                    # 3. 编号全站对齐
+```
+
+第 3 步会自动改：首页目录的序号、`lessons/README.md` 的课程表、每课底部的上下课导航、每课 h1、nav 标签。
+它改不了的会打上 `BY HAND` 让你自己处理，通常是两类：首页课程目录里缺的那一行（放哪个 Part、叫什么名字是你的判断），
+以及正文里「26 课」这类计数（可能要改数字，也可能要改说法）。
+
+**不需要做的事：** 改目录名、改链接、加重定向、动 `progress.js`。旧地址由 `mkdocs.yml` 里那批
+2026-09-06 留下的 redirect 接着，读者进度按 slug 存，插课不会让任何人的进度失效。
 4. **不放可运行的项目代码。** `lessons/` 里的代码是示意用的，写在 README 的代码块里，不建 `code/` 目录，不建 `tests/`。需要落地的东西写进「工程落地」小节，或者指向参考实现仓库。
    唯一的例外是 `prerequisites/llm-foundations/*/code/`：那几个脚本靠「跑一下看数字怎么变」才讲得清（attention 在算什么、温度怎么改变分布、KV cache 有多大），**必须纯标准库、`python3 xxx.py` 直接能跑**，不引入任何依赖。
 5. **不创建 Dashboard、周计划、学习记录、复盘之类的文件。** 那是读者自己的事。
@@ -49,12 +64,13 @@
 链接一律写 Markdown 语法，class 和属性靠 `attr_list` 挂上去：
 
 ```markdown
-[<span>01</span> 模型选型与成本](lessons/01-how-llms-work/README.md){ .lsn data-lesson="01" }
+[<span>01</span> 模型选型与成本](lessons/how-llms-work/README.md){ .lsn data-lesson="how-llms-work" }
 ```
 
 raw HTML 里的 `href` 既不会被 MkDocs 改写成站点 URL，也逃过 `check_links.py`，所以不要那样写。
-首页课程目录里每个课程链接上的 `data-lesson` 是进度脚本认课的唯一依据，加课或改路径时必须同步：
-进度计数、26 格尺规和首屏那个「接着读」按钮全靠它，漏一条那一课就既标不上、也接不上。
+`data-lesson` 是进度脚本认课的唯一依据，值必须是这一课的 slug，`<span>` 里是它的课号——两者都由
+`sync_numbering.py` 回填，手写错了脚本会纠。进度计数、那把尺规和首屏的「接着读」按钮全靠这份列表，
+漏一课那一课就既标不上、也接不上。尺规的长度、「N 课已掌握」里的数字都从列表长度来，加课不用改。
 
 **全站示意图共用一套视觉约定**，画新图时直接套，不要再发明配色：
 
@@ -109,7 +125,7 @@ estimated_time: 约 N 小时
 ## 工程落地
 从示意代码到能上线还差什么：持久化、监控、多租户、分层、回滚。纯文字。
 **最后一条固定是「怎么测」**：这一课的东西拿什么样本、什么指标验证。评测不是第 18 课才开始的事，
-每课都要留下一块以后能进 golden set 的东西，18 课只负责把它们合成一个系统。
+每课都要留下一块以后能进 golden set 的东西，第 18 课只负责把它们合成一个系统。
 
 ## 框架映射
 一张表，本课概念在 LangGraph、OpenAI Agents SDK、Claude Agent SDK 里各叫什么。
@@ -194,16 +210,20 @@ frontmatter 的 `status`：
 - 不要在课文里推销某个框架
 - 不要把示意代码写成能跑的完整程序（那是参考实现仓库的事）
 - 不要新增 `code/`、`tests/`、`scripts/` 里的运行时代码
-- 不要改课程编号
+- 不要手写课程编号。要改顺序就改 nav，然后跑 `sync_numbering.py`
+- 不要给课程目录名加回数字前缀
 - 不要引用已经拆走的 `project/`、`tests/`、`prerequisites/python|backend|algorithms`
 - **不要出练习题。** 2026-09-06 删掉了全部 26 个 `exercises.md`，共 130 题：这是教程不是考卷，而且拆分之后正文只剩示意代码，「改一改、验收标准是 X」已经无从做起
 
 ## 8. 改完之后
 
 ```bash
-uv run python scripts/check_links.py           # 相对链接可达
-uv run python scripts/check_lesson_template.py # complete 单元的结构
-uv run mkdocs build --strict                   # 站点能建
+uv run python scripts/sync_numbering.py            # 课号按 nav 对齐（会改文件）
+uv run python scripts/check_links.py               # 相对链接可达，课号标签没写错
+uv run python scripts/check_lesson_template.py     # complete 单元的结构
+uv run mkdocs build --strict                       # 站点能建
 ```
+
+CI 跑的是 `sync_numbering.py --check`：只报不改，有任何一处对不上就红。
 
 三条都过才算完。CI 跑的就是这三条。
