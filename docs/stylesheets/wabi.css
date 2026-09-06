@@ -478,6 +478,17 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 .md-typeset details > summary::after { color: var(--ws-ink-3); }
 [dir] .md-typeset details[open] > summary { color: var(--ws-ink); }
 
+/* The per-Part self-tests on the lessons overview nest one fold inside
+   another: the block is the outer one, each answer an inner one. The answers
+   step down a level so the two do not read as siblings. */
+[dir] .md-typeset details.quiz > details { border-top-color: var(--ws-rule-faint); }
+[dir] .md-typeset details.quiz > details > summary {
+  font-family: var(--ws-mono);
+  font-size: .78rem;
+  font-weight: 400;
+  color: var(--ws-ink-3);
+}
+
 /* --- rules and marks ------------------------------------------------------ */
 
 .md-typeset hr {

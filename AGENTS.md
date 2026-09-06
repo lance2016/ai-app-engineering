@@ -13,9 +13,13 @@
 | 原则 | `principles/` | 12 条，一条一个文件，12-factor-agents 风格 |
 | 查阅 | `reference/` | 术语表、技术选型、框架一览、外部资料、诊断题 |
 
-另有三个导航页，不属于任何一课，但改课程结构时必须同步：
-`lessons/README.md`（六个 Part 的定位与出师标准）、`reference/diagnostic.md`（有经验读者的自测题）、
+另有两个导航页，不属于任何一课，但改课程结构时必须同步：
+`lessons/README.md`（两张地图、能力域清单，以及每个 Part 的定位、学前自测和出师标准）、
 `prerequisites/README.md`（补充基础的两类分法，以及那两页学习索引的入口）。
+
+**分工是固定的：** `docs/index.md` 管选路线和接着读，`lessons/README.md` 管知识体系。
+自测题不再单独成页，2026-09-06 拆进了 `lessons/README.md` 每个 Part 开头的折叠块，
+每组三到五题，作用是「这个 Part 你要不要读」，不算分。要加题就加进对应的 Part，不要再建独立的自测页。
 
 配套的**参考实现**在另一个仓库 [ai-app-engineering-ref](https://github.com/lance2016/ai-app-engineering-ref)：一个完整的 AI 应用服务，七个里程碑 M0–M6，加 framework-lab 和 capstones。本仓库**不再包含任何可运行的项目代码**，2026-09-05 拆分完成。
 

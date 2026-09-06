@@ -101,7 +101,6 @@ nav:
   - 首页: index.md
   # 侧栏标签只放名词，短到能一眼扫过；完整标题在页面里。
   - 课程总览: lessons/README.md
-  - 能力自测: reference/diagnostic.md
   - 主线课程:
       - "Part 0 起步":
           - 00 起步: lessons/00-setup/README.md

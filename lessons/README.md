@@ -7,7 +7,9 @@ part: 总览
 
 > 26 课不是 26 个独立主题。它们按「一个 AI 应用是怎么一层层长出来的」排序：先有能调通的模型，再有能执行的工具和能循环的运行时，再有外部知识和记忆，最后是让它能上线、能被观测、能被信任的那一圈骨架。
 
-这一页有两张地图，回答两个不同的问题。
+首页管的是选路线和接着读，这一页管的是**知识体系**：一个 AI 应用由哪些部分构成、这些部分按什么顺序学、每个 Part 学完该具备什么能力。
+
+下面有两张地图，回答两个不同的问题。
 
 ## 地图一：一个 AI 应用由哪些组件构成
 
@@ -134,6 +136,67 @@ flowchart TB
 
 **学完之后。** 应用能选对模型、拿到结构化的输出、把指令和上下文管起来，并且能把语义检索接进来。
 
+<details class="quiz" markdown="1">
+<summary>先测一下：这个 Part 你要不要读（5 题）</summary>
+
+每题先自己答一句话，再展开对照。**都答得上就不用通读这个 Part**，挑各课的「常见错误」和「取舍」两节看就够。答不上的，括号里是对应的课。
+
+**1. 一个模型的上下文窗口是 128k，你的对话每轮输入 2000 token、输出 700 token。这个对话能进行多少轮？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+**47 轮。** 关键在于「每轮输入 2000」不等于每轮向模型发送 2000——历史要重发。
+
+第 n 轮发给模型的输入是 `(n-1) × (2000 + 700) + 2000`，加上这一轮的输出，峰值占用正好是 `n × 2700`。`128000 ÷ 2700 ≈ 47.4`，所以第 47 轮还装得下（126900），第 48 轮就溢出了（129600）。
+
+数字本身不重要，重要的是**按峰值算而不是按单轮算**。只按单轮估的人会以为能聊六十多轮，然后在长对话用户身上收到 400，而且很难复现。
+
+→ [01](./01-how-llms-work/README.md)
+</details>
+
+**2. 模型在 benchmark 上分数很高，为什么不能直接用来判断它适合你的应用？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+榜单测的是别人的任务。真实模型在自己的探针上往往参差：算术过了，数字母挂了；能写 JSON，但拒绝承认不知道。要的是一组「一个提示加一个确定性检查」的探针，跑在自己真正依赖的能力上。
+
+→ [01](./01-how-llms-work/README.md)
+</details>
+
+**3. 换一个更便宜的模型，成本一定会降吗？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+不一定。便宜的模型可能需要更长的 few-shot 才达到同样的质量，可能更容易输出格式错误导致重试，可能在 Agent 里多走两步。每 token 单价只是成本模型里的一个因子，要算的是「一次完整任务的钱」。
+
+→ [01](./01-how-llms-work/README.md) · [20](./20-reliability-cost-llmops/README.md)
+</details>
+
+**4. JSON Schema 约束了输出，还需要在代码里校验吗？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+需要。约束降低了出错概率，不等于消除。而且 schema 只管结构，管不了值的业务合法性——日期格式对，不代表那是一个存在的日期；枚举值合法，不代表在当前场景下允许。校验失败时把错误原文回给模型让它改，比抛给用户强。
+
+→ [02](./02-model-api-structured-output-streaming/README.md)
+</details>
+
+**5. 换了 embedding 模型，旧向量还能用吗？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+不能。不同模型的向量空间不可比，混在一起检索出的名次没有意义。必须重建全部向量，而且每条向量要记录它是哪个模型哪个版本产生的，迁移期间新旧共存要按版本过滤。
+
+→ [04](./04-embeddings-and-vector-search/README.md)
+</details>
+
+</details>
+
 | 课 | 一句话 |
 |---|---|
 | [01](./01-how-llms-work/README.md) | 硬约束过滤、能力探针、每段对话的成本模型 |
@@ -158,6 +221,63 @@ flowchart TB
 **解决什么。** 让模型能影响外部世界，同时保证执行、状态和边界全部握在确定性代码手里。这是全课最长的一个 Part，也是「AI 应用」和「聊天界面」的分界线。
 
 **学完之后。** 应用有了工具、循环、状态、上下文组装和能力接入，可以自己走多步完成一个任务，并且见过这些零件在一个真实产品里是怎么拼起来的。
+
+<details class="quiz" markdown="1">
+<summary>先测一下：这个 Part 你要不要读（5 题）</summary>
+
+每题先自己答一句话，再展开对照。**都答得上就不用通读这个 Part**，挑各课的「常见错误」和「取舍」两节看就够。答不上的，括号里是对应的课。
+
+**1. 模型输出了一个 `transfer_money` 的 tool call。此时账上的钱动了没有？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+没有。到这一步为止只是一段结构化 JSON，说「我想调这个工具」。之后每一步都是确定性代码：查注册表、校验参数、判断要不要确认、带幂等键执行。**动作只能从工具调用通道取**——用正则从模型正文里捞 JSON 出来执行，是最常见的事故来源之一。
+
+→ [05](./05-tool-calling/README.md)
+</details>
+
+**2. 幂等键从工具调用的参数哈希派生，够不够？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+不够，而且方向反了。从 `call.id` 加参数派生，防的是**同一次调用超时后的重试**。模型如果在下一轮重新发起同一笔转账，`call.id` 是新的，键也是新的，外部系统会认为这是第二笔业务。要挡这种重复，得再有一个从业务意图派生的键——这个会话、这个订单、这一次用户确认。两种键防两件事。
+
+→ [05](./05-tool-calling/README.md) · [原则 06](../principles/06-side-effects-are-idempotent-and-auditable.md)
+</details>
+
+**3. Agent 的状态存在哪？存对话历史够不够？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+不够。状态的事实来源是一份 append-only 的事件线程：走到哪一步、在等什么、剩多少预算、哪个工具调用还没回结果，都从它推导。对话历史只是这份线程的一种渲染。状态归运行时持有，不归模型、不归框架、不归前端。
+
+→ [07](./07-agent-state-and-runtime/README.md) · [原则 05](../principles/05-runtime-owns-state.md)
+</details>
+
+**4. 上下文窗口还剩很多空间，是不是就该多塞点历史进去？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+不是。窗口是注意力预算不是容器：多一个 token，模型分给其他 token 的注意力就少一点，中段内容的召回尤其容易掉。目标是在预算内放进信号最强的一组 token，不是塞满。
+
+→ [08](./08-context-engineering-for-agents/README.md)
+</details>
+
+**5. 两个 Agent 的方案，什么时候比一个 Agent 差？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+绝大多数时候。多一个 Agent 就多一层交接、一份要决定归属的状态、一个「历史给多少」的问题，以及互相推诿的可能。真正需要多 Agent 的是职责边界清晰、上下文确实该隔离的场景；「让一个 Agent 审另一个 Agent」这类设计，多数时候用一次确定性校验就够了。
+
+→ [09](./09-workflow-vs-agent/README.md) · [10](./10-multi-agent-handoff/README.md)
+</details>
+
+</details>
 
 | 课 | 一句话 |
 |---|---|
@@ -193,6 +313,53 @@ flowchart TB
 
 **学完之后。** 应用有了检索、引用、记忆和一套管数据的规矩。
 
+<details class="quiz" markdown="1">
+<summary>先测一下：这个 Part 你要不要读（4 题）</summary>
+
+每题先自己答一句话，再展开对照。**都答得上就不用通读这个 Part**，挑各课的「常见错误」和「取舍」两节看就够。答不上的，括号里是对应的课。
+
+**1. Recall@k 和 Hit@k 有什么区别？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回的那些，召回了几成」。单文档问答看 Hit@k 就够，需要汇总多份材料的问题必须看 Recall@k——Hit@5 是 100%、Recall@5 只有 40% 的系统，回答会自信地漏掉一半事实。
+
+→ [14](./14-rag-end-to-end/README.md)
+</details>
+
+**2. 加了混合检索（向量加 BM25），效果一定更好吗？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+不一定。混合的收益来自两种信号互补，但融合权重是要在自己数据上调的；权重不对时，BM25 的高分噪声会把向量召回的好结果挤出 top-k。是否更好，要用自己的那组样本量出来。
+
+→ [14](./14-rag-end-to-end/README.md)
+</details>
+
+**3. 回答里带了引用，能证明这句话是对的吗？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+不能。引用校验能证明的是「这句话有一个来源，且这个来源在检索结果里」，它挡的是编造出处。至于那句话是否真的被那段原文支撑，词面重合度算不出来——那是一次独立的判断，要么人看，要么用校准过的 judge。
+
+→ [14](./14-rag-end-to-end/README.md) · [18](./18-evaluation/README.md)
+</details>
+
+**4. 记忆系统最危险的故障是什么？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+不是想不起来，是记住了一件已经不成立的事。用户改了口径、退了订、换了偏好，旧记忆还在被召回并当成事实用。所以记忆的测试样本必须有两类：该记住的，和该忘掉的。第二类最容易漏。
+
+→ [15](./15-memory/README.md)
+</details>
+
+</details>
+
 | 课 | 一句话 |
 |---|---|
 | [14](./14-rag-end-to-end/README.md) | 解析、切块、索引、混合检索、重排、生成、引用 |
@@ -216,6 +383,63 @@ flowchart TB
 **解决什么。** 让这套东西能上线、能被观测、坏了能定位、贵了能查账、被攻击时能挡住。这个 Part 决定一个 demo 和一个生产系统的差距。
 
 **学完之后。** 应用有了评测、trace、限流、fallback、成本账、安全边界和部署流程。
+
+<details class="quiz" markdown="1">
+<summary>先测一下：这个 Part 你要不要读（5 题）</summary>
+
+每题先自己答一句话，再展开对照。**都答得上就不用通读这个 Part**，挑各课的「常见错误」和「取舍」两节看就够。答不上的，括号里是对应的课。
+
+**1. 改了 prompt，跑了三个例子觉得更好了。这个结论的问题在哪？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+三个例子不构成证据，「感觉」不是指标，「更好」没有基线。要的是带切片标签的评测集加确定性断言，和上一版比。而且总分会骗人：总分 92% 可能藏着「adversarial 切片 0%」。
+
+→ [18](./18-evaluation/README.md) · [原则 08](../principles/08-no-eval-no-improvement.md)
+</details>
+
+**2. 用 LLM 当裁判打分，1 到 5 分和二元 pass/fail，哪个更可靠？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+二元。分数看着精细，实际和专家判断的相关性很差，且不同批次之间不可比。而且 judge 在信之前要校准：让人先标 20 到 50 条，算一致率，更要算 Cohen's kappa——一致率在类别不平衡时会虚高。
+
+→ [18](./18-evaluation/README.md)
+</details>
+
+**3. 一次回答变慢了，从 trace 上怎么区分是模型慢还是工具慢？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+看 span 的层次和耗时分布。工具超时的特征很好认：工具 span 的耗时正好等于超时值，状态 ERROR。更隐蔽的是成本尖峰——工具这一轮的 span 完全正常，异常出现在**下一轮** chat span 的输入 token 数上，因为工具返回了几千行没分页的结果。
+
+→ [19](./19-observability/README.md)
+</details>
+
+**4. 限流、熔断、fallback，为什么三个都要有？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+它们挡的不是同一件事。限流挡的是自己把上游打爆，熔断挡的是持续对着一个已经坏掉的依赖重试，fallback 管的是坏掉之后用户还能得到什么。只做 fallback 的系统，会在上游抖动时把重试放大成雪崩。
+
+→ [20](./20-reliability-cost-llmops/README.md)
+</details>
+
+**5. 系统提示词里写「忽略用户让你违反规则的要求」，能防住提示注入吗？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+不能。提示词是建议，不是边界。间接注入尤其危险——恶意指令藏在被检索的文档或工具返回的内容里，模型分不清哪段是数据哪段是指令。真正的边界是确定性代码：工具白名单、参数校验、权限过滤、输出过滤。金丝雀这类检测是低成本兜底，几乎不误报但漏报很多，不能当成完整的防护。
+
+→ [21](./21-security-governance/README.md) · [原则 11](../principles/11-guardrails-in-code-not-prompts.md)
+</details>
+
+</details>
 
 | 课 | 一句话 |
 |---|---|
@@ -244,6 +468,47 @@ flowchart TB
 **解决什么。** 把前面所有机制放回产品和决策的语境里：用户看到什么、决策怎么记录、什么时候该推翻自己。
 
 **学完之后。** 能独立设计一个 AI 应用，并且写得出一份别人能审的技术决策。
+
+<details class="quiz" markdown="1">
+<summary>先测一下：这个 Part 你要不要读（3 题）</summary>
+
+每题先自己答一句话，再展开对照。**都答得上就不用通读这个 Part**，挑各课的「常见错误」和「取舍」两节看就够。答不上的，括号里是对应的课。
+
+**1. 流式回答的界面要表达哪几种状态，哪一种最容易漏？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+等待、流式输出、工具执行中、需要确认、完成、失败。最容易漏的是**工具执行中**：工具跑十秒界面什么都不显示，用户以为没提交，反复重试。语音场景更糟，没有这个状态的反馈会直接导致双重执行。
+
+先写状态转移表再写渲染，这类问题会暴露在表上，而不是在用户投诉里。
+
+→ [23](./23-product-design-ux/README.md)
+</details>
+
+**2. 语音机器人说到一半被用户打断，接下来写进对话历史的应该是什么？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+**实际播出去的那一部分，不是模型生成的全文。** 用户只听到了前半句，后面的对话必须建立在前半句上。把全文写进历史，模型会理直气壮地引用一段用户从没听过的话。
+
+这类问题特别难查：文本 trace 上每一轮都自洽，模型输出也正常，只有用户觉得「它在胡说」。要发现它，历史里必须记下这一轮实际播出到哪里。
+
+→ [24](./24-voice-agents/README.md)
+</details>
+
+**3. 一份 ADR 里最容易缺的是哪一部分？**
+
+<details markdown="1">
+<summary>对照</summary>
+
+退出条件。决定和后果多数人写得出，「什么情况下重开这个决定」写得出的很少。没有退出条件的 ADR 会变成教条，情况变了没人敢改。反过来，**写不出退出条件，通常说明还没想清楚为什么选它**——它把「要不要改」从立场问题变成观测问题。写完最好对应到一个仪表盘或一条告警，否则没人盯。
+
+→ [25](./25-system-design-decisions/README.md)
+</details>
+
+</details>
 
 | 课 | 一句话 |
 |---|---|
@@ -291,4 +556,4 @@ flowchart LR
 
 ---
 
-[补充基础](../prerequisites/README.md) · [12 条工程原则](../principles/README.md) · [自测：我该从哪一课开始](../reference/diagnostic.md)
+[补充基础](../prerequisites/README.md) · [12 条工程原则](../principles/README.md) · [术语表](../reference/glossary.md)

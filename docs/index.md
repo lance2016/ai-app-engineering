@@ -94,14 +94,14 @@ hide:
 
 <article class="path" data-path="b" markdown="1">
 <p class="path__label">路线 B · 查漏补缺</p>
-<p class="path__who" markdown="span">做过 RAG、Agent 或 Function Calling，但说不清哪里薄。先测出洞，再定点补，不用从头读。</p>
-<p class="path__pick" markdown="span">推荐章节：[26 题自测](reference/diagnostic.md) → [06 Agent 循环](lessons/06-agent-loop/README.md) · [07 State 与 Runtime](lessons/07-agent-state-and-runtime/README.md) · [08 Context Engineering](lessons/08-context-engineering-for-agents/README.md) · [18 评测](lessons/18-evaluation/README.md)</p>
-<p class="path__go" markdown="span">[先做 26 题自测](reference/diagnostic.md){ .md-button .md-button--primary }</p>
+<p class="path__who" markdown="span">做过 RAG、Agent 或 Function Calling，但说不清哪里薄。先用能力域清单对照手上的项目，再定点补，不用从头读。</p>
+<p class="path__pick" markdown="span">推荐章节：[课程总览](lessons/README.md) → [06 Agent 循环](lessons/06-agent-loop/README.md) · [07 State 与 Runtime](lessons/07-agent-state-and-runtime/README.md) · [08 Context Engineering](lessons/08-context-engineering-for-agents/README.md) · [18 评测](lessons/18-evaluation/README.md)</p>
+<p class="path__go" markdown="span">[对照能力清单找洞](lessons/README.md){ .md-button .md-button--primary }</p>
 <details class="path__more" markdown="1">
 <summary>这条路线怎么读</summary>
 <ol class="tl" markdown="1">
-<li markdown="span">**先做 [26 题自测](reference/diagnostic.md)**，二十分钟。题目按 Part 分组，答不上的那几组就是你的洞。</li>
-<li markdown="span">**按结果挑 Part 读。** 做过 RAG 的人最常缺的是 Part 2 的运行时控制（[06](lessons/06-agent-loop/README.md) · [07](lessons/07-agent-state-and-runtime/README.md) · [08](lessons/08-context-engineering-for-agents/README.md)）和 Part 4 的评测（[18](lessons/18-evaluation/README.md)）。</li>
+<li markdown="span">**先用[课程总览](lessons/README.md)的能力域清单对照项目。** 十行，空着的那几行就是风险所在。</li>
+<li markdown="span">**按结果挑 Part 读。** 每个 Part 开头有三到五题，答得上就跳过。做过 RAG 的人最常缺的是 Part 2 的运行时控制（[06](lessons/06-agent-loop/README.md) · [07](lessons/07-agent-state-and-runtime/README.md) · [08](lessons/08-context-engineering-for-agents/README.md)）和 Part 4 的评测（[18](lessons/18-evaluation/README.md)）。</li>
 <li markdown="span">**用 [12 条工程原则](principles/README.md)对照现有项目。** 每条都有反例和正确形态，对不上的那条就去读它指向的课。</li>
 <li markdown="span">**在选框架**，直接看[框架一览与选型标准](reference/frameworks.md)，不必等读完 Part 2。</li>
 </ol>

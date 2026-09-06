@@ -42,8 +42,8 @@
 
 |  | 没做过 AI 应用 | 做过 RAG 或 Agent |
 |---|---|---|
-| **第一步** | 从 [00 起步](./lessons/00-setup/README.md) 顺着读，别跳 | 先花 20 分钟做 [26 题自测](./reference/diagnostic.md) |
-| **然后** | Part 1 → Part 5 按顺序走完 | 按自测结果挑薄弱的 Part 读 |
+| **第一步** | 从 [00 起步](./lessons/00-setup/README.md) 顺着读 | 先看[课程总览](./lessons/README.md)的能力域清单，对照手上的项目 |
+| **然后** | Part 1 → Part 5 按推荐顺序走完 | 每个 Part 开头有三到五题，答不上就读那个 Part |
 | **模型原理** | token、attention、KV cache 不熟，先补[补充基础里的 LLM 原理八篇](./prerequisites/README.md) | 读到「前置 F0x」的引用再回查 |
 | **想直接看结论** | 学完每个 Part 后回看[工程原则](./principles/README.md) | [12 条工程原则](./principles/README.md)是全课的压缩版 |
 | **正在选框架** | 学完 Part 2 再看 | [框架一览与选型标准](./reference/frameworks.md) |
@@ -146,7 +146,7 @@
 
 ## 参考资料
 
-工程能力与算法基础的学习索引见 [prerequisites/](./prerequisites/README.md)，术语见 [glossary.md](./reference/glossary.md)，自测题见 [diagnostic.md](./reference/diagnostic.md)，技术选型见 [stack.md](./reference/stack.md)，框架对比见 [frameworks.md](./reference/frameworks.md)，外部资料见 [resources.md](./reference/resources.md)。
+工程能力与算法基础的学习索引见 [prerequisites/](./prerequisites/README.md)，术语见 [glossary.md](./reference/glossary.md)，技术选型见 [stack.md](./reference/stack.md)，框架对比见 [frameworks.md](./reference/frameworks.md)，外部资料见 [resources.md](./reference/resources.md)。
 
 ## 贡献与许可
 

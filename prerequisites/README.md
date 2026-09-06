@@ -67,7 +67,7 @@
 | 你的情况 | 建议 |
 |---|---|
 | 必备项基本都有，没做过 AI 应用 | [第 00 课](../lessons/00-setup/README.md)顺着读 |
-| 做过 AI 应用，想查漏补缺 | 先做[能力自测](../reference/diagnostic.md)，按结果挑 Part |
+| 做过 AI 应用，想查漏补缺 | 看[课程总览](../lessons/README.md)，每个 Part 开头有几道题，答不上就读那个 Part |
 | 模型原理不熟（token、attention、KV cache） | 上面那八篇 |
 | 必备项缺得比较多 | 先补 Python 的类型注解、dataclass、async 三项和 SQL，其余边读边补 |
 
