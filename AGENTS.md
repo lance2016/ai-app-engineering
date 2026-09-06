@@ -8,14 +8,14 @@
 
 | 层 | 目录 | 形式 |
 |---|---|---|
-| 前置 | `prerequisites/` | `engineering-foundations.md` 是编程与后端底子的索引（只指路不教）；`llm-foundations/` 是 F00–F07 八篇 LLM 原理 |
+| 补充基础 | `prerequisites/` | 分两类：**工程能力**（`engineering-foundations.md`）和**算法基础**（`algorithm-foundations.md` 加 `llm-foundations/` 的 F00–F07 八篇）。前两者是学习索引，只指路不教；八篇讲 LLM 原理 |
 | 主线 | `lessons/` | 26 课 00–25，每课 `README.md + exercises.md` |
 | 原则 | `principles/` | 12 条，一条一个文件，12-factor-agents 风格 |
 | 查阅 | `reference/` | 术语表、技术选型、框架一览、外部资料、诊断题 |
 
 另有三个导航页，不属于任何一课，但改课程结构时必须同步：
 `lessons/README.md`（六个 Part 的定位与出师标准）、`reference/diagnostic.md`（有经验读者的自测题）、
-`prerequisites/engineering-foundations.md`（Python / 后端 / 算法的学习索引，每项都标着哪一课用到）。
+`prerequisites/README.md`（补充基础的两类分法，以及那两页学习索引的入口）。
 
 配套的**参考实现**在另一个仓库 [ai-app-engineering-ref](https://github.com/lance2016/ai-app-engineering-ref)：一个完整的 AI 应用服务，七个里程碑 M0–M6，加 framework-lab 和 capstones。本仓库**不再包含任何可运行的项目代码**，2026-09-05 拆分完成。
 

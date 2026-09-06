@@ -49,7 +49,7 @@
 | **正在选框架** | 学完 Part 2 再看 | [框架一览与选型标准](./reference/frameworks.md) |
 
 [补充基础](./prerequisites/README.md)那两组都是**可选的**，不是必修：编程与后端底子是一张学习索引，只指路；LLM 原理八篇在主线需要时会被点名引用（那八篇大多还是草稿，比主线薄）。
-不确定自己的底子够不够，看一眼[编程与后端底子](./prerequisites/engineering-foundations.md)；每个 Part 在搭什么、学完怎么算过关，见[课程总览](./lessons/README.md)。
+不确定自己的底子够不够，看一眼[补充基础](./prerequisites/README.md)；每个 Part 在搭什么、学完怎么算过关，见[课程总览](./lessons/README.md)。
 
 ## 26 课
 
@@ -129,7 +129,7 @@
 
 ```text
 ├── lessons/          主线 26 课，每课 README + exercises.md
-├── prerequisites/    补充基础：编程与后端底子的学习索引，加 LLM 原理 F00–F07 八篇
+├── prerequisites/    补充基础：工程能力与算法基础两类，含两页学习索引和 LLM 原理八篇
 ├── principles/       12 条工程原则，一条一个文件
 ├── reference/        术语表、技术选型、框架一览、外部资料
 └── docs/ mkdocs.yml  文档站配置（内容都是上面几个目录的符号链接）
@@ -146,7 +146,7 @@
 
 ## 参考资料
 
-编程与后端底子见 [engineering-foundations.md](./prerequisites/engineering-foundations.md)，术语见 [glossary.md](./reference/glossary.md)，自测题见 [diagnostic.md](./reference/diagnostic.md)，技术选型见 [stack.md](./reference/stack.md)，框架对比见 [frameworks.md](./reference/frameworks.md)，外部资料见 [resources.md](./reference/resources.md)。
+工程能力与算法基础的学习索引见 [prerequisites/](./prerequisites/README.md)，术语见 [glossary.md](./reference/glossary.md)，自测题见 [diagnostic.md](./reference/diagnostic.md)，技术选型见 [stack.md](./reference/stack.md)，框架对比见 [frameworks.md](./reference/frameworks.md)，外部资料见 [resources.md](./reference/resources.md)。
 
 ## 贡献与许可
 

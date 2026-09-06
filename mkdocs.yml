@@ -135,18 +135,21 @@ nav:
           - 23 产品设计与交互: lessons/23-product-design-ux/README.md
           - 24 语音应用: lessons/24-voice-agents/README.md
           - 25 系统设计与技术决策: lessons/25-system-design-decisions/README.md
-  # 两组都不是必修，只在需要时才查，所以排在主线之后。
+  # 两类都不是必修，只在需要时才查，所以排在主线之后。分类留着，以后各自还会加内容。
   - 补充基础:
       - 概述: prerequisites/README.md
-      - 编程与后端底子: prerequisites/engineering-foundations.md
-      - F00 LLM 是什么: prerequisites/llm-foundations/00-what-an-llm-is/README.md
-      - F01 Tokenization: prerequisites/llm-foundations/01-tokenization/README.md
-      - F02 Embedding 与向量空间: prerequisites/llm-foundations/02-embeddings/README.md
-      - F03 Attention 与 Transformer: prerequisites/llm-foundations/03-attention-and-transformer/README.md
-      - F04 Context Window 与 Sampling: prerequisites/llm-foundations/04-context-window-and-sampling/README.md
-      - F05 训练与对齐: prerequisites/llm-foundations/05-training-and-alignment/README.md
-      - F06 KV Cache 与推理: prerequisites/llm-foundations/06-kv-cache-and-inference/README.md
-      - F07 模型地图: prerequisites/llm-foundations/07-model-landscape/README.md
+      - 工程能力:
+          - 编程与后端底子: prerequisites/engineering-foundations.md
+      - 算法基础:
+          - 算法与数学底子: prerequisites/algorithm-foundations.md
+          - F00 LLM 是什么: prerequisites/llm-foundations/00-what-an-llm-is/README.md
+          - F01 Tokenization: prerequisites/llm-foundations/01-tokenization/README.md
+          - F02 Embedding 与向量空间: prerequisites/llm-foundations/02-embeddings/README.md
+          - F03 Attention 与 Transformer: prerequisites/llm-foundations/03-attention-and-transformer/README.md
+          - F04 Context Window 与 Sampling: prerequisites/llm-foundations/04-context-window-and-sampling/README.md
+          - F05 训练与对齐: prerequisites/llm-foundations/05-training-and-alignment/README.md
+          - F06 KV Cache 与推理: prerequisites/llm-foundations/06-kv-cache-and-inference/README.md
+          - F07 模型地图: prerequisites/llm-foundations/07-model-landscape/README.md
   - 工程原则:
       - 概述: principles/README.md
       - 01 模型输出是建议: principles/01-model-output-is-a-suggestion.md
