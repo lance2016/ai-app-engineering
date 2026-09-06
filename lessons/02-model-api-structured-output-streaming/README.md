@@ -252,7 +252,7 @@ def record(self, label, usage, provider) -> float:
 - [Anthropic · Messages API](https://platform.claude.com/docs/en/api/messages)（访问日期 2026-09-04）：一个供应商完整的请求体定义，注意角色、工具结果和参数都在同一层。
 - [Anthropic · Structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)（访问日期 2026-09-04）：服务端约束输出格式的做法和它的限制，读完就知道客户端校验为什么还是要留。
 - [OpenAI · Structured Outputs 指南](https://platform.openai.com/docs/guides/structured-outputs)（访问日期 2026-09-04）：另一家的等价机制，从 Pydantic 模型直接生成 schema 的写法和本课一致。
-- [DeepSeek · JSON Output](https://api-docs.deepseek.com/guides/json_mode)（访问日期 2026-09-04）：它的 JSON 模式要求提示词里含 "json" 字样，是个典型的供应商特性差异。
+- [DeepSeek · JSON Output](https://api-docs.deepseek.com/guides/json_mode)（访问日期 2026-09-04）：它的 JSON 模式要求提示词里含 `json` 字样，是个典型的供应商特性差异。
 - [OpenAI · Images and vision](https://platform.openai.com/docs/guides/images-vision)（访问日期 2026-09-06）：图片怎么进请求体，以及 token 怎么按尺寸折算。
 - [Anthropic · Extended thinking](https://platform.claude.com/docs/en/build-with-claude/extended-thinking)（访问日期 2026-09-06）：思考块的字段、签名和传递规则，第二节那条规矩的出处。
 - [Anthropic · Streaming](https://platform.claude.com/docs/en/build-with-claude/streaming) 与 [OpenAI · Streaming responses](https://platform.openai.com/docs/guides/streaming-responses)（访问日期 2026-09-04）：事件类型和最后一块的内容。

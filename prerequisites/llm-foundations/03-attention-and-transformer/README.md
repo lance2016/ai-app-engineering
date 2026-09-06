@@ -41,7 +41,7 @@ flowchart LR
 5. **√d 缩放是为了防止 softmax 饱和。** 向量维度大时点积的值域也大，不缩放的话 softmax 会几乎变成 one-hot，梯度消失。
 6. **KV cache 就是把每个 token 的 K 和 V 存下来。** 生成第 n+1 个 token 时，前 n 个的 K、V 不用重算。代价是显存，[F06](../06-kv-cache-and-inference/README.md) 算这笔账。
 7. **GQA（Grouped-Query Attention）让多个 Query 头共享一组 K/V。** 目的是减少 KV cache 显存，几乎不损失质量。现代开源模型基本都用。
-8. **"lost in the middle"是实测现象：模型对上下文开头和结尾更敏感，中间部分容易忽略。** 对应用的直接含义：重要指令放最前或最后，检索结果不要堆在中间。
+8. **「lost in the middle」是实测现象：模型对上下文开头和结尾更敏感，中间部分容易忽略。** 对应用的直接含义：重要指令放最前或最后，检索结果不要堆在中间。
 9. **Flash Attention 等优化改的是计算方式，不改结果。** 通过分块和避免存 n² 的中间矩阵，让长上下文在有限显存里跑得动。选托管 API 时看不到它，自部署时它决定你能开多长的窗口。
 
 ### 一层一层叠起来
@@ -77,7 +77,7 @@ flowchart TB
 | [`code/01_single_head_attention.py`](./code/01_single_head_attention.py) | 4 个 token、维度 3，手算一遍点积、softmax、加权求和；`CAUSAL=0` 看 mask 在挡什么 | `uv run python prerequisites/llm-foundations/03-attention-and-transformer/code/01_single_head_attention.py` |
 | [`code/02_gpt_param_count.py`](./code/02_gpt_param_count.py) | 从层数、维度、词表算 7B 的参数量，再换算 fp16 / int8 / int4 的权重体积 | `uv run python prerequisites/llm-foundations/03-attention-and-transformer/code/02_gpt_param_count.py` |
 
-`01` 里数一数：4 个 token 算了 16 个点积。换成 4000 个 token 是 1600 万个。这就是 n²。`02` 输出约 6.6B，和"7B"对得上；三行显存数字就是你在选「能不能在一张 24GB 卡上跑」时要看的。
+`01` 里数一数：4 个 token 算了 16 个点积。换成 4000 个 token 是 1600 万个。这就是 n²。`02` 输出约 6.6B，和「7B」对得上；三行显存数字就是你在选「能不能在一张 24GB 卡上跑」时要看的。
 
 ## 它在 AI 应用里用在哪
 
