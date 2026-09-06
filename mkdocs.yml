@@ -99,46 +99,46 @@ markdown_extensions:
 
 nav:
   - 首页: index.md
-  - 开始这里:
-      - 课程总览：每个 Part 在搭什么: lessons/README.md
-      - 自测：我该从哪一课开始: reference/diagnostic.md
+  # 侧栏标签只放名词，短到能一眼扫过；完整标题在页面里。
+  - 课程总览: lessons/README.md
+  - 能力自测: reference/diagnostic.md
   - 主线课程:
       - "Part 0 起步":
-          - 00 起步：怎么读这门课，怎么接第一个模型: lessons/00-setup/README.md
+          - 00 起步: lessons/00-setup/README.md
       - "Part 1 模型与上下文":
-          - 01 从模型到应用：能力边界、成本模型与选型: lessons/01-how-llms-work/README.md
-          - 02 模型调用、结构化输出与流式: lessons/02-model-api-structured-output-streaming/README.md
-          - 03 Prompt Engineering 与单次调用的上下文: lessons/03-prompt-engineering/README.md
-          - 04 Embedding 与向量检索基础: lessons/04-embeddings-and-vector-search/README.md
+          - 01 模型选型与成本: lessons/01-how-llms-work/README.md
+          - 02 调用、结构化输出与流式: lessons/02-model-api-structured-output-streaming/README.md
+          - 03 Prompt Engineering: lessons/03-prompt-engineering/README.md
+          - 04 Embedding 与向量检索: lessons/04-embeddings-and-vector-search/README.md
       - "Part 2 Tool 与 Agent":
-          - 05 Tool Calling：从 Schema 到副作用: lessons/05-tool-calling/README.md
+          - 05 Tool Calling: lessons/05-tool-calling/README.md
           - 06 Agent 循环与控制流: lessons/06-agent-loop/README.md
           - 07 Agent State 与 Runtime: lessons/07-agent-state-and-runtime/README.md
-          - 08 Agent 的 Context Engineering: lessons/08-context-engineering-for-agents/README.md
-          - 09 Workflow 还是 Agent：架构模式: lessons/09-workflow-vs-agent/README.md
-          - 10 多智能体、Handoff 与 Racing: lessons/10-multi-agent-handoff/README.md
-          - 11 MCP：模型上下文协议: lessons/11-mcp/README.md
-          - 12 Skill 与能力生态分层: lessons/12-skills-and-capability-layers/README.md
-          - 13 Agent Harness：把前八课装进一个真实系统: lessons/13-agent-harness/README.md
+          - 08 Context Engineering: lessons/08-context-engineering-for-agents/README.md
+          - 09 Workflow 还是 Agent: lessons/09-workflow-vs-agent/README.md
+          - 10 多智能体与 Handoff: lessons/10-multi-agent-handoff/README.md
+          - 11 MCP: lessons/11-mcp/README.md
+          - 12 Skill 与能力分层: lessons/12-skills-and-capability-layers/README.md
+          - 13 Agent Harness: lessons/13-agent-harness/README.md
       - "Part 3 知识与记忆":
           - 14 RAG 端到端: lessons/14-rag-end-to-end/README.md
-          - 15 Memory：提取、整合与检索: lessons/15-memory/README.md
-          - 16 数据工程与数据质量: lessons/16-data-engineering/README.md
+          - 15 Memory: lessons/15-memory/README.md
+          - 16 数据工程: lessons/16-data-engineering/README.md
       - "Part 4 生产工程":
-          - 17 AI 应用系统架构与端到端数据流: lessons/17-system-architecture/README.md
-          - 18 评测：Golden Set、LLM Judge 与 Agent Eval: lessons/18-evaluation/README.md
-          - 19 可观测性：从日志到 LLM Trace: lessons/19-observability/README.md
-          - 20 可靠性、成本、部署与 LLMOps: lessons/20-reliability-cost-llmops/README.md
+          - 17 系统架构与数据流: lessons/17-system-architecture/README.md
+          - 18 评测: lessons/18-evaluation/README.md
+          - 19 可观测性: lessons/19-observability/README.md
+          - 20 可靠性与成本: lessons/20-reliability-cost-llmops/README.md
           - 21 安全与治理: lessons/21-security-governance/README.md
-          - 22 模型适配、微调与推理服务: lessons/22-model-adaptation-finetuning-inference/README.md
+          - 22 微调与推理服务: lessons/22-model-adaptation-finetuning-inference/README.md
       - "Part 5 产品与技术决策":
-          - 23 AI 产品设计与交互: lessons/23-product-design-ux/README.md
-          - 24 语音应用：链路、延迟预算与打断: lessons/24-voice-agents/README.md
+          - 23 产品设计与交互: lessons/23-product-design-ux/README.md
+          - 24 语音应用: lessons/24-voice-agents/README.md
           - 25 系统设计与技术决策: lessons/25-system-design-decisions/README.md
-  # 两组都只在需要时才查，所以排在主线之后，标题里写明可选。
-  - 补充基础（可选）:
-      - 这两组要不要读: prerequisites/README.md
-      - 编程与后端底子：缺了去哪补: prerequisites/engineering-foundations.md
+  # 两组都不是必修，只在需要时才查，所以排在主线之后。
+  - 补充基础:
+      - 概述: prerequisites/README.md
+      - 编程与后端底子: prerequisites/engineering-foundations.md
       - F00 LLM 是什么: prerequisites/llm-foundations/00-what-an-llm-is/README.md
       - F01 Tokenization: prerequisites/llm-foundations/01-tokenization/README.md
       - F02 Embedding 与向量空间: prerequisites/llm-foundations/02-embeddings/README.md
@@ -148,21 +148,21 @@ nav:
       - F06 KV Cache 与推理: prerequisites/llm-foundations/06-kv-cache-and-inference/README.md
       - F07 模型地图: prerequisites/llm-foundations/07-model-landscape/README.md
   - 工程原则:
-      - 12 条 AI 应用工程原则: principles/README.md
-      - 原则 01｜模型输出是建议，不是执行结果: principles/01-model-output-is-a-suggestion.md
-      - 原则 02｜默认用确定性 Workflow: principles/02-deterministic-by-default.md
-      - 原则 03｜Prompt 和 Context Window 必须自己掌控: principles/03-own-your-prompts-and-context.md
-      - 原则 04｜Tool 就是带契约的结构化输出: principles/04-tools-are-contracts.md
-      - 原则 05｜状态由运行时持有: principles/05-runtime-owns-state.md
-      - 原则 06｜每个副作用都要幂等、可确认、可审计: principles/06-side-effects-are-idempotent-and-auditable.md
-      - 原则 07｜失败要分层定位: principles/07-locate-failures-by-layer.md
-      - 原则 08｜没有评测集，就没有「变好了」: principles/08-no-eval-no-improvement.md
-      - 原则 09｜Trace 是一等公民: principles/09-trace-is-first-class.md
-      - 原则 10｜成本和延迟是设计约束: principles/10-cost-and-latency-are-design-constraints.md
-      - 原则 11｜安全边界由确定性代码执行: principles/11-guardrails-in-code-not-prompts.md
-      - 原则 12｜模型是可替换的适配器: principles/12-models-are-swappable-adapters.md
+      - 概述: principles/README.md
+      - 01 模型输出是建议: principles/01-model-output-is-a-suggestion.md
+      - 02 默认用确定性 Workflow: principles/02-deterministic-by-default.md
+      - 03 自己掌控 Prompt 与 Context: principles/03-own-your-prompts-and-context.md
+      - 04 Tool 是带契约的输出: principles/04-tools-are-contracts.md
+      - 05 状态由运行时持有: principles/05-runtime-owns-state.md
+      - 06 副作用幂等、可确认、可审计: principles/06-side-effects-are-idempotent-and-auditable.md
+      - 07 失败要分层定位: principles/07-locate-failures-by-layer.md
+      - 08 没有评测就没有「变好了」: principles/08-no-eval-no-improvement.md
+      - 09 Trace 是一等公民: principles/09-trace-is-first-class.md
+      - 10 成本和延迟是设计约束: principles/10-cost-and-latency-are-design-constraints.md
+      - 11 安全边界由代码执行: principles/11-guardrails-in-code-not-prompts.md
+      - 12 模型是可替换的适配器: principles/12-models-are-swappable-adapters.md
   - 参考手册:
-      - 框架一览与选型标准: reference/frameworks.md
+      - 框架一览: reference/frameworks.md
       - 术语表: reference/glossary.md
       - 技术选型: reference/stack.md
       - 外部资料: reference/resources.md
