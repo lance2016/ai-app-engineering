@@ -7,6 +7,13 @@ Run:  uv run python scripts/check_lesson_template.py           # errors fail, wa
 present. Sections in OPTIONAL_SECTIONS are recommended but not every topic
 has them.
 
+Every `complete` lesson must also say how to test the thing it teaches. That
+rule predates this script (AGENTS.md 3.0 makes "怎么测" the last item under
+工程落地) and was silently unmet by thirteen lessons, so it is checked here
+now rather than trusted. The check looks for the phrase anywhere in the
+lesson, not under a fixed heading, because a narrative lesson names that
+section after its own subject.
+
 A lesson may set `structure: narrative` in its frontmatter to opt out of the
 fixed heading list and organise its own narrative. Then only CONTRACT_SECTIONS
 are required: the headings whose names are functional labels a reader looks
@@ -34,6 +41,8 @@ OPTIONAL_SECTIONS = ["前置", "工程落地", "一线经验"]
 CONTRACT_SECTIONS = ["学习目标", "常见错误", "框架映射", "参考实现", "延伸阅读"]
 # 起步课没有前置，也不谈落地和一线经验，不必每次都提醒。
 EXEMPT_FROM_OPTIONAL = {"setup"}
+# 第 00 课只跑通一次调用，没有可以留进 golden set 的东西。
+EXEMPT_FROM_HOW_TO_TEST = {"setup"}
 PREREQ_SECTIONS = ["学习目标", "核心概念", "常见错误", "延伸阅读"]
 
 
@@ -55,7 +64,8 @@ def check_unit(readme: Path, sections: list[str]) -> tuple[list[str], list[str]]
     if meta.get("status") != "complete":
         return errors, warnings
     found = headings(readme)
-    narrative = sections is LESSON_SECTIONS and meta.get("structure") == "narrative"
+    is_lesson = sections is LESSON_SECTIONS
+    narrative = is_lesson and meta.get("structure") == "narrative"
     if narrative:
         sections = CONTRACT_SECTIONS
     for s in sections:
@@ -65,6 +75,10 @@ def check_unit(readme: Path, sections: list[str]) -> tuple[list[str], list[str]]
         for s in OPTIONAL_SECTIONS:
             if s not in found:
                 warnings.append(f"no '## {s}' section")
+    if is_lesson and readme.parent.name not in EXEMPT_FROM_HOW_TO_TEST:
+        if "怎么测" not in readme.read_text(encoding="utf-8"):
+            errors.append("nothing says 怎么测 -- every lesson leaves a sample "
+                          "that can join the golden set (AGENTS.md 3.0)")
     return errors, warnings
 
 

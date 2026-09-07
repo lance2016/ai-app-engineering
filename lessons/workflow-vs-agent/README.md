@@ -205,6 +205,7 @@ async def refine(generator, evaluator, task) -> tuple[str, bool]:
 - **每种模式的失败形态不同，监控也不同。** chaining 看每道门的拒绝率，routing 看各车道的分布和兜底率，orchestrator 看计划被拒的比例，evaluator-optimizer 看平均轮数。
 - **模式可以嵌套，但要有边界。** routing 的某一条车道里跑一个 chaining 是合理的；chaining 的某一步里跑一个自治 Agent 就要谨慎——外层的确定性会被内层的不确定性吃掉。
 - **选型要留记录。** 「为什么这里用 workflow 不用 Agent」应该写进设计文档。三个月后有人想「优化」成自治 Agent 时，这份记录是唯一的防线。
+- **怎么测。** 五种模式各配一条断言，全部用剧本式的假适配器，不需要真模型：chaining 断言中间那道门真的拦住了不合格的中间产物；routing 断言分类结果不在枚举里时走了兜底；parallelization 断言一路失败不影响另一路的结果；orchestrator-workers 断言计划超过上限被拒；evaluator-optimizer 断言轮数上限生效。这五条是判断「换了模型之后这套 workflow 还成立吗」的最小依据（第 18 课）。
 
 ## 框架映射
 

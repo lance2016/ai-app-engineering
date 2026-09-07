@@ -227,6 +227,7 @@ def call(client, tool):
 - **每次 `tools/call` 打一个 span**，记录 server 名、工具名、耗时和 `isError`。MCP 引入了一个进程边界，没有 trace 的话「慢」和「错」都定位不到。
 - **server 进程要有生命周期管理**：启动超时、健康检查、崩溃后的退避重启。别让一个疯狂重启的 server 拖垮整个 host。
 - **第三方 server 是供应链风险。** 它能读你传过去的一切参数。接入前要看代码、钉版本、限制它能访问的资源。第 21 课展开。
+- **怎么测。** 写一个假 server 就能测三条：握手之前调 `tools/list`，断言被拒；把 server 的 stdout 关掉，断言 client 立刻拿到错误而不是永远阻塞；给它一个返回 `isError: true` 的工具和一个返回 JSON-RPC `error` 的方法，断言前者回喂给模型、后者不回喂。都不需要真模型和真 server（第 18 课）。
 
 ## 框架映射
 
