@@ -71,7 +71,7 @@ stateDiagram-v2
 
 每个状态要回答同一个问题：用户此刻看到什么、能点什么。
 
-**控制权按可逆性分级。** 分级由运行时按动作的**声明**决定，不由模型判断。这和第 05 课确认门是同一条原则的两面。
+**控制权按可逆性分级。** 分级由运行时按动作的声明决定，不由模型判断。这和第 05 课确认门是同一条原则的两面。
 
 **反馈要能定位问题。** 一个总体的「点赞率 85%」什么都说明不了。
 
@@ -199,7 +199,7 @@ class Feedback:
 
 三个字段各有用处：
 
-- **`event_index`** 让反馈挂在**具体的一次回答**上，能回溯到那次的 trace 和检索结果。
+- **`event_index`** 让反馈挂在具体的一次回答上，能回溯到那次的 trace 和检索结果。
 - **`reason`** 让负反馈可归因。「不好」没法改，「事实错误」能改。
 - **`intent`** 让你能切片。
 
@@ -227,7 +227,7 @@ class Feedback:
 citations: list[str]     # ["refund-policy#0", "shipping#2"]
 ```
 
-界面上每条引用是可点的，点开显示那个 chunk 的原文和它在文档里的位置。用户要能**验证**，不只是被告知有来源。
+界面上每条引用是可点的，点开显示那个 chunk 的原文和它在文档里的位置。用户要能验证，不只是被告知有来源。
 
 ## 常见错误
 
@@ -260,7 +260,7 @@ citations: list[str]     # ["refund-policy#0", "shipping#2"]
 | 事件流 → UI 状态 | `astream_events` 的事件类型 | `run_streamed` 的 stream events | 消息流 |
 | 审批交互 | `interrupt` 的 payload 驱动 UI | `needs_approval` 的中断 | 权限回调 |
 
-框架给的是事件，**状态机是你自己的**。事件类型到 UI 状态的映射表，是这一层唯一需要认真设计的东西。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
+框架给的是事件，状态机是你自己的。事件类型到 UI 状态的映射表，是这一层唯一需要认真设计的东西。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
 ## 一线经验
 

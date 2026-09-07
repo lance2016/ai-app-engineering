@@ -126,7 +126,7 @@ def handle(self, method, params):
 ]}
 ```
 
-转成运行时自己的类型，**同时套上白名单**：
+转成运行时自己的类型，同时套上白名单：
 
 ```python
 ALLOWLIST = frozenset({"search_notes"})     # 这次请求不允许删除，无论 server 提供了什么

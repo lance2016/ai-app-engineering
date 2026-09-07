@@ -251,7 +251,7 @@ with tracer.span("invoke_agent support_bot",
             raise
 ```
 
-`contextvars` 有个坑：`asyncio.create_task` 会**复制**当前上下文（所以子任务能看到父 span），但线程池不会自动传播。SSE 生成器跨任务执行时，父 span 也要显式传。
+`contextvars` 有个坑：`asyncio.create_task` 会复制当前上下文（所以子任务能看到父 span），但线程池不会自动传播。SSE 生成器跨任务执行时，父 span 也要显式传。
 
 ### 三、OTLP 就是一个 JSON
 

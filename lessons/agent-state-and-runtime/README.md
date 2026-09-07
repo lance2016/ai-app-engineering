@@ -95,7 +95,7 @@ def status(self) -> str:
     ...
 ```
 
-`status()` 是**算出来的**，这一点很关键。它没有对应的存储字段，所以不存在「数据库说在等用户、事件里却没有提问」这种不一致。
+`status()` 是算出来的，这一点很关键。它没有对应的存储字段，所以不存在「数据库说在等用户、事件里却没有提问」这种不一致。
 
 ### 二、暂停恢复：同一个函数，两种入口
 
@@ -193,7 +193,7 @@ async def handle_second_message(thread, current: asyncio.Task, text: str):
 
 看 interrupt 那一支里的 `completed_tool_results`：**被打断不等于前面白干**。已经拿到的工具结果留在事件线程里，第二次运行的模型能看到它们。
 
-不选任何一种策略，第二条消息会在第一次运行还在写线程时被追加进去，两个循环交错写同一个列表。这不是 bug，是**没有做决定**。
+不选任何一种策略，第二条消息会在第一次运行还在写线程时被追加进去，两个循环交错写同一个列表。代码里没有任何一行决定过这时候该怎么办，所以这个行为是未定义的。
 
 ## 常见错误
 
@@ -231,7 +231,7 @@ async def handle_second_message(thread, current: asyncio.Task, text: str):
 | 恢复 | 传 `None` 从上次 checkpoint 继续 | `RunState.from_string()` | `resume=session_id` |
 | 事件流 | `astream_events` | `Runner.run_streamed` | 消息流 |
 
-LangGraph 在这一层做得最完整，但要注意一个坑：节点内 `interrupt()` **之前**的副作用，在 resume 时会重跑——因为 checkpoint 的粒度是节点，不是语句。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
+LangGraph 在这一层做得最完整，但要注意一个坑：节点内 `interrupt()` 之前的副作用，在 resume 时会重跑——因为 checkpoint 的粒度是节点，不是语句。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
 ## 一线经验
 

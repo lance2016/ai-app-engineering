@@ -161,7 +161,7 @@ def forget(memories, user_id: str, subject: str, requested_by: str) -> list[Memo
     return kept
 ```
 
-审计记录里存的是**被删记忆的标识和出处**，不是内容——否则「删除」等于把内容抄到另一张表里。
+审计记录里存的是被删记忆的标识和出处，不是内容——否则「删除」等于把内容抄到另一张表里。
 
 `requested_by` 区分用户主动要求和系统按策略清理，两者的合规含义完全不同。
 
@@ -196,7 +196,7 @@ def forget(memories, user_id: str, subject: str, requested_by: str) -> list[Memo
 | 跨会话存储 | `BaseStore`（有命名空间，天然按用户隔离） | `Session` 主要存会话历史 | 项目级 memory 文件 |
 | 提取与整合 | 自己写节点 | 自己写 | 自己写 |
 
-三个框架都给存储，**都不给整合逻辑**。这正是本课的重点：整合是业务判断，不该外包。官方文档：[LangGraph Memory](https://langchain-ai.github.io/langgraph/concepts/memory/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
+三个框架都给存储，都不给整合逻辑。这正是本课的重点：整合是业务判断，不该外包。官方文档：[LangGraph Memory](https://langchain-ai.github.io/langgraph/concepts/memory/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
 ## 一线经验
 

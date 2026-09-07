@@ -21,7 +21,7 @@ estimated_time: 约 1.5 小时
 
 ## 前置
 
-- 这一课不解释向量为什么能比较、余弦为什么先归一化、embedding 层和文本 embedding 模型差在哪。要补就翻 [F02 Embedding 与向量空间](../../prerequisites/llm-foundations/02-embeddings/README.md)，**不用先读完再回来**
+- 这一课不解释向量为什么能比较、余弦为什么先归一化、embedding 层和文本 embedding 模型差在哪。要补就翻 [F02 Embedding 与向量空间](../../prerequisites/llm-foundations/02-embeddings/README.md)，不用先读完再回来
 
 ## 怎么理解它
 
@@ -37,7 +37,7 @@ flowchart LR
 
 [F02](../../prerequisites/llm-foundations/02-embeddings/README.md) 讲了向量为什么能比较，也讲了归一化之后余弦就是点积（pgvector 的 `<=>` 算的是余弦距离，等于 1 减余弦相似度；存归一化后的向量可以用内积代替，省一次开方）。这里补四个工程事实。
 
-**query 和 document 要落进同一个可比较的向量空间。** 多数模型的要求是：同模型、同版本、同维度、同归一化方式。但「同一个模型」不等于「同一段代码」——有一类模型做的是**非对称检索**，编码查询和编码文档的输入不一样：有的要求查询加一个前缀（`query: `），有的要传 `task_type` 或 `input_type` 参数，有的干脆是两个 encoder。这类模型两边都按文档的方式编码，相似度会明显变差，而且不报错。
+**query 和 document 要落进同一个可比较的向量空间。** 多数模型的要求是：同模型、同版本、同维度、同归一化方式。但「同一个模型」不等于「同一段代码」——有一类模型做的是非对称检索，编码查询和编码文档的输入不一样：有的要求查询加一个前缀（`query: `），有的要传 `task_type` 或 `input_type` 参数，有的干脆是两个 encoder。这类模型两边都按文档的方式编码，相似度会明显变差，而且不报错。
 
 所以心智模型不是 `embed(query) == embed(document)`，是两个函数：
 
@@ -140,7 +140,7 @@ def by_sentence(text): return [s.strip() for s in re.split(r"(?<=\.)\s+", text) 
 
 查询 `"how to reset password"`：
 
-- **整块切**：文档确实**包含**答案，但它的向量是五个话题的平均值。那个纯讲密码的干扰项反而排第一。
+- **整块切**：文档确实包含答案，但它的向量是五个话题的平均值。那个纯讲密码的干扰项反而排第一。
 - **按句切**：目标句单独成块，向量只表达一件事，排第一。
 
 这就是「一个 chunk 只讲一件事」这条经验的来源。第 14 课会把它展开成完整的切块策略。

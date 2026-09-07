@@ -40,7 +40,7 @@ flowchart TB
 
 **Handoff 是工具调用。** Triage Agent 输出 `transfer_to_billing(reason=...)`，和调用任何工具一样经过注册表和校验。运行时收到后把活跃 Agent 换成 billing。
 
-OpenAI Agents SDK 把这叫 handoff，把「把另一个 Agent 当工具调用、结果回给自己」叫 agents-as-tools。两者的区别是**控制权有没有转移**。
+OpenAI Agents SDK 把这叫 handoff，把「把另一个 Agent 当工具调用、结果回给自己」叫 agents-as-tools。两者的区别是控制权有没有转移。
 
 **历史给多少是策略。** 全给：专家看到一切，token 最多，容易被无关历史干扰。只给最后一句：便宜、专注，但丢了「用户已经说过订单号」这类上下文。摘要：折中，但摘要本身可能漏。真实系统里这个策略通常按目标 Agent 配置。
 
@@ -78,7 +78,7 @@ specialist_view = context_for_specialist(history, call.arguments["reason"])
 answer = await billing.model.complete([billing_system, *specialist_view])
 ```
 
-注意 `reason` 这个参数。它是 triage 给专家的**交接说明**，比原始历史更浓缩，而且是 triage 自己判断出来的重点。summary 策略把它直接用上了。
+注意 `reason` 这个参数。它是 triage 给专家的交接说明，比原始历史更浓缩，而且是 triage 自己判断出来的重点。summary 策略把它直接用上了。
 
 三条消息的例子里三种策略看不出差别。二十轮之后，`full` 会让专家的窗口里大部分是和它无关的闲聊。
 

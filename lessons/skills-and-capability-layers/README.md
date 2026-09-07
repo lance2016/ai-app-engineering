@@ -200,7 +200,7 @@ def load_pinned(skill_dir, pins: dict[str, str]) -> str:
 | 能力说明 | 自己拼进 prompt | agent 的 `instructions` | 原生 Agent Skills 支持 |
 | 渐进加载 | 自己写工具 | 自己写工具 | SDK 内置三级加载 |
 
-Skill 目前主要是 Anthropic 生态的概念，但**三级加载的思路和框架无关**——任何有几十个能力说明的系统都需要它。官方文档：[Agent Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) · [LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)（核对日期 2026-09-05）。
+Skill 目前主要是 Anthropic 生态的概念，但三级加载的思路和框架无关——任何有几十个能力说明的系统都需要它。官方文档：[Agent Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) · [LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)（核对日期 2026-09-05）。
 
 ## 一线经验
 

@@ -20,7 +20,7 @@ estimated_time: 约 1.5 小时
 
 ## 前置
 
-- 这一课直接用几条结论：LoRA 为什么有效、prefill 与 decode 的区别、KV cache 怎么算、GQA 和量化各省了什么。想知道这些结论从哪来，看 [F05 训练与对齐](../../prerequisites/llm-foundations/05-training-and-alignment/README.md) 和 [F06 KV Cache 与推理](../../prerequisites/llm-foundations/06-kv-cache-and-inference/README.md)，**不用先读完再回来**
+- 这一课直接用几条结论：LoRA 为什么有效、prefill 与 decode 的区别、KV cache 怎么算、GQA 和量化各省了什么。想知道这些结论从哪来，看 [F05 训练与对齐](../../prerequisites/llm-foundations/05-training-and-alignment/README.md) 和 [F06 KV Cache 与推理](../../prerequisites/llm-foundations/06-kv-cache-and-inference/README.md)，不用先读完再回来
 - [18 评测](../evaluation/README.md)：没有评测集就无法判断微调有没有用
 
 ## 怎么理解它
@@ -64,7 +64,7 @@ flowchart TD
 | 模型路由 | 大部分请求简单，少数很难 | 小模型跑常规、大模型兜难例。要有一个判断难易的分类器，它本身可以是小模型 |
 | 换一个更强的基座 | 上面都试过还是不行 | 直接花钱，但比微调快得多，也不会把自己锁在一个版本上 |
 
-一个实际的顺序：**先修评测，再加约束，再拆任务，再考虑换模型，最后才是微调**。微调排在最后不是因为它没用，是因为它是这几项里**唯一会产生长期维护负担的**——模型要重训、要版本管理、要跟着基座升级重来一遍。
+一个实际的顺序：**先修评测，再加约束，再拆任务，再考虑换模型，最后才是微调**。微调排在最后不是因为它没用，是因为它是这几项里唯一会产生长期维护负担的——模型要重训、要版本管理、要跟着基座升级重来一遍。
 
 ## 机制拆解
 
@@ -178,7 +178,7 @@ def breakeven_tokens_per_month() -> float:
 | 接自建推理 | LangChain 的 OpenAI 兼容 provider | 改 base URL | 不支持（绑 Anthropic） |
 | 按任务路由模型 | 不同节点配不同 model | 不同 agent 配不同 model | 单模型 |
 
-自建推理的接入点是**OpenAI 兼容协议**，不是框架特性。官方文档：[vLLM](https://docs.vllm.ai/en/latest/) · [llama.cpp](https://github.com/ggml-org/llama.cpp) · [LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)（核对日期 2026-09-05）。
+自建推理的接入点是OpenAI 兼容协议，不是框架特性。官方文档：[vLLM](https://docs.vllm.ai/en/latest/) · [llama.cpp](https://github.com/ggml-org/llama.cpp) · [LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)（核对日期 2026-09-05）。
 
 ## 一线经验
 

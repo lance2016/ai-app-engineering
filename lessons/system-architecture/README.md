@@ -137,7 +137,7 @@ async def run_task(model) -> str:
     return task_id                                # 立刻返回
 ```
 
-三者的差别只有最后几行。**前面的链一模一样**，所以业务逻辑不会因为形态不同而分叉。
+三者的差别只有最后几行。前面的链一模一样，所以业务逻辑不会因为形态不同而分叉。
 
 流式那支要注意：`persist` 在流结束之后。如果客户端中途断开，已经生成的部分要不要存？多数场景要存（用户刷新页面还能看到），所以更稳的做法是边流边增量落库。
 
@@ -159,7 +159,7 @@ async def agent_events(question: str) -> AsyncIterator[str]:
     yield "event: done\ndata: {}\n\n"
 ```
 
-SSE 的帧格式就这么简单：`event:` 一行、`data:` 一行、**空行结束**。`id:` 可选，但加上之后浏览器断线重连会带 `Last-Event-ID` 头，你可以从那里续传。
+SSE 的帧格式就这么简单：`event:` 一行、`data:` 一行、空行结束。`id:` 可选，但加上之后浏览器断线重连会带 `Last-Event-ID` 头，你可以从那里续传。
 
 `X-Accel-Buffering: no` 是给 Nginx 看的。不加它，本地测试完全正常，上了生产变成「等很久然后一次全出来」——这是流式最常见的上线事故。Nginx 侧还要配 `proxy_buffering off`。
 
