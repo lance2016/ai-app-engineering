@@ -9,9 +9,38 @@ estimated_time: 约 1.5 小时
 
 > 第 05 课的工具是你自己写在进程里的函数，schema 和实现一起改，永远对得上。MCP 的工具在别的进程、别的机器、别人的代码里，它的作者可以在你不知道的时候改掉参数名。这一课讲协议怎么接，以及为什么「接得上」和「能不能用」必须是两件事。
 
+## 工具住在另一个进程里
+
+第 05 课的工具是你自己写的函数：schema 和实现在同一个仓库里，一起改，永远对得上。
+
+MCP 换掉的就是这一条。工具跑在另一个进程里——可能是另一台机器、另一个人的代码——host 通过一个协议把它接进来。一次完整的往返长这样：
+
+```mermaid
+sequenceDiagram
+    participant H as Host / 运行时
+    participant S as MCP Server（另一个进程）
+    H->>S: initialize(protocolVersion, capabilities, clientInfo)
+    S-->>H: protocolVersion, capabilities, serverInfo
+    H->>S: notifications/initialized
+    Note over H,S: 此后才允许正常操作
+    H->>S: tools/list · resources/list
+    S-->>H: 工具描述（name, description, inputSchema）· 资源列表
+    H->>H: 转成 ToolSpec，套自己的白名单，交给模型
+    H->>S: tools/call(name, arguments)
+    S-->>H: result{content, isError}  或  error{code, message}
+```
+
+这张图上有三件事，这一课后面全靠它们：
+
+- **host 要先问「你有哪些工具」**（`tools/list`），拿回来的是每个工具的名字、说明和参数 schema。这一步之后 host 才知道该告诉模型什么。
+- **模型选定之后，host 才发 `tools/call`**，参数按上一步拿到的那份 schema 填。
+- **这两步之间可以隔很久。** 长驻进程通常只在启动时问一次，然后把工具列表缓存下来。
+
+第三条是下面那个 bug 的来源。
+
 ## 周三，同一个工具突然开始报参数错误
 
-一个长驻的 Agent 进程，接了一个第三方的 `notes` MCP server。启动时握手、`tools/list`、把工具列表缓存下来，之后一直用。
+一个长驻的 Agent 进程，接了一个第三方的 `notes` server，按上面第三条的做法在启动时缓存了工具列表。
 
 周二，一切正常：
 
@@ -50,7 +79,7 @@ estimated_time: 约 1.5 小时
 
 用户看到的是一个突然不会搜笔记的机器人。日志里那个 `-32602` 会让你去检查自己的调用代码，而代码一个字都没改。
 
-三件事凑在一起才有这个 bug：工具列表被缓存了、schema 归另一个进程的人改、协议错误和工具执行失败走两条不同的通道。这一课讲的就是这三件事。
+说到底是那条线只走了一次左半边、之后一直重复右半边。三件事凑在一起才有这个 bug：工具列表被缓存了、schema 归另一个进程的人改、协议错误和工具执行失败走两条不同的通道。这一课讲的就是这三件事。
 
 ## 学习目标
 
@@ -63,24 +92,9 @@ estimated_time: 约 1.5 小时
 
 - [05 Tool Calling](../tool-calling/README.md)：ToolSpec、白名单、错误结果。MCP 工具最终都要变成这些东西
 
-## 协议是一个生命周期，不是一组函数
+## 「接得上」和「能不能用」是两件事
 
-```mermaid
-sequenceDiagram
-    participant H as Host / 运行时
-    participant S as MCP Server（另一个进程）
-    H->>S: initialize(protocolVersion, capabilities, clientInfo)
-    S-->>H: protocolVersion, capabilities, serverInfo
-    H->>S: notifications/initialized
-    Note over H,S: 此后才允许正常操作
-    H->>S: tools/list · resources/list
-    S-->>H: 工具描述（name, description, inputSchema）· 资源列表
-    H->>H: 转成 ToolSpec，套自己的白名单，交给模型
-    H->>S: tools/call(name, arguments)
-    S-->>H: result{content, isError}  或  error{code, message}
-```
-
-开头那个 bug 就是这条线被截断的结果：进程只走了一次左半边，之后一直重复右半边。
+上面那张图只说明了消息怎么走。它没说的是：谁在决定这些工具能不能用、以及这条线断在中间会怎样。三件事都在 host 这一侧。
 
 ### 协议只管「怎么接」，不管「能不能用」
 
