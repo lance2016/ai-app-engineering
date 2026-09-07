@@ -114,8 +114,6 @@ def read_doc(ctx: RequestContext, call: ToolCall) -> Message:
     return ok(call, content)
 ```
 
-两个要点：
-
 **工具签名里根本不该有 `tenant_id` 这个参数。** 一旦有，模型就能填它——而模型可能只是在复述注入进来的内容。
 
 **「不存在」和「没权限」返回同一个错误。** 告诉攻击者「doc_9 存在但你没权限」，就泄露了 doc_9 的存在。这是经典的信息泄露，在 Agent 场景下尤其危险，因为攻击者可以让模型批量试探。
