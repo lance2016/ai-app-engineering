@@ -14,7 +14,8 @@ estimated_time: 约 2 小时
 
 ## 学习目标
 
-- 能各写一个 prompt chaining、routing、parallelization、orchestrator-workers、evaluator-optimizer 的最小实现，并说出每种模式的适用条件
+- 能各写一个 prompt chaining、routing、parallelization、orchestrator-workers、evaluator-optimizer 的最小实现
+- 能说出这五种模式各自的适用条件
 - 能对一个具体需求做判断：用确定性代码、用 workflow、还是用自治 Agent，理由是什么
 - 能解释 planner / executor 和 evaluator-optimizer 为什么算 workflow 而不是 Agent
 
