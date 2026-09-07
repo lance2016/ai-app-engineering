@@ -41,7 +41,7 @@ WIDE = LESSONS + [
 # lessons, so it is matched by what it does rather than by one heading.
 TRADEOFF_HEADINGS = ("取舍", "松一点", "记多少", "接一个 server",
                      "上限设多少", "透明到什么程度", "用一个模型还是几个",
-                     "开几层校验")
+                     "开几层校验", "长 prompt 还是短 prompt")
 
 BOLD = re.compile(r"\*\*([^*\n]+)\*\*")
 LEADS_WITH_BOLD = re.compile(r"^\s*(?:-|\d+\.)?\s*\*\*")
