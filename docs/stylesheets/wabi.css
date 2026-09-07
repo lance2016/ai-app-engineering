@@ -505,6 +505,26 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
   color: var(--ws-ink-2);
 }
 
+/* Worked examples fold too, so a reader who already believes the point can
+   walk past the material instead of reading it. Two things make them work,
+   and neither is CSS: the summary states the concrete problem (a reader who
+   never opens the fold still meets it, which is what AGENTS.md 3.3 asks for),
+   and the prose after the fold stands on its own.
+
+   These sit inside running prose, unlike the self-tests on the overview, so
+   the block closes with a hairline as well -- otherwise the end of an example
+   and the start of the argument look identical. The label goes mono, the same
+   register the skin uses for every other addressing mark. */
+[dir] .md-typeset details.case {
+  border-bottom: 1px solid var(--ws-rule-faint);
+  margin: 1.6rem 0;
+}
+[dir] .md-typeset details.case > summary {
+  font-family: var(--ws-mono);
+  font-size: .78rem;
+  letter-spacing: .04em;
+}
+
 /* --- callouts ------------------------------------------------------------- */
 
 /* One device, for one job: saying where a number or a transcript came from.
