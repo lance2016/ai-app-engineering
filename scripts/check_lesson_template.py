@@ -6,6 +6,15 @@ Run:  uv run python scripts/check_lesson_template.py           # errors fail, wa
 `complete` in a README's frontmatter promises that every required section is
 present. Sections in OPTIONAL_SECTIONS are recommended but not every topic
 has them.
+
+A lesson may set `structure: narrative` in its frontmatter to opt out of the
+fixed heading list and organise its own narrative. Then only CONTRACT_SECTIONS
+are required: the headings whose names are functional labels a reader looks
+things up by, rather than framing the author should be choosing per topic.
+Twenty-six lessons that all open with `## 为什么需要` and close with
+`## 延伸阅读` read as one article with the nouns swapped, which is what this
+escape hatch exists to fix. It is an opt-in, so a lesson that says nothing
+still gets the full check.
 """
 
 import argparse
@@ -17,6 +26,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 LESSON_SECTIONS = ["为什么需要", "学习目标", "怎么理解它", "机制拆解", "常见错误", "取舍", "框架映射", "参考实现", "延伸阅读"]
 OPTIONAL_SECTIONS = ["前置", "工程落地", "一线经验"]
+# What a `structure: narrative` lesson still owes the reader. The five that
+# stay are the ones people navigate by ("what breaks", "what is this called in
+# LangGraph"); the six that drop out are framing -- 为什么需要, 怎么理解它,
+# 机制拆解, 取舍, 工程落地, 一线经验 -- and each topic should be naming those
+# after the thing it is actually about.
+CONTRACT_SECTIONS = ["学习目标", "常见错误", "框架映射", "参考实现", "延伸阅读"]
 # 起步课没有前置，也不谈落地和一线经验，不必每次都提醒。
 EXEMPT_FROM_OPTIONAL = {"setup"}
 PREREQ_SECTIONS = ["学习目标", "核心概念", "常见错误", "延伸阅读"]
@@ -36,9 +51,13 @@ def headings(path: Path) -> set[str]:
 
 def check_unit(readme: Path, sections: list[str]) -> tuple[list[str], list[str]]:
     errors, warnings = [], []
-    if frontmatter(readme).get("status") != "complete":
+    meta = frontmatter(readme)
+    if meta.get("status") != "complete":
         return errors, warnings
     found = headings(readme)
+    narrative = sections is LESSON_SECTIONS and meta.get("structure") == "narrative"
+    if narrative:
+        sections = CONTRACT_SECTIONS
     for s in sections:
         if s not in found:
             errors.append(f"missing section '## {s}'")

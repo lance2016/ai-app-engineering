@@ -242,11 +242,13 @@
   cursor: pointer;
 }
 .home .prog__last button:hover { color: var(--ws-rust); }
+/* A statement about where the reader's data goes, at .7rem. ink-3 is 3.22:1
+   on paper; this one has to be legible, not just present. */
 .home .prog__note {
   margin: .5rem 0 0;
   font-size: .7rem;
   line-height: 1.6;
-  color: var(--ws-ink-3);
+  color: var(--ws-ink-2);
 }
 
 /* --- which route ---------------------------------------------------------- */
@@ -257,12 +259,15 @@
   gap: 1rem;
   margin-top: 1.6rem;
 }
+/* On a transparent ground the border is the whole affordance, so it answers to
+   the 3:1 non-text bar rather than to the hairline colour used for dividers:
+   rule is 1.28:1 on paper, ink-3 is 3.22:1. */
 .home .picker__opt {
   display: flex;
   gap: .8rem;
   padding: 1rem;
   background: transparent;
-  border: 1px solid var(--ws-rule);
+  border: 1px solid var(--ws-ink-3);
   border-radius: 2px;
   font-family: inherit;
   text-align: left;
@@ -321,11 +326,13 @@
   line-height: 1.85;
   color: var(--ws-ink-2);
 }
+/* The route's reading list. Its links carry celadon, but the label and the
+   separators were ink-3 at .78rem -- 3.22:1, under the bar for body text. */
 .md-typeset .home .path__pick {
   margin: 0 0 1.2rem !important;
   font-size: .78rem;
   line-height: 1.9;
-  color: var(--ws-ink-3);
+  color: var(--ws-ink-2);
 }
 .md-typeset .home .path__go { margin: 0 !important; }
 .md-typeset .home .path__go .md-button { margin: 0; }
@@ -586,7 +593,9 @@
 
 /* The request path is the one thing on the diagram that is coloured. */
 .md-typeset .sysnode--core { border-color: var(--ws-celadon); border-width: 2px; }
-.md-typeset .sysnode--async { border-style: dashed; border-color: var(--ws-rule); }
+/* The legend reads "dashed: optional, async or offline", so the dash carries
+   information and owes the 3:1 bar. rule was 1.28:1. */
+.md-typeset .sysnode--async { border-style: dashed; border-color: var(--ws-ink-3); }
 .md-typeset .sysnode--risk {
   border-style: dashed;
   border-color: var(--ws-rust);

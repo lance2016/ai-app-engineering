@@ -50,7 +50,10 @@
   --md-shadow-z3: none;
 
   /* Syntax highlighting uses the page's own three colours -- ink, celadon,
-     rust -- so a code block reads as part of the page, not a pasted screen. */
+     rust -- so a code block reads as part of the page, not a pasted screen.
+     Comments sit at ink-2, not ink-3: the `# <-` notes that point at the line
+     that matters are content, and ink-3 on the code ground is 2.99:1, under
+     even the large-text bar. ink-2 is 5.39:1 and still recedes from the code. */
   --md-code-hl-keyword-color:      var(--ws-celadon);
   --md-code-hl-operator-color:     var(--ws-ink-2);
   --md-code-hl-punctuation-color:  var(--ws-ink-2);
@@ -58,7 +61,7 @@
   --md-code-hl-number-color:       var(--ws-rust);
   --md-code-hl-constant-color:     var(--ws-rust);
   --md-code-hl-special-color:      var(--ws-rust);
-  --md-code-hl-comment-color:      var(--ws-ink-3);
+  --md-code-hl-comment-color:      var(--ws-ink-2);
   --md-code-hl-function-color:     var(--ws-ink);
   --md-code-hl-name-color:         var(--ws-ink);
   --md-code-hl-variable-color:     var(--ws-ink);
@@ -110,7 +113,7 @@
   --md-code-hl-number-color:       var(--ws-rust);
   --md-code-hl-constant-color:     var(--ws-rust);
   --md-code-hl-special-color:      var(--ws-rust);
-  --md-code-hl-comment-color:      var(--ws-ink-3);
+  --md-code-hl-comment-color:      var(--ws-ink-2);
   --md-code-hl-function-color:     var(--ws-ink);
   --md-code-hl-name-color:         var(--ws-ink);
   --md-code-hl-variable-color:     var(--ws-ink);
@@ -499,8 +502,70 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
   font-family: var(--ws-mono);
   font-size: .78rem;
   font-weight: 400;
-  color: var(--ws-ink-3);
+  color: var(--ws-ink-2);
 }
+
+/* --- callouts ------------------------------------------------------------- */
+
+/* One device, for one job: saying where a number or a transcript came from.
+   A course that shows traces and tables has to be able to mark which of them
+   were observed and which were built to teach, and bold prose is too easy to
+   read past.
+
+   Material ships admonitions as tinted cards with an icon and a coloured left
+   stripe. All three are the defaults this skin exists to avoid, so the fill,
+   the icon and the stripe come off and the block borrows the page's own
+   structural language instead: a hairline with a mono label over it, the same
+   device the front page uses for section marks.
+
+   `note` is for provenance, `warning` for a fact that will bite (a deprecated
+   attribute name, a field that is required on one vendor and not another).
+   Two kinds is the cap. A third would make this decoration again. */
+
+/* Specificity note: Material's own admonition rules land at (0,3,0) -- it
+   prefixes them with [dir=ltr] and with the type class (.note, .warning) --
+   so matching that and relying on load order is a tie this file only wins
+   because extra_css comes after the theme. Every rule below is deliberately
+   one step above the theme's instead, so a theme upgrade that reorders its
+   bundle cannot turn these blocks back into blue cards. */
+
+[dir] .md-typeset .admonition,
+[dir] .md-typeset .admonition.note,
+[dir] .md-typeset .admonition.warning {
+  margin: 1.6rem 0;
+  padding: .7rem 0 0;
+  border: 0;
+  border-top: 1px solid var(--ws-rule);
+  border-radius: 0;
+  background: transparent;
+  font-size: inherit;
+}
+/* The theme puts a blue glow ring on :focus-within, which fires whenever a
+   link inside the block takes focus. The skin has its own :focus-visible. */
+[dir] .md-typeset .admonition,
+[dir] .md-typeset .admonition:focus-within { box-shadow: none; }
+
+[dir] .md-typeset .admonition > :last-child { margin-bottom: 0; }
+
+[dir] .md-typeset .admonition > .admonition-title {
+  margin: 0 0 .4rem;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  font-family: var(--ws-mono);
+  font-size: .66rem;
+  font-weight: 400;
+  letter-spacing: .14em;
+  line-height: 1.5;
+  color: var(--ws-ink-2);
+}
+/* The icon is a masked ::before, absolutely positioned into the 2rem of left
+   padding the title rule above just removed. Hide the box, not just the mask:
+   the theme sets the mask again at (0,3,0) per admonition type. */
+[dir] .md-typeset .admonition > .admonition-title::before { display: none; }
+
+[dir] .md-typeset .admonition.warning { border-top-color: var(--ws-rust); }
+[dir] .md-typeset .admonition.warning > .admonition-title { color: var(--ws-rust); }
 
 /* --- rules and marks ------------------------------------------------------ */
 
