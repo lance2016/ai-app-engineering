@@ -57,7 +57,7 @@ EMPHASIS_EXEMPT = {("system-design-decisions", "机制拆解", "二、ADR：多�
 
 CEILINGS = {
     "negation": 93,         # 「不是 X，是 Y」and「而不是」across the course
-    "zhenzheng": 29,        # 「真正」
+    "zhenzheng": 26,        # 「真正」
     "count_lead": 0,        # 「三个要点：」and friends -- no legitimate use
     "bold_closer": 0,       # a tradeoff bullet ending on a bolded epigram
     "dense_emphasis": 0,    # subsections over three prose emphases
