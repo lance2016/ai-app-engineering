@@ -22,6 +22,8 @@ Agent 涉及的状态有四类，来源和生命周期完全不同，混在一�
 1. **任务状态不要单独存。** 12-factor 的 factor 05 说得很直接：当前步骤、等待状态、重试次数这些「执行状态」，都是「已经发生了什么」的元数据，可以从事件历史算出来。单独维护一份，就要保证两份同步，这是给自己挖坑。
 2. **业务状态不要放进 Agent 状态里。** 模型说「订单已发货」，运行时要去订单系统查，而不是相信线程里某条工具结果。线程是发生过什么的记录，不是事实的权威来源。
 
+一个容易归错的东西：模型列出的任务清单。它是模型的一次输出，和工具结果一样属于对话状态，追加进线程即可；「清单里哪几项做完了」才是任务状态，照推论 1 从事件推导。把整份清单当执行状态另存一份，两种错误一起犯。
+
 ## 违反它会怎样
 
 - **状态散落在局部变量里。** 循环里用几个变量记步数、记上次的工具结果、记「是否等用户确认」。进程一重启全没了，想暂停恢复要把每个变量都想一遍怎么序列化。
@@ -54,7 +56,7 @@ class Thread:
 ## 对照
 
 - 参考：[12-factor-agents · factor 05](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-05-unify-execution-state.md)、[factor 12](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-12-stateless-reducer.md)（访问日期 2026-09-04）；[langchain-academy · module-2 state schema 与 reducers](https://github.com/langchain-ai/langchain-academy/tree/main/module-2)（访问日期 2026-09-04）
-- 相关课程：[07 Agent State 与 Runtime](../lessons/agent-state-and-runtime/README.md)、[15 Memory](../lessons/memory/README.md)
+- 相关课程：[07 Agent State 与 Runtime](../lessons/agent-state-and-runtime/README.md)、[10 长任务与计划](../lessons/long-horizon-tasks/README.md)、[16 Memory](../lessons/memory/README.md)
 
 ---
 

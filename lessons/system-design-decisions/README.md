@@ -4,7 +4,7 @@ part: Part 5 产品与技术决策
 estimated_time: 约 2 小时
 ---
 
-# 25 系统设计与技术决策
+# 26 系统设计与技术决策
 
 > 前面的课教你怎么把每一层做对。这一课教你在还没动手之前做决定：自建还是买、检索还是微调、Workflow 还是 Agent、单体还是平台。**决定的质量不取决于你知道多少方案，取决于你能不能把假设写出来、算出来、并给它一个退出条件。**
 
@@ -20,7 +20,7 @@ estimated_time: 约 2 小时
 
 ## 前置
 
-- [17 系统架构与端到端数据流](../system-architecture/README.md)：本课的估算落在那条请求链的每个环节上
+- [18 系统架构与端到端数据流](../system-architecture/README.md)：本课的估算落在那条请求链的每个环节上
 - [09 Workflow 还是 Agent](../workflow-vs-agent/README.md)：本课把那一课的架构选择放进更大的决策框架
 
 ## 怎么理解它
@@ -99,7 +99,7 @@ def estimate(a: Assumptions) -> Estimate:
 
 **`concurrent = peak_rps × p95_turn_seconds` 是整段最重要的一行。** 工作进程数、数据库连接池大小、SSE 连接数都从它来。
 
-改 `p95_turn_seconds` 看并发数怎么变，你会明白**第 20 课的延迟优化同时也是容量优化**：把 p95 从 8 秒降到 4 秒，需要的并发容量直接减半。
+改 `p95_turn_seconds` 看并发数怎么变，你会明白**第 21 课的延迟优化同时也是容量优化**：把 p95 从 8 秒降到 4 秒，需要的并发容量直接减半。
 
 一组示例数字（5 万日活、每人 6 轮、每轮 6000 输入 token）：
 
@@ -143,8 +143,8 @@ class ADR:
 > **决定**：共享模型 + 每租户 RAG 索引（pgvector + BM25），租户 id 作为每次查询的硬过滤。
 >
 > **后果**
-> - 需要带文档版本和删除的入库管线（第 16 课）
-> - 上线前需要每租户 golden set 上的 Recall@k（第 18 课）
+> - 需要带文档版本和删除的入库管线（第 17 课）
+> - 上线前需要每租户 golden set 上的 Recall@k（第 19 课）
 > - 回答延迟预算多一跳检索（p95 约 +150ms）
 >
 > **退出条件（任一为真就重开这个决定）**
@@ -257,4 +257,4 @@ def flips(step: float = 0.10) -> list[str]:
 
 ---
 
-[← 上一课 24](../voice-agents/README.md) · [读完了？12 条工程原则是一张对照清单 →](../../principles/README.md)
+[← 上一课 25](../voice-agents/README.md) · [读完了？12 条工程原则是一张对照清单 →](../../principles/README.md)

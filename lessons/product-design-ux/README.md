@@ -5,7 +5,7 @@ part: Part 5 产品与技术决策
 estimated_time: 约 2 小时
 ---
 
-# 23 AI 产品设计与交互
+# 24 AI 产品设计与交互
 
 > 前面二十三课都在让 Agent 可靠。这一课讲用户那一侧：界面要把 Agent 的每一种状态表达出来，否则用户会用自己的方式补偿，而补偿的方式往往是再说一遍。
 
@@ -242,7 +242,7 @@ class Feedback:
 
 ### 四、引用要能点开
 
-引用列表放在回答末尾、点不开、和正文没有对应关系，等于没有。引用要能回到原文的具体位置——第 14 课讲了怎么在检索层保留 `chunk_id` 和位置信息，本课只是把它带到界面：
+引用列表放在回答末尾、点不开、和正文没有对应关系，等于没有。引用要能回到原文的具体位置——第 15 课讲了怎么在检索层保留 `chunk_id` 和位置信息，本课只是把它带到界面：
 
 ```python
 citations: list[str]     # ["refund-policy#0", "shipping#2"]
@@ -275,7 +275,7 @@ citations: list[str]     # ["refund-policy#0", "shipping#2"]
 - **反馈要能反查 trace。** 用户点踩的那一刻，你要能拿到那次运行的完整 trace 和检索结果，否则改不了。
 - **「部分完成」要有明确表达。** Agent 做了三步中的两步就失败了，界面要说清哪两步做了、哪一步没做。「失败」两个字会让用户不知道要不要重来。
 - **A/B 的粒度是场景，不是全局。** 新提示词在 faq 上更好、在 refund 上更差是常态。按切片看，不按总体看。
-- **怎么测。** 状态机写成一张转移表，测试就在表上跑，不用碰界面：断言每个状态都有出边（没有死状态）、断言 `TOOL_RUNNING` 存在且从 `WAITING` 和 `STREAMING` 都能到（开头那个案例的回归测试）、断言任何通向不可逆动作的路径上一定经过确认状态。三条都是确定性的，能进 CI（第 18 课）。
+- **怎么测。** 状态机写成一张转移表，测试就在表上跑，不用碰界面：断言每个状态都有出边（没有死状态）、断言 `TOOL_RUNNING` 存在且从 `WAITING` 和 `STREAMING` 都能到（开头那个案例的回归测试）、断言任何通向不可逆动作的路径上一定经过确认状态。三条都是确定性的，能进 CI（第 19 课）。
 
 ## 框架映射
 
@@ -300,4 +300,4 @@ citations: list[str]     # ["refund-policy#0", "shipping#2"]
 
 ---
 
-[← 上一课 22](../model-adaptation-finetuning-inference/README.md) · [下一课 24 →](../voice-agents/README.md)
+[← 上一课 23](../model-adaptation-finetuning-inference/README.md) · [下一课 25 →](../voice-agents/README.md)

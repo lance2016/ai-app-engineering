@@ -4,7 +4,7 @@ part: Part 3 知识与记忆
 estimated_time: 约 1.5 小时
 ---
 
-# 15 Memory：提取、整合与检索
+# 16 Memory：提取、整合与检索
 
 > 模型没有记忆，它每次只看到运行时递过去的那一串消息。「记忆」是运行时替它做的四件事：从对话里提取值得记的东西，和已有的合并，下次需要时挑出相关的放进上下文，用户要求时删掉。每一步都是确定性代码加一次可校验的模型调用，没有魔法。
 
@@ -173,7 +173,7 @@ def forget(memories, user_id: str, subject: str, requested_by: str) -> list[Memo
 
 **检索忘了按用户过滤。** 见第三节。这是记忆系统最常见也最严重的事故。
 
-**删除只删了记忆本身。** 如果记忆已经被拷贝进某个摘要、某个用户画像字段或某个缓存，只删记忆表那一行不够。第 16 课的删除演练讲怎么证明删干净了。
+**删除只删了记忆本身。** 如果记忆已经被拷贝进某个摘要、某个用户画像字段或某个缓存，只删记忆表那一行不够。第 17 课的删除演练讲怎么证明删干净了。
 
 ## 取舍
 
@@ -218,4 +218,4 @@ def forget(memories, user_id: str, subject: str, requested_by: str) -> list[Memo
 
 ---
 
-[← 上一课 14](../rag-end-to-end/README.md) · [下一课 16 →](../data-engineering/README.md)
+[← 上一课 15](../rag-end-to-end/README.md) · [下一课 17 →](../data-engineering/README.md)

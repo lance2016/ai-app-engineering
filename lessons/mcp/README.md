@@ -5,7 +5,7 @@ part: Part 2 Tool 与 Agent
 estimated_time: 约 1.5 小时
 ---
 
-# 11 MCP：模型上下文协议
+# 12 MCP：模型上下文协议
 
 > 第 05 课的工具是你自己写在进程里的函数，schema 和实现一起改，永远对得上。MCP 的工具在别的进程、别的机器、别人的代码里，它的作者可以在你不知道的时候改掉参数名。这一课讲协议怎么接，以及为什么「接得上」和「能不能用」必须是两件事。
 
@@ -284,16 +284,16 @@ def call(client, tool):
 
 - **stdio 还是 HTTP。** stdio 简单、无网络、无鉴权问题，适合本地工具（文件、shell、本地数据库）。Streamable HTTP 适合远程共享的 server，但要处理鉴权、会话和重连。协议层面两者一样，差别在传输和安全。
 - **工具列表缓存多久。** 每次调用前都 `tools/list`，永远不会用错 schema，代价是每次多一个往返。缓存加订阅 `listChanged` 通知是折中，但要接受通知可能丢。启动一次跑几天的 host，缓存必须配一个失效条件；短命进程每次重新发现最省心。
-- **一个大 server 还是多个小 server。** 一个 server 暴露 50 个工具，模型的上下文里就是 50 段描述。按领域拆成小 server，host 按任务挑选接哪几个，和第 06 课「一个 Agent 管 3～10 步」是同一个逻辑。第 12 课的 Skill 是在这之上再加一层「什么时候用哪组工具」的说明。
+- **一个大 server 还是多个小 server。** 一个 server 暴露 50 个工具，模型的上下文里就是 50 段描述。按领域拆成小 server，host 按任务挑选接哪几个，和第 06 课「一个 Agent 管 3～10 步」是同一个逻辑。第 13 课的 Skill 是在这之上再加一层「什么时候用哪组工具」的说明。
 
 ## 从一个假 server 到生产
 
 - **MCP 工具和本地工具走同一套守卫。** 校验、白名单、确认门、幂等，一个都不能少。MCP 只是工具的来源不同。
-- **每次 `tools/call` 打一个 span**，记录 server 名、server 版本、工具名、耗时和 `isError`。MCP 引入了一个进程边界，没有 trace 的话「慢」和「错」都定位不到（第 19 课）。把版本也打上去，开头那个案例在 trace 上就是「版本变了、错误率同时起跳」。
+- **每次 `tools/call` 打一个 span**，记录 server 名、server 版本、工具名、耗时和 `isError`。MCP 引入了一个进程边界，没有 trace 的话「慢」和「错」都定位不到（第 20 课）。把版本也打上去，开头那个案例在 trace 上就是「版本变了、错误率同时起跳」。
 - **通道 A 的错误率要有告警。** 它的正常水位是零，见上面第三节。
 - **server 进程要有生命周期管理**：启动超时、健康检查、崩溃后的退避重启。别让一个疯狂重启的 server 拖垮整个 host。
-- **第三方 server 是供应链风险。** 它能读你传过去的一切参数，而且能在任何时候改自己的行为。接入前要看代码、钉版本、限制它能访问的资源。第 21 课展开。
-- **怎么测。** 写一个假 server 就能测四条：握手之前调 `tools/list`，断言被拒；把 server 的 stdout 关掉，断言 client 立刻拿到错误而不是永远阻塞；给它一个返回 `isError: true` 的工具和一个返回 JSON-RPC `error` 的方法，断言前者回喂给模型、后者不回喂；让假 server 在重连后换一份 schema，断言 host 用的是新的那份。最后一条就是开头那个案例的回归测试。四条都不需要真模型（第 18 课）。
+- **第三方 server 是供应链风险。** 它能读你传过去的一切参数，而且能在任何时候改自己的行为。接入前要看代码、钉版本、限制它能访问的资源。第 22 课展开。
+- **怎么测。** 写一个假 server 就能测四条：握手之前调 `tools/list`，断言被拒；把 server 的 stdout 关掉，断言 client 立刻拿到错误而不是永远阻塞；给它一个返回 `isError: true` 的工具和一个返回 JSON-RPC `error` 的方法，断言前者回喂给模型、后者不回喂；让假 server 在重连后换一份 schema，断言 host 用的是新的那份。最后一条就是开头那个案例的回归测试。四条都不需要真模型（第 19 课）。
 
 ## 框架映射
 
@@ -319,4 +319,4 @@ MCP client 在 [`mcp/client.py`](https://github.com/lance2016/ai-app-engineering
 
 ---
 
-[← 上一课 10](../multi-agent-handoff/README.md) · [下一课 12 →](../skills-and-capability-layers/README.md)
+[← 上一课 11](../multi-agent-handoff/README.md) · [下一课 13 →](../skills-and-capability-layers/README.md)

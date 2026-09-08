@@ -47,6 +47,8 @@ flowchart LR
 
 那个菱形问的是「下一步做什么」。其余全归运行时：执行、记账、判断该不该继续、决定怎么处理失败。这条边界画清楚之后，Agent 的可靠性就是普通软件的可靠性问题了。
 
+这个「模型想一步、运行时做一步、结果再回给模型」的形状有个名字：**ReAct**。它出自 2022 年的同名论文（见延伸阅读），今天几乎所有 Agent 框架的默认循环都是它的变体。知道这个名字，读别家文档时能一眼认出自己在看什么。
+
 ### 停止条件全部由运行时持有
 
 模型「自然停下」是一种停止方式，但不能是唯一的。至少还要有步数上限、token 预算、时间预算，以及跑偏检测。
@@ -61,7 +63,9 @@ flowchart LR
 
 ### 一个 Agent 管 3～10 步
 
-上下文越长模型越容易跑偏，这是 12-factor 的 factor 10 反复强调的经验。任务大就拆成多个小 Agent，让确定性代码把它们串起来。这一点第 09 课和第 10 课展开。
+上下文越长模型越容易跑偏，这是 12-factor 的 factor 10 反复强调的经验。任务大就拆成多个小 Agent，让确定性代码把它们串起来。这一点第 09 课和第 11 课展开。
+
+拆不开的长任务还有另一条路：循环不动，给它一份每轮重新念一遍的清单，再逐项验收。第 10 课讲这条路，以及两条路各自适合什么。
 
 还有一条来自 factor 08 的观察：循环不一定要一口气跑完。模型请求「问用户一个问题」或「部署到生产」时，正确做法是跳出循环，把状态存下来，等人回来再续。本课的循环还是单进程内的，怎么跨请求暂停和恢复是第 07 课的内容。
 
@@ -180,7 +184,7 @@ else:
 ## 从十几行到能上线
 
 - **每一次停止都要落一条结构化事件**，带上停止原因和当时的预算快照。事后排查「这次为什么只跑了两步」，靠的是这条记录，不是日志里的一句话。
-- **停止原因要够细。** `FINISHED`、`STEP_LIMIT`、`TOKEN_BUDGET`、`TIME_BUDGET`、`USER_ENDED`、`NEEDS_HUMAN` 是六种不同的结局，混成一个「结束了」就没法按原因统计。第 19 课那棵 trace 树上，根 span 的 `stop_reason` 就是这个字段。
+- **停止原因要够细。** `FINISHED`、`STEP_LIMIT`、`TOKEN_BUDGET`、`TIME_BUDGET`、`USER_ENDED`、`NEEDS_HUMAN` 是六种不同的结局，混成一个「结束了」就没法按原因统计。第 20 课那棵 trace 树上，根 span 的 `stop_reason` 就是这个字段。
 - **预算要分层**：单次运行有预算，单个用户每天有预算，整个服务每月有预算。只做最里面那层，一个死循环的用户就能把整月账单打穿。
 - **重试要带上幂等键**，否则「瞬时错误」的重试会把已经生效的副作用做第二遍。这是第 05 课工具契约的延续。
 - **跑偏检测的窗口要可配**，不同任务类型的合理重复度差很多。
@@ -205,6 +209,7 @@ else:
 
 - [12-factor-agents · factor 08 Own your control flow](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-08-own-your-control-flow.md)（访问日期 2026-09-04）：三种控制流形态的代码示例，「跳出循环等人」就出自这里。
 - [12-factor-agents · factor 10 Small, focused agents](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-10-small-focused-agents.md)（访问日期 2026-09-04）：为什么一个 Agent 管 3～10 步，以及「模型变强了这条还成立吗」的回答。
+- [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629)（访问日期 2026-09-08）：本课这个循环的原始论文，读摘要和图 1 就够。
 - [Anthropic · Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)（访问日期 2026-09-05）：循环与工作流的边界，第 09 课会详细展开。
 
 ---

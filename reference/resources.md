@@ -52,14 +52,14 @@
 
 | 项目 | 语言 | 值得看的一件事 | 对应课 |
 |---|---|---|---|
-| [openai/codex](https://github.com/openai/codex) | Rust | 沙箱和审批分级：哪些动作直接做、哪些要问 | 06、21 |
-| [cline/cline](https://github.com/cline/cline) | TypeScript | 计划与执行分成两种模式；文件改动走 diff 而不是整文件重写 | 09、13 |
-| [Aider-AI/aider](https://github.com/Aider-AI/aider) | Python | repo map：怎么在有限上下文里表示一个大代码库 | 08、13 |
-| [All-Hands-AI/OpenHands](https://github.com/All-Hands-AI/OpenHands) | Python | 动作与观察成对的事件流，就是第 07 课那份事件记录 | 07、19 |
+| [openai/codex](https://github.com/openai/codex) | Rust | 沙箱和审批分级：哪些动作直接做、哪些要问 | 06、22 |
+| [cline/cline](https://github.com/cline/cline) | TypeScript | 计划与执行分成两种模式；文件改动走 diff 而不是整文件重写 | 09、14 |
+| [Aider-AI/aider](https://github.com/Aider-AI/aider) | Python | repo map：怎么在有限上下文里表示一个大代码库 | 08、14 |
+| [All-Hands-AI/OpenHands](https://github.com/All-Hands-AI/OpenHands) | Python | 动作与观察成对的事件流，就是第 07 课那份事件记录 | 07、20 |
 | [SWE-agent/SWE-agent](https://github.com/SWE-agent/SWE-agent) | Python | agent-computer interface：工具是为模型设计的，不是为人 | 05 |
-| [block/goose](https://github.com/block/goose) | Rust | 扩展能力全部走 MCP，是第 11 课协议价值的一个实例 | 11、12 |
-| [anthropics/claude-code](https://github.com/anthropics/claude-code) | — | 本体不开源，这个仓库是 CHANGELOG、插件与示例；机制看上面的官方文档 | 06、12 |
-| [agents.md](https://agents.md/) | — | 一份写给编码 agent 的项目说明文件约定 | 03、12 |
+| [block/goose](https://github.com/block/goose) | Rust | 扩展能力全部走 MCP，是第 12 课协议价值的一个实例 | 12、13 |
+| [anthropics/claude-code](https://github.com/anthropics/claude-code) | — | 本体不开源，这个仓库是 CHANGELOG、插件与示例；机制看上面的官方文档 | 06、13 |
+| [agents.md](https://agents.md/) | — | 一份写给编码 agent 的项目说明文件约定 | 03、13 |
 
 访问日期均为 2026-09-06。**这几个项目迭代很快**，上面写的是当天打开时的形态，隔几个月再看可能已经换了做法。
 
@@ -81,7 +81,7 @@
 - [Anthropic · Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)（访问日期 2026-09-04）：Workflow 与 Agent 模式的分类，第 09 课的骨架。
 - [Anthropic · Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)（访问日期 2026-09-04）：attention budget 和 just-in-time 两个说法的出处，第 08 课。
 - [Anthropic · Writing effective tools for AI agents](https://www.anthropic.com/engineering/writing-tools-for-agents)（访问日期 2026-09-06）：工具的名字、描述和返回值怎么写，模型才用得对。第 05 课「工具是契约」落到字面上的部分。
-- [Anthropic · How we built our multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system)（访问日期 2026-09-06）：多 Agent 的收益和它的 token 代价，第 10 课判断「要不要再加一个 Agent」时看这篇。
+- [Anthropic · How we built our multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system)（访问日期 2026-09-06）：多 Agent 的收益和它的 token 代价，第 11 课判断「要不要再加一个 Agent」时看这篇。
 - [Anthropic · Claude Code best practices](https://www.anthropic.com/engineering/claude-code-best-practices)（访问日期 2026-09-06）：从使用约定反推一个成熟 harness 的设计，第 06、12 课。
 - [OpenAI · A practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)（PDF，访问日期 2026-09-06）：单 Agent 什么时候该拆成多 Agent，以及 guardrail 的分层，第 09、21 课。
 
@@ -94,7 +94,7 @@
 | [Attention Is All You Need](https://arxiv.org/abs/1706.03762) | 第 3.2 节 | F03 |
 | [Sentence-BERT](https://arxiv.org/abs/1908.10084) | 第 3 节训练目标 | F02、04 |
 | [Matryoshka Representation Learning](https://arxiv.org/abs/2205.13147) | 摘要与图 1 | F02、04 |
-| [RAG](https://arxiv.org/abs/2005.11401) | 摘要与图 1 | 14 |
+| [RAG](https://arxiv.org/abs/2005.11401) | 摘要与图 1 | 15 |
 | [ReAct](https://arxiv.org/abs/2210.03629) | 摘要与图 1 | 06 |
 
 ## 需要定期核查的内容

@@ -5,7 +5,7 @@ part: Part 4 生产工程
 estimated_time: 约 2 小时
 ---
 
-# 19 可观测性：从日志到 LLM Trace
+# 20 可观测性：从日志到 LLM Trace
 
 > 一句错误的回答背后可能有八九次调用。日志里只留下最后那句话的时候，排查就变成了猜。这一课用五十行代码造一个 tracer，属性名对齐 OpenTelemetry 的 GenAI 约定，再按 OTLP 发出去。
 
@@ -50,7 +50,7 @@ estimated_time: 约 2 小时
 ## 前置
 
 - [07 Agent State 与 Runtime](../agent-state-and-runtime/README.md)：被观测的对象
-- [18 评测](../evaluation/README.md)：评测集里的失败案例从 trace 里挑
+- [19 评测](../evaluation/README.md)：评测集里的失败案例从 trace 里挑
 
 ## 同一次运行，换成一棵树
 
@@ -303,7 +303,7 @@ def build_payload() -> dict:
 ## 从五十行到生产
 
 - **成本要能按租户聚合。** `gen_ai.conversation.id` 和自定义的 `tenant_id` 属性都要打上，否则成本尖峰那棵树只能告诉你「有人很贵」。
-- **trace 和评测要打通。** 从一条 trace 一键生成 golden case，是评测集能持续长大的关键（第 18 课）。工单 #4471 复现之后，它应该变成一条 golden case。
+- **trace 和评测要打通。** 从一条 trace 一键生成 golden case，是评测集能持续长大的关键（第 19 课）。工单 #4471 复现之后，它应该变成一条 golden case。
 - **自定义属性要有命名前缀和清单。** 上面用的 `aiapp.*` 那几个（`stop_reason`、`empty_output`、`tool.result_bytes`、`args_sha`）是这个系统的私有词汇，散着加会变成没人认识的字段。和标准属性一样，它们也该有一份文档。
 - **怎么测。** 拿一组能确定性触发四种故障的假实现（会超时的工具、返回空串的模型、返回巨大结果的工具、会绕圈的提示），跑一遍，断言 trace 上的信号真的出现了：状态是不是 ERROR、`stop_reason` 对不对、根 span 的 `cost_usd` 有没有算上。观测代码不写测试，坏掉的时候没人会发现——它坏掉的形态就是「一片绿」。
 
@@ -331,4 +331,4 @@ OpenTelemetry 接线在 [`ops/telemetry.py`](https://github.com/lance2016/ai-app
 
 ---
 
-[← 上一课 18](../evaluation/README.md) · [下一课 20 →](../reliability-cost-llmops/README.md)
+[← 上一课 19](../evaluation/README.md) · [下一课 21 →](../reliability-cost-llmops/README.md)

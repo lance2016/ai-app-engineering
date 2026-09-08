@@ -4,7 +4,7 @@ part: Part 4 生产工程
 estimated_time: 约 2 小时
 ---
 
-# 18 评测：Golden Set、LLM Judge 与 Agent Eval
+# 19 评测：Golden Set、LLM Judge 与 Agent Eval
 
 > 改了 prompt，试了三个问题，感觉更好了。这一课要把这句话里的每个词换掉：三个问题换成带标签的评测集，「感觉」换成断言和校准过的 judge，「更好」换成和基线比的门禁。
 
@@ -24,7 +24,7 @@ estimated_time: 约 2 小时
 ## 前置
 
 - [07 Agent State 与 Runtime](../agent-state-and-runtime/README.md)：轨迹评测直接对事件线程做断言
-- [14 RAG 端到端](../rag-end-to-end/README.md)：Recall@k 是本课方法在检索层的应用
+- [15 RAG 端到端](../rag-end-to-end/README.md)：Recall@k 是本课方法在检索层的应用
 
 ## 怎么理解它
 
@@ -249,4 +249,4 @@ def gate(current: dict, baseline: dict) -> list[str]:
 
 ---
 
-[← 上一课 17](../system-architecture/README.md) · [下一课 19 →](../observability/README.md)
+[← 上一课 18](../system-architecture/README.md) · [下一课 20 →](../observability/README.md)

@@ -145,25 +145,26 @@ nav:
           - 07 Agent State 与 Runtime: lessons/agent-state-and-runtime/README.md
           - 08 Context Engineering: lessons/context-engineering-for-agents/README.md
           - 09 Workflow 还是 Agent: lessons/workflow-vs-agent/README.md
-          - 10 多智能体与 Handoff: lessons/multi-agent-handoff/README.md
-          - 11 MCP: lessons/mcp/README.md
-          - 12 Skill 与能力分层: lessons/skills-and-capability-layers/README.md
-          - 13 Agent Harness: lessons/agent-harness/README.md
+          - 10 长任务与计划: lessons/long-horizon-tasks/README.md
+          - 11 多智能体与 Handoff: lessons/multi-agent-handoff/README.md
+          - 12 MCP: lessons/mcp/README.md
+          - 13 Skill 与能力分层: lessons/skills-and-capability-layers/README.md
+          - 14 Agent Harness: lessons/agent-harness/README.md
       - "Part 3 知识与记忆":
-          - 14 RAG 端到端: lessons/rag-end-to-end/README.md
-          - 15 Memory: lessons/memory/README.md
-          - 16 数据工程: lessons/data-engineering/README.md
+          - 15 RAG 端到端: lessons/rag-end-to-end/README.md
+          - 16 Memory: lessons/memory/README.md
+          - 17 数据工程: lessons/data-engineering/README.md
       - "Part 4 生产工程":
-          - 17 系统架构与数据流: lessons/system-architecture/README.md
-          - 18 评测: lessons/evaluation/README.md
-          - 19 可观测性: lessons/observability/README.md
-          - 20 可靠性与成本: lessons/reliability-cost-llmops/README.md
-          - 21 安全与治理: lessons/security-governance/README.md
-          - 22 微调与推理服务: lessons/model-adaptation-finetuning-inference/README.md
+          - 18 系统架构与数据流: lessons/system-architecture/README.md
+          - 19 评测: lessons/evaluation/README.md
+          - 20 可观测性: lessons/observability/README.md
+          - 21 可靠性与成本: lessons/reliability-cost-llmops/README.md
+          - 22 安全与治理: lessons/security-governance/README.md
+          - 23 微调与推理服务: lessons/model-adaptation-finetuning-inference/README.md
       - "Part 5 产品与技术决策":
-          - 23 产品设计与交互: lessons/product-design-ux/README.md
-          - 24 语音应用: lessons/voice-agents/README.md
-          - 25 系统设计与技术决策: lessons/system-design-decisions/README.md
+          - 24 产品设计与交互: lessons/product-design-ux/README.md
+          - 25 语音应用: lessons/voice-agents/README.md
+          - 26 系统设计与技术决策: lessons/system-design-decisions/README.md
   # 两类都不是必修，只在需要时才查，所以排在主线之后。分类留着，以后各自还会加内容。
   - 背景知识:
       - 概述: prerequisites/README.md

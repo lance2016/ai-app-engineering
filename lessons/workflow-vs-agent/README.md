@@ -51,6 +51,8 @@ flowchart LR
 
 **Planner / executor 是 orchestrator-workers 的一种**：planner 输出结构化的子任务列表，executor 逐个执行。它算 workflow，因为路径由代码控制，模型只是填了计划的内容。
 
+这里的计划一次生成、执行中不变。让模型边做边改计划是另一回事，那时控制流仍归运行时，计划只是上下文里的一份内容——第 10 课讲那种形态。
+
 **Evaluator-optimizer 也算 workflow**，因为循环的形状是固定的：生成、评审、再生成。模型不能决定「这次不评审了」。
 
 只有当路径无法预先枚举、必须让模型根据每一步的结果决定下一步时，才需要自治 Agent。那就是第 06 课的循环。代价是更高的成本、更长的延迟、错误会累积，所以要有沙箱、预算和评测。
@@ -130,7 +132,7 @@ async def vote_is_safe(text, attempts=3) -> tuple[bool, Counter]:
 
 两种用法差别很大。分段是把一个大任务拆成互不相干的小任务，图的是速度和每个子任务的专注度。投票是同一个任务做多次，图的是置信度——用成本换准确率。
 
-共同点：聚合是代码做的，模型看不到其他分支的结果。这是它和多 Agent 协作（第 10 课）的分界。
+共同点：聚合是代码做的，模型看不到其他分支的结果。这是它和多 Agent 协作（第 11 课）的分界。
 
 ### 四、Orchestrator-workers：计划是有 schema 的
 
@@ -205,7 +207,7 @@ async def refine(generator, evaluator, task) -> tuple[str, bool]:
 - **每种模式的失败形态不同，监控也不同。** chaining 看每道门的拒绝率，routing 看各车道的分布和兜底率，orchestrator 看计划被拒的比例，evaluator-optimizer 看平均轮数。
 - **模式可以嵌套，但要有边界。** routing 的某一条车道里跑一个 chaining 是合理的；chaining 的某一步里跑一个自治 Agent 就要谨慎——外层的确定性会被内层的不确定性吃掉。
 - **选型要留记录。** 「为什么这里用 workflow 不用 Agent」应该写进设计文档。三个月后有人想「优化」成自治 Agent 时，这份记录是唯一的防线。
-- **怎么测。** 五种模式各配一条断言，全部用剧本式的假适配器，不需要真模型：chaining 断言中间那道门真的拦住了不合格的中间产物；routing 断言分类结果不在枚举里时走了兜底；parallelization 断言一路失败不影响另一路的结果；orchestrator-workers 断言计划超过上限被拒；evaluator-optimizer 断言轮数上限生效。这五条是判断「换了模型之后这套 workflow 还成立吗」的最小依据（第 18 课）。
+- **怎么测。** 五种模式各配一条断言，全部用剧本式的假适配器，不需要真模型：chaining 断言中间那道门真的拦住了不合格的中间产物；routing 断言分类结果不在枚举里时走了兜底；parallelization 断言一路失败不影响另一路的结果；orchestrator-workers 断言计划超过上限被拒；evaluator-optimizer 断言轮数上限生效。这五条是判断「换了模型之后这套 workflow 还成立吗」的最小依据（第 19 课）。
 
 ## 框架映射
 
@@ -223,7 +225,7 @@ async def refine(generator, evaluator, task) -> tuple[str, bool]:
 
 后来改成 routing：一个小模型先分类成「纯聊天 / 纯指令 / 两者都有」三类，再分别走不同的路径。分类模型偶尔输出训练时见过但当前不存在的类别名，兜底是当作「纯聊天」——这就是上面 `human_review` 那个分支的角色。
 
-这个 routing 的并行版本是第 10 课的 racing。
+这个 routing 的并行版本是第 11 课的 racing。
 
 ## 参考实现
 
@@ -238,4 +240,4 @@ async def refine(generator, evaluator, task) -> tuple[str, bool]:
 
 ---
 
-[← 上一课 08](../context-engineering-for-agents/README.md) · [下一课 10 →](../multi-agent-handoff/README.md)
+[← 上一课 08](../context-engineering-for-agents/README.md) · [下一课 10 →](../long-horizon-tasks/README.md)

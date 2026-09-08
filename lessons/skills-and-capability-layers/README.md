@@ -4,7 +4,7 @@ part: Part 2 Tool 与 Agent
 estimated_time: 约 1.5 小时
 ---
 
-# 12 Skill 与能力生态分层
+# 13 Skill 与能力生态分层
 
 > 到这一课，「能力」这个词已经有了好几层意思：进程里的函数（Tool）、别的进程暴露的接口（MCP）、一段教模型怎么用这些东西的说明（Skill）、宿主软件的扩展包（Plugin）、Agent 之间的通话协议（A2A）。它们经常被混着叫。这一课把它们各归各位，然后把 Skill 这一层讲透。
 
@@ -22,7 +22,7 @@ estimated_time: 约 1.5 小时
 
 - [05 Tool Calling](../tool-calling/README.md)：注册表。Skill 的 `allowed-tools` 要和它对账
 - [08 Agent 的 Context Engineering](../context-engineering-for-agents/README.md)：按需加载的机制，本课是它在「能力说明」上的具体应用
-- [11 MCP](../mcp/README.md)：接入协议。Skill 常常是「怎么用一组 MCP 工具」的说明书
+- [12 MCP](../mcp/README.md)：接入协议。Skill 常常是「怎么用一组 MCP 工具」的说明书
 
 ## 怎么理解它
 
@@ -217,8 +217,8 @@ Skill 目前主要是 Anthropic 生态的概念，但三级加载的思路和框
 - [Anthropic · Agent Skills 概览](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)（访问日期 2026-09-04）：SKILL.md 格式、frontmatter 字段、渐进式披露的官方说明。
 - [Anthropic Engineering · Equipping agents for the real world with Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)（访问日期 2026-09-04）：为什么要分三级加载，以及 PDF Skill 怎样把大段参考资料拆到附属文件里。
 - [anthropics/skills](https://github.com/anthropics/skills)（访问日期 2026-09-04）：一批真实 Skill 的源码，`spec/` 是规范，`template/` 是起手模板。读几个 `SKILL.md` 比读任何介绍都直观。
-- [A2A 协议](https://a2a-protocol.org/latest/)（访问日期 2026-09-04）：Agent 之间的协议，Agent Card 相当于 Agent 级别的「name + description」。第 10 课的 handoff 如果跨系统，就是它的用武之地。
+- [A2A 协议](https://a2a-protocol.org/latest/)（访问日期 2026-09-04）：Agent 之间的协议，Agent Card 相当于 Agent 级别的「name + description」。第 11 课的 handoff 如果跨系统，就是它的用武之地。
 
 ---
 
-[← 上一课 11](../mcp/README.md) · [下一课 13 →](../agent-harness/README.md)
+[← 上一课 12](../mcp/README.md) · [下一课 14 →](../agent-harness/README.md)

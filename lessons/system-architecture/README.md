@@ -4,7 +4,7 @@ part: Part 4 生产工程
 estimated_time: 约 1.5 小时
 ---
 
-# 17 AI 应用系统架构与端到端数据流
+# 18 AI 应用系统架构与端到端数据流
 
 > 前面十几课各讲一个部件。这一课把它们放回一条完整的请求链里：从客户端发出请求，经过网关、会话、上下文、模型、工具、检索，再回到客户端。看清每一跳做什么、耗时在哪、状态归谁，你就知道该往哪加东西、出了问题该去哪看。
 
@@ -21,7 +21,7 @@ estimated_time: 约 1.5 小时
 ## 前置
 
 - [07 Agent State 与 Runtime](../agent-state-and-runtime/README.md)：事件线程和事件流，本课的持久化就是存它
-- [14 RAG 端到端](../rag-end-to-end/README.md)：检索这一跳的内部
+- [15 RAG 端到端](../rag-end-to-end/README.md)：检索这一跳的内部
 
 ## 怎么理解它
 
@@ -107,7 +107,7 @@ async def call_model(thread, model, context) -> ModelResponse:
         return await model.complete(thread.to_messages() + [system(context)], tools=tools)
 ```
 
-`hop` 事件是第 19 课 trace 的雏形。**每一跳都记时间，从第一天开始。** 事后加计时要动每一个函数，一开始就有则几乎零成本。
+`hop` 事件是第 20 课 trace 的雏形。**每一跳都记时间，从第一天开始。** 事后加计时要动每一个函数，一开始就有则几乎零成本。
 
 典型的耗时分布：模型几十到几百毫秒，检索十几毫秒，鉴权和持久化个位数毫秒。**优化方向由这张表决定**，不是靠猜。
 
@@ -212,7 +212,7 @@ def load_thread(thread_id, cache, repo) -> Thread | None:
 - **`hop` 事件要能开关采样率。** 全量记录在高 QPS 下是可观的写入压力。
 - **长任务要有状态查询接口和取消接口。** 只能提交不能查、不能取消的任务系统，运维起来非常痛苦。
 - **健康检查要分层**：`/healthz` 只看进程活着，`/readyz` 要探数据库和 Redis。两者混在一起会让滚动发布把还没连上数据库的实例放进流量。
-- **怎么测。** 上面那个「把 Redis 清空」的实验就是一条测试，写下来：清空缓存，断言请求仍然成功、只是变慢。另外两条：断言每一跳的超时异常里带了是哪一跳（否则排障时分不清检索慢还是模型慢），以及断言数据库连不上时 `/readyz` 真的返回失败而 `/healthz` 仍然通过。三条都不需要模型（第 18 课）。
+- **怎么测。** 上面那个「把 Redis 清空」的实验就是一条测试，写下来：清空缓存，断言请求仍然成功、只是变慢。另外两条：断言每一跳的超时异常里带了是哪一跳（否则排障时分不清检索慢还是模型慢），以及断言数据库连不上时 `/readyz` 真的返回失败而 `/healthz` 仍然通过。三条都不需要模型（第 19 课）。
 
 ## 框架映射
 
@@ -245,4 +245,4 @@ def load_thread(thread_id, cache, repo) -> Thread | None:
 
 ---
 
-[← 上一课 16](../data-engineering/README.md) · [下一课 18 →](../evaluation/README.md)
+[← 上一课 17](../data-engineering/README.md) · [下一课 19 →](../evaluation/README.md)

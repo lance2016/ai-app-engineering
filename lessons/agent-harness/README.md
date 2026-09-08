@@ -4,7 +4,7 @@ part: Part 2 Tool 与 Agent
 estimated_time: 约 2 小时
 ---
 
-# 13 Agent Harness：把前八课装进一个真实系统
+# 14 Agent Harness：把前八课装进一个真实系统
 
 > 05 到 12 课的零件已经齐了：工具、循环、状态、上下文、能力接入。这一课把它们放进一个真实产品形态里看一遍——编码 Agent。它是这两年被用得最重的一类 Agent，它撞过的墙，你的应用迟早也会撞。
 
@@ -25,7 +25,7 @@ estimated_time: 约 2 小时
 ## 前置
 
 - [05 Tool Calling](../tool-calling/README.md)、[06 Agent 循环与控制流](../agent-loop/README.md)、[07 Agent State 与 Runtime](../agent-state-and-runtime/README.md)：这一课是这三样的组合形态，不再重复它们的机制
-- [12 Skill 与能力生态分层](../skills-and-capability-layers/README.md)：Skill 和 MCP 在 harness 里各占哪一格
+- [13 Skill 与能力生态分层](../skills-and-capability-layers/README.md)：Skill 和 MCP 在 harness 里各占哪一格
 
 ## 怎么理解它
 
@@ -145,12 +145,12 @@ async def call_tool(tool, args, mode, hooks):
 
 **把纪律写进系统提示词。** 「改完一定要跑测试」「不要碰 migrations」，模型多数时候会听。**多数时候不构成安全边界。** 能写成权限声明的写声明，能写成 hook 的写 hook，剩下的才留给提示词。
 
-**压缩时把「还没做完的事」压没了。** 摘要是模型写的，它倾向保留「聊过什么」，丢掉「第三步还没做」。这份没做完的清单要走第 08 课的 `protected`：运行时认定它重要，每轮原样带进窗口，不交给摘要模型转述。它和「走到第几步」是两码事——后者从事件线程推导得出（第 07 课），不用也不该单独存一份。
+**压缩时把「还没做完的事」压没了。** 摘要是模型写的，它倾向保留「聊过什么」，丢掉「第三步还没做」。这份没做完的清单要走第 08 课的 `protected`：运行时认定它重要，每轮原样带进窗口，不交给摘要模型转述。它和「走到第几步」是两码事——后者从事件线程推导得出（第 07 课），不用也不该单独存一份。清单怎么接进循环、怎么验收，见第 10 课。
 
 ## 取舍
 
 - **工具少而通用，还是多而专用。** 四个动词好学、好审计，但模型要多绕几步；十几个专用工具一步到位，代价是每个都要写描述、测试和权限声明，而且工具定义每一轮都在占上下文（第 08 课）。先做四个，等 trace 里反复出现同一组合，再把它固化成一个工具。
-- **审批频率。** 每一步都问，用户三分钟后就开始无脑点同意，确认门等于没有（第 23 课讲的是同一件事）。只在不可逆动作上问，可撤销的动作靠「做了 + 能看 diff + 能撤」兜住。
+- **审批频率。** 每一步都问，用户三分钟后就开始无脑点同意，确认门等于没有（第 24 课讲的是同一件事）。只在不可逆动作上问，可撤销的动作靠「做了 + 能看 diff + 能撤」兜住。
 - **沙箱强度。** 关掉网络、限死工作目录最安全，但很多真实任务要装依赖、查文档。折中是分级：默认只读加工作目录可写，需要网络时显式开一个会话级开关，并且把这次开关记进事件。
 - **派子 Agent 还是主循环自己做。** 子 Agent 隔离上下文，主循环只拿回结论，长任务里省得多；代价是它看不到主循环的全部背景，容易做偏，trace 上还多一层（第 10、19 课）。
 
@@ -160,7 +160,7 @@ async def call_tool(tool, args, mode, hooks):
 - **权限配置分层**：项目级（放在仓库里，跟着代码走 review）、用户级、会话级。冲突时取最严的那一层，不是最近的那一层。
 - **沙箱边界写进配置，不写进代码**：工作目录、允许的命令前缀、网络开关。这些是会被审计的东西，藏在代码里没人看得见。
 - **子 Agent 的预算独立结算**：主循环的步数和 token 预算不能被一个跑飞的子 Agent 吃光（第 06 课）。
-- **怎么测。** 拿一组真实仓库任务做样本，但断言不要写在最终回答上，写在轨迹上：改了哪些文件、不该动的有没有动、不可逆动作发生了几次、有没有绕过审批、压缩之后那份没做完的清单还在不在。这些断言都是确定性的，一秒内跑完，能进 CI（第 18 课）。
+- **怎么测。** 拿一组真实仓库任务做样本，但断言不要写在最终回答上，写在轨迹上：改了哪些文件、不该动的有没有动、不可逆动作发生了几次、有没有绕过审批、压缩之后那份没做完的清单还在不在。这些断言都是确定性的，一秒内跑完，能进 CI（第 19 课）。
 
 ## 框架映射
 
@@ -182,11 +182,11 @@ async def call_tool(tool, args, mode, hooks):
 
 - [SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering](https://arxiv.org/abs/2405.15793)（访问日期 2026-09-06）：读摘要和讲工具界面设计的那一节。「工具是给模型的界面」这个说法的出处。
 - [Claude Code · Hooks 参考](https://docs.claude.com/en/docs/claude-code/hooks)（访问日期 2026-09-06）：一套成熟的拦截点设计，事件类型和它们能改什么，值得照着抄。
-- [Claude Code · 子 Agent](https://docs.claude.com/en/docs/claude-code/sub-agents)（访问日期 2026-09-06）：上下文隔离怎么配，和第 10 课对着读。
+- [Claude Code · 子 Agent](https://docs.claude.com/en/docs/claude-code/sub-agents)（访问日期 2026-09-06）：上下文隔离怎么配，和第 11 课对着读。
 - [aider · Repository map](https://aider.chat/docs/repomap.html)（访问日期 2026-09-06）：怎么在有限上下文里表示一个大代码库，第 08 课那套预算思路的一个具体解法。
 - [Anthropic · Writing effective tools for AI agents](https://www.anthropic.com/engineering/writing-tools-for-agents)（访问日期 2026-09-06）：工具描述和返回值该怎么写，本课第一节的展开。
 - [openai/codex](https://github.com/openai/codex)（访问日期 2026-09-06）：一个开源的终端编码 agent，直接看它的沙箱和审批分级怎么落地。
 
 ---
 
-[← 上一课 12](../skills-and-capability-layers/README.md) · [下一课 14 →](../rag-end-to-end/README.md)
+[← 上一课 13](../skills-and-capability-layers/README.md) · [下一课 15 →](../rag-end-to-end/README.md)
