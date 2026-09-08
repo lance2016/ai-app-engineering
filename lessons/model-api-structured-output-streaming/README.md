@@ -164,8 +164,19 @@ class Invoice(BaseModel):
 
 SYSTEM = ("Extract the invoice as JSON matching this JSON Schema exactly. "
           "Output only the JSON object.\n"
-          + json.dumps(Invoice.model_json_schema(), ensure_ascii=False))
+          + json.dumps(Invoice.model_json_schema(), ensure_ascii=False))   # (1)!
 
+invoice = Invoice.model_validate_json(strip_fences(reply.content))         # (2)!
+```
+
+1.  第一次用：把 schema 写进提示，告诉模型该返回什么形状。
+2.  第二次用：同一个类校验返回值。两边不可能不一致，因为只有一处定义。
+
+数字类型错、日期格式错、金额带千分位逗号，开头那三个坏字段这一层全接住。
+
+校验没过怎么办，才是第三层：
+
+```python
 async def extract(model, text, max_attempts=3) -> Invoice:
     messages = [Message(role="system", content=SYSTEM),
                 Message(role="user", content=text)]
@@ -181,7 +192,7 @@ async def extract(model, text, max_attempts=3) -> Invoice:
     raise RuntimeError("model never produced valid JSON")
 ```
 
-同一份 `Invoice` 用了两次：一次生成写进提示里的 schema，一次校验返回值。数字类型错、日期格式错、金额带千分位逗号，这三种最常见的错 `date` 的 `pattern` 和 `total` 的 `float` 一次全接住。Pydantic 报的第一条错误原文直接发回去，第二次基本就对了。
+Pydantic 报的第一条错误原文直接发回去，第二次基本就对了。注意这里没有任何一行去改模型的输出，运行时只判对错。
 
 `strip_fences` 是极少数值得在运行时做的归一化：很多模型即使被要求「只输出 JSON」也会包一层 ```` ```json ````。它无歧义、和业务无关，所以可以自动处理。**除此之外的形状修补都该交给模型**。
 
@@ -206,7 +217,7 @@ async def extract(model, text, max_attempts=3) -> Invoice:
 
 ### 四、流式：一边显示，一边攒
 
-```python
+```python hl_lines="13 16"
 async def run(model, messages):
     started, first_token_at = time.monotonic(), None
     text, buffers, ready = [], {}, []        # buffers：按块 id 攒还没收全的参数
@@ -219,10 +230,10 @@ async def run(model, messages):
             ui.append(ev.delta)
 
         elif ev.type == "args_delta":        # 结构化参数也是一片片来的
-            buffers[ev.id] = buffers.get(ev.id, "") + ev.delta   # ← 只攒，不解析
+            buffers[ev.id] = buffers.get(ev.id, "") + ev.delta   # 只攒，不解析
 
         elif ev.type == "block_done":        # 这一块收全了，现在才能解析
-            ready.append(validate(ev.id, buffers.pop(ev.id)))    # ← 校验过才交出去
+            ready.append(validate(ev.id, buffers.pop(ev.id)))    # 校验过才交出去
 
     return text, ready, model.final_usage()  # usage 由 adapter 兜底给出
 ```

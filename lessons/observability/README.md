@@ -13,13 +13,13 @@ estimated_time: 约 2 小时
 
 工单是这么一句话：
 
-```
+```text
 #4471  用户问退货政策，机器人答的是运费政策。已复现，会话 id 有。
 ```
 
 拿着会话 id 去翻日志，能看到的是这些：
 
-```
+```text
 2026-09-07 14:22:11 INFO  正在调用模型...
 2026-09-07 14:22:13 INFO  调用完成
 2026-09-07 14:22:13 INFO  正在检索...
@@ -90,7 +90,7 @@ flowchart LR
 
 **一、工具超时。** 最容易认的一种。
 
-```
+```text
 invoke_agent support_bot        2.31s  OK
 ├─ chat deepseek-chat           0.42s  OK     in=182  out=24
 ├─ execute_tool search          2.000s ERROR  error.type=TimeoutError
@@ -101,21 +101,21 @@ invoke_agent support_bot        2.31s  OK
 
 **二、模型空输出。** 没有异常，没有超时。
 
-```
+```text
 invoke_agent support_bot        0.88s  OK
 └─ chat deepseek-chat           0.83s  OK     in=182  out=0
 ```
 
 整棵树全绿，唯一的信号是 `out=0`。除非运行时主动检查并打属性，否则这次运行在任何仪表盘上都是成功的。加上三行之后：
 
-```
+```text
 invoke_agent support_bot        0.88s  ERROR  aiapp.stop_reason=empty_output
 └─ chat deepseek-chat           0.83s  ERROR  in=182  out=0  aiapp.empty_output=true
 ```
 
 **三、成本尖峰。** 信号滞后一轮出现。
 
-```
+```text
 invoke_agent support_bot        6.12s  OK     aiapp.cost_usd=0.0412
 ├─ chat deepseek-chat           0.44s  OK     in=182     out=28
 ├─ execute_tool list_orders     0.19s  OK     aiapp.tool.result_bytes=168400
@@ -126,7 +126,7 @@ invoke_agent support_bot        6.12s  OK     aiapp.cost_usd=0.0412
 
 **四、循环。** 每一步都成功。
 
-```
+```text
 invoke_agent support_bot       11.42s  OK     aiapp.stop_reason=step_limit  steps=5
 ├─ execute_tool search          0.21s  OK     aiapp.args_sha=9f2a1c
 ├─ execute_tool search          0.19s  OK     aiapp.args_sha=9f2a1c

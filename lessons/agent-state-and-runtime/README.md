@@ -107,7 +107,7 @@ def status(self) -> str:
 
 ### 二、暂停恢复：同一个函数，两种入口
 
-```python
+```python hl_lines="4"
 async def run(thread, model, max_steps=6):
     while thread.steps() < max_steps:
         # ① 先把模型已经要求、但还没结果的调用处理掉

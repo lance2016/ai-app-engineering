@@ -79,7 +79,7 @@ flowchart LR
 
 ### 一、ContextBuilder：先放固定区段，再用剩余预算填历史
 
-```python
+```python title="runtime/context.py" hl_lines="24 35"
 @dataclass
 class ContextBuilder:
     system: str
@@ -125,7 +125,7 @@ class ContextBuilder:
 
 ### 二、压缩：摘要不可信，关键事实单独走
 
-```python
+```python hl_lines="15"
 def extract_protected(thread) -> list[str]:
     """确定性抽取那些不能交给摘要的事实。"""
     return [e.data["content"] for e in thread.events
@@ -140,7 +140,7 @@ async def compact(thread, summarizer):
     thread.append("compaction",
                   summary=reply.content,
                   covers=len(old),
-                  protected=extract_protected(thread))   # ← 兜底
+                  protected=extract_protected(thread))
 
 def window_for_model(thread) -> list[Message]:
     last = latest_compaction(thread)

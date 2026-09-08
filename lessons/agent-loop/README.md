@@ -82,36 +82,38 @@ flowchart LR
 
 ## 循环、预算、失败路由
 
-下面三段代码只为说明机制，省略了适配器、日志和类型定义，不能直接运行。
+三段代码是一层层加上去的：先让循环能跑起来，再让它一定停得下来，最后决定停不下来的时候怎么办。
+只为说明机制，省略了适配器、日志和类型定义，不能直接运行。标题写的是[参考实现](#参考实现)里对应的模块，方便对照着读。
 
 ### 一、循环本身很短
 
-```python
+```python title="runtime/loop.py" hl_lines="14"
 async def run_agent(model, goal, tools, max_steps):
     messages = [Message(role="user", content=goal)]
 
     for step in range(1, max_steps + 1):
         reply = await model.complete(messages, tools=tools)
 
-        # 模型不再要工具，说明它认为任务完成了
-        if not reply.tool_calls:
+        if not reply.tool_calls:      # (1)!
             return Result(stop_reason=FINISHED, answer=reply.content)
 
         messages.append(Message(role="assistant", tool_calls=reply.tool_calls))
         for call in reply.tool_calls:
-            messages.append(run_tool(call))     # 执行归运行时
+            messages.append(run_tool(call))     # (2)!
 
-    # 走到这里说明模型一直在要工具，运行时替它踩刹车
     return Result(stop_reason=STEP_LIMIT)
 ```
 
-十几行。复杂度不在循环本身，在循环外面的预算和路由。注意最后那个 `return`：它是整段代码里最重要的一行，因为它是唯一保证进程能结束的东西。
+1.  模型不再要工具，只说明它认为任务做完了。结束循环的是这个 `return`，不是模型。
+2.  模型只提出调用请求，执行永远在运行时这一侧。
+
+十几行。复杂度不在循环本身，在循环外面的预算和路由。注意最后那个 `return`：走到它说明模型一直在要工具，运行时替它踩了刹车。它是整段代码里最重要的一行，因为它是唯一保证进程能结束的东西。
 
 开头那个退出工具装进来就是多一个分支：`run_tool` 认出这个工具名，不执行任何副作用，直接让 `run_agent` 带着 `stop_reason=USER_ENDED` 返回。它和 `STEP_LIMIT` 一样是运行时的一条停止路径，只是触发它的信号来自模型。
 
 ### 二、预算要在每轮结算之后检查
 
-```python
+```python title="runtime/budget.py"
 @dataclass
 class Budget:
     max_steps: int
@@ -140,7 +142,7 @@ class Budget:
 
 ### 三、失败分类决定恢复动作
 
-```python
+```python title="runtime/errors.py"
 ROUTES = {
     Failure.TRANSIENT:     Route.RETRY,      # 网络抖动、限流、超时
     Failure.INVALID_INPUT: Route.FEEDBACK,   # 参数错了，模型能自己改

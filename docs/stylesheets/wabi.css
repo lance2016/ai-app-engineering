@@ -71,6 +71,9 @@
   --md-code-hl-variable-color:     var(--ws-ink);
   --md-code-hl-generic-color:      var(--ws-ink-2);
   --md-code-hl-color:              var(--ws-celadon);
+  /* hl_lines is a "read this" mark, so it spends celadon (rule 3) -- but as a
+     wash under the line, not a warning highlighter. */
+  --md-code-hl-color--light:       rgba(13, 128, 107, .07);
 }
 
 [data-md-color-scheme="slate"] {
@@ -124,6 +127,7 @@
   --md-code-hl-variable-color:     var(--ws-ink);
   --md-code-hl-generic-color:      var(--ws-ink-2);
   --md-code-hl-color:              var(--ws-celadon);
+  --md-code-hl-color--light:       rgba(63, 191, 156, .12);
 }
 
 /* --- type --------------------------------------------------------------- */
@@ -370,6 +374,51 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
   color: var(--ws-ink-3);
   background: transparent;
   box-shadow: none;
+}
+
+/* A `title=` says which module of the reference implementation this sketch is
+   the shape of. It is addressing, like a line number, so it is set in mono at
+   the weight of a caption and separated by the same hairline the block already
+   uses -- not a window chrome bar with a filename in bold. The right padding
+   keeps the copy button off the text. */
+[dir] .md-typeset .highlight span.filename {
+  margin: 0;
+  padding: .5rem 2.6rem .45rem 1.1rem;
+  border: 0;
+  border-bottom: 1px solid var(--ws-rule);
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--ws-mono);
+  font-size: .68rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--ws-ink-2);
+}
+
+/* `hl_lines` means "read this line", not "this line is dangerous". A wash plus
+   the 2px celadon edge Material already draws is enough to find it while
+   scanning; a saturated fill would read as a warning and fight the rust that
+   this skin reserves for one. */
+[dir] .md-typeset .highlight .hll {
+  /* The bleed has to match the 1.1rem padding above, or the wash stops short of
+     the block's own edge. Material's own value is in em on the code font. */
+  margin: 0 -1.1rem;
+  padding: 0 1.1rem;
+  box-shadow: 2px 0 0 0 var(--md-code-hl-color) inset;
+}
+
+/* Annotations carry the teaching sentences that used to sit in the source as
+   `# <-` notes. The marker is a "you are here" mark, so celadon; the popup
+   needs a hairline because rule 1 turned every Material shadow off and its
+   panel would otherwise be a white box on white paper. */
+.md-typeset .md-annotation__index::after { background-color: var(--ws-ink-3); }
+.md-typeset .md-tooltip--active + .md-annotation__index::after,
+.md-typeset :hover > .md-annotation__index::after { background-color: var(--ws-celadon); }
+.md-tooltip2__inner,
+.md-tooltip__inner {
+  border: 1px solid var(--ws-rule);
+  border-radius: 7px;
+  background: var(--ws-paper);
 }
 
 /* --- links --------------------------------------------------------------- */

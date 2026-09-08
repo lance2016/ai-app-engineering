@@ -204,8 +204,10 @@ def specs_from_server(client, allowlist) -> list[ToolSpec]:
     return [ToolSpec(name=t["name"], description=t["description"],
                      parameters=t["inputSchema"])
             for t in client.request("tools/list")["tools"]
-            if t["name"] in allowlist]       # ← 删掉这个过滤，delete_note 就直通模型了
+            if t["name"] in allowlist]       # (1)!
 ```
+
+1.  删掉这个过滤，`delete_note` 就直通模型了。白名单在 host 侧，不在 server 侧——server 说它有什么，和这次请求能用什么，是两件事。
 
 `annotations.readOnlyHint` 值得用起来：它可以直接决定这个工具要不要过第 05 课的确认门。没有这个标注的工具，默认当成有副作用。
 
@@ -244,15 +246,17 @@ def dispatch(client, call, allowlist) -> Message:
 
 ### 四、断连：EOF 必须变成异常
 
-```python
+```python hl_lines="5 6"
 def request(self, method, params=None):
     self._write({"jsonrpc": "2.0", "id": next(self._ids),
                  "method": method, "params": params or {}})
     line = self._proc.stdout.readline()
-    if not line:                       # ← 这两行是防止整个 Agent 循环挂死的关键
+    if not line:
         raise ServerGone("server closed stdout")
     ...
 ```
+
+`if not line` 那两行是防止整个 Agent 循环挂死的关键。stdout 关掉之后 `readline()` 返回空串，不抛异常；没有这个检查，调用方会一直等下去。
 
 重连就是把生命周期再走一遍：
 

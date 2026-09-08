@@ -93,7 +93,7 @@ sequenceDiagram
 
 ### ① 注册表：白名单在「告诉模型」时就生效
 
-```python
+```python hl_lines="4"
 class ToolRegistry:
     def specs(self, allowlist: frozenset[str]) -> list[ToolSpec]:
         """只把这次请求允许用的工具告诉模型。看不见的它选不了。"""
@@ -171,9 +171,11 @@ async def run_refund(gateway, call, attempts=2, timeout=0.1) -> Message:
                 gateway.refund(idempotency_key=key, **call.arguments), timeout)
             return ok(call, result)
         except TimeoutError:
-            pass          # ← 用同一个 key 重试；网关会识别出这是重放
+            pass          # (1)!
     return error(call, "refund status unknown after retries")
 ```
+
+1.  重试用的是同一个 `key`。网关认出这是重放，返回第一次的结果，账本里不会多一笔。
 
 超时的语义是「不知道做没做」，不是「没做」。带同一个键重试，网关返回 `replayed: True`，账本里仍然只有一笔。开头那张表的 `T+0.44` 到 `T+0.51` 走的就是这一段，它是对的。
 
@@ -190,7 +192,7 @@ def business_key(confirmation_id: str, call: ToolCall) -> str:
 
 把这个键接上，开头那张表的最后三行就变成：
 
-```
+```text
 T+1.10  运行时 → 网关   Idempotency-Key: 3f9a1c...（confirmation_id 派生，与第一次相同）
 T+1.17  网关  200 {"refund_id": "rf_77", "replayed": true}
 T+1.18  运行时 → 模型  工具结果：这笔退款已经完成，refund_id rf_77
