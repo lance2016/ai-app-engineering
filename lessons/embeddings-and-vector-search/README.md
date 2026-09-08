@@ -121,7 +121,7 @@ def embed(text: str, dim: int = DIM) -> list[float]:
 ```
 
 <details class="case" markdown="1">
-<summary>例子：这七行为什么给同义的说法打零分</summary>
+<summary>例子：查「重置密码」，「忘记登录凭据」一个词都没共享，得分是零</summary>
 
 查 `how do I reset my password`，候选 `I forgot my login credentials` 和它一个词都不共享，每个词哈希到别的桶去了，点积为零——同义在词袋里没有任何表示。
 

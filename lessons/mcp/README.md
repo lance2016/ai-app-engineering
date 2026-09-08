@@ -39,7 +39,7 @@ sequenceDiagram
 第三条是下面那个 bug 的来源。
 
 <details class="case" markdown="1">
-<summary>例子：周三 server 把参数 `query` 改名成 `q`，host 还在用周二缓存下来的 schema</summary>
+<summary>例子：周三 server 把参数 query 改名成 q，host 还在用周二缓存下来的 schema</summary>
 
 一个长驻的 Agent 进程，接了一个第三方的 `notes` server，按上面第三条的做法在启动时缓存了工具列表。
 

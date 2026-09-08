@@ -10,7 +10,7 @@ estimated_time: 约 2 小时
 > 一句错误的回答背后可能有八九次调用。日志里只留下最后那句话的时候，排查就变成了猜。这一课用五十行代码造一个 tracer，属性名对齐 OpenTelemetry 的 GenAI 约定，再按 OTLP 发出去。
 
 <details class="case" markdown="1">
-<summary>例子：工单只有一句「它答错了」，日志八行全是「正在调用模型…」</summary>
+<summary>例子：工单只有一句「它答错了」，翻出八行日志，一个问题都答不上来</summary>
 
 工单是这么一句话：
 
