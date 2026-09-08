@@ -1,29 +1,32 @@
 /* ==========================================================================
-   Wabi-sabi skin for MkDocs Material.
+   Developer-docs skin for MkDocs Material.
 
    Ground rules, so future edits stay coherent:
-   1. One paper tone across header, nav and content. Structure comes from
-      whitespace and hairlines, never from cards, shadows or fills.
-   2. No web fonts. The audience reads from mainland China, where Google
-      Fonts is unreachable; a blocked @import would stall first paint.
-      Headings borrow an old-style Latin serif and a system Song face.
-   3. Colour is spent in exactly one place: celadon, on links and on the
-      marks that say "you are here". Rust is reserved for warnings.
+   1. White paper, near-black ink, hairline rules. Structure comes from
+      whitespace and edges; a fill is only used where a block has to read as
+      one bounded surface (the lead callout, the orientation card, code).
+   2. No web fonts and no serif. The audience reads from mainland China, where
+      Google Fonts is unreachable; the whole page is set in the system sans,
+      the way a developer documentation site is.
+   3. Colour is spent in exactly one place: green, on links and on the marks
+      that say "you are here". Rust is reserved for warnings.
+   4. Every rule here applies to every page. The front page and the course
+      overview differ in layout, not in skin; those layouts live in home.css.
    ========================================================================== */
 
 /* --- tokens ------------------------------------------------------------- */
 
 [data-md-color-scheme="default"] {
-  --ws-paper:      #eae7df;
-  --ws-paper-deep: #e3dfd5;
-  --ws-ink:        #2a2823;
-  --ws-ink-2:      #5c574d;
-  --ws-ink-3:      #857f72;
-  --ws-rule:       #d2cdc1;
-  --ws-rule-faint: #dfdace;
-  --ws-celadon:    #46685c;
-  --ws-celadon-2:  #6e8b7e;
-  --ws-rust:       #8a5334;
+  --ws-paper:      #ffffff;
+  --ws-paper-deep: #f7f7f8;
+  --ws-ink:        #202123;
+  --ws-ink-2:      #6b6b6b;
+  --ws-ink-3:      #8e8e8e;
+  --ws-rule:       #e5e5e5;
+  --ws-rule-faint: #eeeeee;
+  --ws-celadon:    #0d806b;
+  --ws-celadon-2:  #0d806b;
+  --ws-rust:       #b5472d;
 
   --md-default-bg-color:              var(--ws-paper);
   --md-default-fg-color:              var(--ws-ink);
@@ -70,18 +73,18 @@
 }
 
 [data-md-color-scheme="slate"] {
-  --ws-paper:      #1e1d1a;
-  --ws-paper-deep: #26241f;
-  --ws-ink:        #e0dbd0;
-  --ws-ink-2:      #a39c8d;
-  --ws-ink-3:      #7c7567;
-  --ws-rule:       #3a372f;
-  --ws-rule-faint: #302e28;
-  --ws-celadon:    #9bbba9;
-  --ws-celadon-2:  #b9d2c3;
-  --ws-rust:       #c48a63;
+  --ws-paper:      #0f0f10;
+  --ws-paper-deep: #1a1a1c;
+  --ws-ink:        #ececee;
+  --ws-ink-2:      #a5a5aa;
+  --ws-ink-3:      #86868b;
+  --ws-rule:       #2d2d31;
+  --ws-rule-faint: #232326;
+  --ws-celadon:    #3fbf9c;
+  --ws-celadon-2:  #58d3b1;
+  --ws-rust:       #e08a63;
 
-  --md-hue: 40;
+  --md-hue: 232;
   --md-default-bg-color:              var(--ws-paper);
   --md-default-fg-color:              var(--ws-ink);
   --md-default-fg-color--light:       var(--ws-ink-2);
@@ -124,12 +127,9 @@
 /* --- type --------------------------------------------------------------- */
 
 :root {
-  /* Latin from an old-style face with calligraphic roots, CJK from a Song
-     face. Both traditions come from a cut or brushed stroke, so mixed
-     Chinese/English headings keep one voice. */
-  --ws-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
-              Georgia, "Songti SC", "Source Han Serif SC", "Noto Serif CJK SC",
-              "Source Han Serif CN", STSong, SimSun, serif;
+  /* System faces only: the audience reads from mainland China and a Google
+     Fonts request would stall first paint. One sans carries the whole page,
+     headings included -- that is what a docs site looks like. */
   --ws-sans:  -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
               "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC",
               "Noto Sans CJK SC", sans-serif;
@@ -143,35 +143,35 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 /* CJK carries more ink per line than Latin, so it wants more leading and a
    slightly larger body size than Material's default 16px/1.6. */
 .md-typeset {
-  font-size: .85rem;
-  line-height: 1.9;
-  letter-spacing: .01em;
+  font-size: .86rem;
+  line-height: 1.8;
+  letter-spacing: 0;
 }
 
+/* Headings separate by weight and space, not by a second typeface. */
 .md-typeset h1, .md-typeset h2, .md-typeset h3,
 .md-typeset h4, .md-typeset h5, .md-typeset h6 {
-  font-family: var(--ws-serif);
-  font-weight: 600;
-  letter-spacing: 0;
+  font-family: var(--ws-sans);
+  font-weight: 650;
+  letter-spacing: -.02em;
   color: var(--ws-ink);
 }
 
 .md-typeset h1 {
-  font-size: 2rem;
-  line-height: 1.35;
-  margin: 0 0 1.6rem;
-  font-weight: 500;
+  max-width: 42rem;
+  font-size: 2.35rem;
+  line-height: 1.18;
+  margin: 0 0 1rem;
+  text-wrap: balance;
 }
 .md-typeset h2 {
   font-size: 1.35rem;
-  line-height: 1.4;
-  margin: 3.2rem 0 .9rem;
-  font-weight: 500;
+  line-height: 1.35;
+  margin: 3.5rem 0 .9rem;
 }
 .md-typeset h3 {
-  font-size: 1.05rem;
+  font-size: 1rem;
   margin: 2rem 0 .6rem;
-  font-weight: 600;
 }
 .md-typeset h4 { font-size: .92rem; margin: 1.6rem 0 .5rem; }
 
@@ -209,120 +209,85 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 
 /* --- the opening line ---------------------------------------------------- */
 
-/* Every lesson opens with a one-sentence blockquote under the title. It is
-   the page's thesis, so it gets the page's one piece of scale. */
+/* Every lesson opens with a one-sentence blockquote under the title. It is the
+   page's thesis, so it gets one bounded surface, the way a docs page opens
+   with a summary box.
+
+   Two things about the selector. It has to stay a descendant chain, because
+   four Part 1 lessons wrap their body in a <div class="lesson"> and a child
+   combinator would miss exactly those pages. And [dir] has to come first, not
+   after a body prefix: dir is set on <body> itself, so `body ... [dir] ...`
+   asks for a second element that does not exist and matches nothing. */
 [dir] .md-typeset h1 + blockquote {
-  margin: 0 0 3rem;
-  padding: 0 0 1.6rem;
-  border: 0;
-  border-bottom: 1px solid var(--ws-rule);
-  font-family: var(--ws-serif);
-  font-size: 1.05rem;
-  line-height: 1.95;
+  max-width: 42rem;
+  margin: 0 0 2.4rem;
+  padding: 1rem 1.2rem;
+  border: 1px solid var(--ws-rule);
+  border-left: 3px solid var(--ws-celadon);
+  border-radius: 8px;
+  background: var(--ws-paper-deep);
+  font-size: .92rem;
+  line-height: 1.75;
   color: var(--ws-ink-2);
 }
 [dir] .md-typeset h1 + blockquote p { margin: 0; }
 
-/* Part 1 keeps the original paper-like reading skin. These few rules only
-   improve the rhythm of its denser lessons; they do not turn the page into a
-   collection of cards. */
-.lesson--part1 > h1 {
-  max-width: 34rem;
-  text-wrap: balance;
-}
-.lesson--part1 > blockquote {
-  max-width: 38rem;
-  margin-bottom: 2.8rem;
-}
-
-/* Goals and prerequisites are orientation, not another chapter. Keep them in
-   one quiet row, separated by a hairline and empty space rather than a fill. */
-.lesson--part1 .lesson-meta {
+/* Goals and prerequisites are orientation, not another chapter. One compact
+   card, two columns, read once before the lesson starts. */
+.md-typeset .lesson-meta {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, .75fr);
-  gap: 2.2rem;
-  margin: 0 0 3.6rem;
-  padding: 1rem 0 .8rem;
-  border-top: 1px solid var(--ws-rule);
-  border-bottom: 1px solid var(--ws-rule);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  /* No row gap: the divider between the two columns is drawn on both cells of
+     the right column, and a gap would break it into two dashes. */
+  column-gap: 2rem;
+  row-gap: 0;
+  align-items: start;
+  margin: 0 0 3rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--ws-rule);
+  border-radius: 8px;
+  background: var(--ws-paper-deep);
 }
-.lesson--part1 .lesson-meta > h2 {
+/* Each column is a label over its own list, so the four children are placed
+   explicitly -- auto-flow would pair the second label with the first list. */
+.md-typeset .lesson-meta > h2 {
   grid-column: 1;
   grid-row: 1;
   margin: 0 0 .7rem;
-  font-family: var(--ws-mono);
-  font-size: .64rem;
-  font-weight: 500;
-  letter-spacing: .1em;
+  padding: 0;
+  font-size: .74rem;
+  letter-spacing: 0;
   color: var(--ws-ink-2);
 }
-.lesson--part1 .lesson-meta > ul {
+.md-typeset .lesson-meta > ul {
   grid-column: 1;
   grid-row: 2;
   margin: 0;
   padding-left: 1.1rem;
   font-size: .8rem;
-  line-height: 1.8;
+  line-height: 1.7;
 }
-.lesson--part1 .lesson-meta > h2:nth-of-type(2) {
+.md-typeset .lesson-meta > h2:nth-of-type(2),
+.md-typeset .lesson-meta > ul:nth-of-type(2) {
   grid-column: 2;
-  grid-row: 1;
-  padding-left: 2.2rem;
+  border-left: 1px solid var(--ws-rule);
 }
-.lesson--part1 .lesson-meta > ul:nth-of-type(2) {
-  grid-column: 2;
-  grid-row: 2;
-  padding-left: 2.2rem;
-}
+.md-typeset .lesson-meta > h2:nth-of-type(2) { padding-left: 1.6rem; }
+.md-typeset .lesson-meta > ul:nth-of-type(2) { padding-left: 2.7rem; }
 
-/* Section classes remain useful for navigation and risk emphasis. The visual
-   distinction is intentionally quiet: spacing does most of the work. */
-.lesson--part1 > h2 {
-  margin-top: 3.8rem;
-  padding-top: 0;
-  border-top: 0;
-}
-.lesson--part1 > h2.section--risk {
+/* Sections rely on spacing and weight. Only risks get a colour cue. */
+.md-typeset h2.section--risk {
   padding-left: .9rem;
-  border-left: 2px solid var(--ws-rust);
+  border-left: 3px solid var(--ws-rust);
 }
-
-/* A worked case is the page's concrete entry point. A single leading rule is
-   enough to separate it from the surrounding argument. */
-[dir] .md-typeset .lesson--part1 details.case {
-  margin: 1.8rem 0 2.8rem;
-  padding: 0 0 0 1.2rem;
-  border: 0;
-  border-left: 2px solid var(--ws-celadon);
-  background: transparent;
-}
-[dir] .md-typeset .lesson--part1 details.case > summary {
-  padding: 0 0 .9rem;
-  font-family: var(--ws-serif);
-  font-size: 1rem;
-  line-height: 1.65;
-  color: var(--ws-ink);
-}
-[dir] .md-typeset .lesson--part1 details.case > summary::after {
-  color: var(--ws-celadon);
-}
-/* Code is a separate material type, but it should still feel like part of the
-   page. A slightly deeper paper tone and generous vertical spacing are enough. */
-.lesson--part1 .highlight {
-  margin: 1.6rem 0;
-  padding: 0;
-  border: 0;
-  background: var(--ws-paper-deep);
-}
-.lesson--part1 .highlight > pre > code { padding: 1rem 1.1rem; }
 
 /* Keep the edit affordance quiet until it is needed. */
-.md-content__inner:has(.lesson--part1) .md-content__button {
-  opacity: .42;
+.md-content__button {
+  opacity: .35;
   transition: opacity .2s, color .2s;
 }
-.md-content__inner:has(.lesson--part1) .md-content__button:hover,
-.md-content__inner:has(.lesson--part1) .md-content__button:focus-visible {
+.md-content__button:hover,
+.md-content__button:focus-visible {
   opacity: 1;
   color: var(--ws-celadon);
 }
@@ -348,7 +313,6 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 .md-typeset table:not([class]) th {
   background: transparent;
   border-bottom: 1px solid var(--ws-rule);
-  font-family: var(--ws-serif);
   font-weight: 600;
   color: var(--ws-ink);
   padding: .7rem .9rem;
@@ -363,14 +327,21 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 
 /* --- code ---------------------------------------------------------------- */
 
-.md-typeset pre > code {
-  border-radius: 2px;
-  padding: 1.1rem 1.2rem;
-  line-height: 1.7;
+/* A code block has a clear edge, but no invented title bar. */
+.md-typeset .highlight {
+  margin: 1.5rem 0;
+  border: 1px solid var(--ws-rule);
+  border-radius: 7px;
+  background: var(--md-code-bg-color);
+  overflow: hidden;
 }
-.md-typeset .highlight { margin: 1.6rem 0; }
+.md-typeset pre > code {
+  border-radius: 0;
+  padding: 1rem 1.1rem;
+  line-height: 1.65;
+}
 .md-typeset code {
-  border-radius: 2px;
+  border-radius: 4px;
   padding: .1em .35em;
   font-size: .84em;
   background: var(--ws-paper-deep);
@@ -400,11 +371,10 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 
 .md-typeset .md-button {
   border: 1px solid var(--ws-rule);
-  border-radius: 2px;
+  border-radius: 6px;
   padding: .5em 1.4em;
   color: var(--ws-ink);
-  font-family: var(--ws-serif);
-  font-weight: 500;
+  font-weight: 550;
   text-decoration: none;
   transition: border-color .2s, color .2s;
 }
@@ -420,17 +390,17 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
   color: var(--ws-ink);
 }
 
-/* --- header: paper all the way up ---------------------------------------- */
+/* --- header and sidebars: paper all the way up --------------------------- */
 
 .md-header {
   background: var(--ws-paper);
   color: var(--ws-ink);
   box-shadow: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color .25s;
+  border-bottom: 1px solid var(--ws-rule);
 }
-.md-header--shadow { border-bottom-color: var(--ws-rule); box-shadow: none; }
-.md-header__title { font-family: var(--ws-serif); font-weight: 500; }
+.md-header--shadow { box-shadow: none; }
+.md-sidebar--primary, .md-sidebar--secondary { background: var(--ws-paper); }
+.md-header__title { font-weight: 550; }
 .md-header__topic:first-child { font-weight: 500; }
 .md-search__form {
   background: var(--ws-paper-deep);
@@ -446,9 +416,13 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 /* --- navigation: a mark in the margin, not a filled pill ----------------- */
 
 .md-nav { font-size: .68rem; line-height: 1.7; }
-.md-nav__title { font-family: var(--ws-serif); color: var(--ws-ink-2); font-weight: 500; }
-.md-nav__link { color: var(--ws-ink-2); transition: color .15s; }
+.md-nav__title { color: var(--ws-ink-2); font-weight: 550; }
+.md-nav__link { color: var(--ws-ink-2); border-radius: 6px; transition: color .15s; }
 .md-nav__item .md-nav__link--active { color: var(--ws-celadon); font-weight: 600; }
+/* The tint is mixed from the accent so it holds in both schemes. */
+.md-sidebar--primary .md-nav__link--active {
+  background: color-mix(in srgb, var(--ws-celadon) 9%, transparent);
+}
 
 /* Material hangs its hover colour off an attribute selector --
    .md-nav__link[href]:hover is (0,3,0) -- so the plain .md-nav__link:hover rule
@@ -510,7 +484,7 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 .md-footer { border-top: 1px solid var(--ws-rule); }
 .md-footer-meta { background: transparent; }
 .md-footer__link { opacity: 1; }
-.md-footer__title { font-family: var(--ws-serif); background: transparent; }
+.md-footer__title { background: transparent; }
 .md-footer__direction { color: var(--ws-ink-3); }
 .md-copyright { color: var(--ws-ink-3); }
 .md-copyright__highlight { color: var(--ws-ink-2); }
@@ -589,8 +563,7 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 [dir] .md-typeset details > summary {
   background: transparent;
   border-left-width: 0;
-  font-family: var(--ws-serif);
-  font-weight: 500;
+  font-weight: 550;
   color: var(--ws-ink-2);
   padding: .7rem 0;
 }
@@ -616,17 +589,32 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
    and the prose after the fold stands on its own.
 
    These sit inside running prose, unlike the self-tests on the overview, so
-   the block closes with a hairline as well -- otherwise the end of an example
-   and the start of the argument look identical. The label goes mono, the same
-   register the skin uses for every other addressing mark. */
+   the example is a bounded surface: a reader can see where the material starts
+   and where the argument picks up again. The summary states the case, so it is
+   set at reading size rather than as a mono label. */
 [dir] .md-typeset details.case {
-  border-bottom: 1px solid var(--ws-rule-faint);
-  margin: 1.6rem 0;
+  margin: 1.8rem 0 2.6rem;
+  padding: 0 1.1rem 1rem;
+  border: 1px solid var(--ws-rule);
+  border-left: 3px solid var(--ws-celadon);
+  border-radius: 8px;
+  background: var(--ws-paper);
 }
 [dir] .md-typeset details.case > summary {
-  font-family: var(--ws-mono);
-  font-size: .78rem;
-  letter-spacing: .04em;
+  padding: .95rem 0 .85rem;
+  font-size: .92rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.55;
+  color: var(--ws-ink);
+}
+/* A case is already a bounded surface, so the wide-content exemption above
+   must not let its code blocks hang outside that surface. */
+[dir] .md-typeset details.case .highlight {
+  width: 100%;
+  max-width: 100%;
+  margin-right: 0;
+  overflow-x: auto;
 }
 /* The provenance note lives inside the fold, since it labels the fold's own
    numbers. Its hairline would otherwise sit a full stanza above the block's
@@ -750,211 +738,4 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
     font-size: 2rem;
     margin-top: 2.4rem;
   }
-}
-
-/* --- desktop documentation skin ------------------------------------------
-   Shared by reading pages. The home page and the course overview keep their
-   own browsing layouts. */
-
-body:not(:has(.home)):not(:has(.sysfig)) {
-  --ws-paper: #ffffff;
-  --ws-paper-deep: #f7f7f8;
-  --ws-ink: #202123;
-  --ws-ink-2: #6b6b6b;
-  --ws-ink-3: #8e8e8e;
-  --ws-rule: #e5e5e5;
-  --ws-rule-faint: #eeeeee;
-  --ws-celadon: #0d806b;
-  --ws-celadon-2: #0d806b;
-  --ws-rust: #b5472d;
-  --md-default-bg-color: var(--ws-paper);
-  --md-default-fg-color: var(--ws-ink);
-  --md-default-fg-color--light: var(--ws-ink-2);
-  --md-default-fg-color--lighter: var(--ws-ink-3);
-  --md-default-fg-color--lightest: var(--ws-rule);
-  --md-primary-fg-color: var(--ws-paper);
-  --md-primary-bg-color: var(--ws-ink);
-  --md-accent-fg-color: var(--ws-celadon);
-  --md-typeset-color: var(--ws-ink);
-  --md-typeset-a-color: var(--ws-celadon);
-  --md-code-bg-color: #f7f7f8;
-  --md-code-fg-color: var(--ws-ink);
-}
-body:not(:has(.home)):not(:has(.sysfig)) {
-  --ws-paper: #ffffff;
-  --ws-paper-deep: #f7f7f8;
-  --ws-ink: #202123;
-  --ws-ink-2: #6b6b6b;
-  --ws-ink-3: #8e8e8e;
-  --ws-rule: #e5e5e5;
-  --ws-rule-faint: #eeeeee;
-  --ws-celadon: #0d806b;
-  --ws-celadon-2: #0d806b;
-  --ws-rust: #b5472d;
-  --md-default-bg-color: #ffffff;
-  --md-default-fg-color: #202123;
-  --md-default-fg-color--light: #6b6b6b;
-  --md-default-fg-color--lighter: #8e8e8e;
-  --md-default-fg-color--lightest: #e5e5e5;
-  --md-code-bg-color: #f7f7f8;
-  --md-code-fg-color: #202123;
-  background: #ffffff;
-}
-
-body:not(:has(.home)):not(:has(.sysfig)),
-body:not(:has(.home)):not(:has(.sysfig)) input,
-body:not(:has(.home)):not(:has(.sysfig)) .md-typeset {
-  font-family: var(--ws-sans);
-}
-body:not(:has(.home)):not(:has(.sysfig)) .md-typeset {
-  font-size: .86rem;
-  line-height: 1.8;
-  letter-spacing: 0;
-}
-body:not(:has(.home)):not(:has(.sysfig)) .md-typeset h1,
-body:not(:has(.home)):not(:has(.sysfig)) .md-typeset h2,
-body:not(:has(.home)):not(:has(.sysfig)) .md-typeset h3,
-body:not(:has(.home)):not(:has(.sysfig)) .md-typeset h4 {
-  font-family: var(--ws-sans);
-  letter-spacing: -.02em;
-}
-body:not(:has(.home)):not(:has(.sysfig)) .md-typeset h1 {
-  max-width: 42rem;
-  margin-bottom: 1rem;
-  font-size: 2.35rem;
-  line-height: 1.18;
-  font-weight: 650;
-  text-wrap: balance;
-}
-body:not(:has(.home)):not(:has(.sysfig)) .md-typeset h2 {
-  margin-top: 3.5rem;
-  margin-bottom: .9rem;
-  font-size: 1.35rem;
-  line-height: 1.35;
-  font-weight: 650;
-}
-body:not(:has(.home)):not(:has(.sysfig)) .md-typeset h3 {
-  margin-top: 2rem;
-  font-size: 1rem;
-  font-weight: 650;
-}
-
-body:not(:has(.home)):not(:has(.sysfig)) .md-header {
-  background: var(--ws-paper);
-  border-bottom: 1px solid var(--ws-rule);
-}
-body:not(:has(.home)):not(:has(.sysfig)) .md-sidebar--primary,
-body:not(:has(.home)):not(:has(.sysfig)) .md-sidebar--secondary {
-  background: var(--ws-paper);
-}
-body:not(:has(.home)):not(:has(.sysfig)) .md-nav__link {
-  border-radius: 6px;
-}
-body:not(:has(.home)):not(:has(.sysfig)) .md-nav__link--active {
-  background: #f0f7f5;
-}
-
-/* The opening line reads as a compact callout, like a docs introduction. */
-body:not(:has(.home)):not(:has(.sysfig)) [dir] .md-typeset > h1 + blockquote {
-  max-width: 42rem;
-  margin: 0 0 2.4rem;
-  padding: 1rem 1.2rem;
-  border: 1px solid var(--ws-rule);
-  border-left: 3px solid var(--ws-celadon);
-  border-radius: 8px;
-  background: var(--ws-paper-deep);
-  font-family: var(--ws-sans);
-  font-size: .92rem;
-  line-height: 1.75;
-  color: var(--ws-ink-2);
-}
-
-/* Orientation information is a single compact surface, not two competing
-   sections. */
-body:not(:has(.home)):not(:has(.sysfig)) .lesson-meta {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 2rem;
-  align-items: start;
-  margin: 0 0 3rem;
-  padding: 1.1rem 1.25rem;
-  border: 1px solid var(--ws-rule);
-  border-radius: 8px;
-  background: var(--ws-paper-deep);
-}
-body:not(:has(.home)):not(:has(.sysfig)) .lesson-meta > h2 {
-  margin: 0 0 .7rem;
-  padding: 0;
-  font-size: .74rem;
-  letter-spacing: 0;
-  color: var(--ws-ink-2);
-}
-body:not(:has(.home)):not(:has(.sysfig)) .lesson-meta > ul {
-  margin: 0;
-  font-size: .8rem;
-  line-height: 1.7;
-}
-body:not(:has(.home)):not(:has(.sysfig)) .lesson-meta > h2:nth-of-type(2),
-body:not(:has(.home)):not(:has(.sysfig)) .lesson-meta > ul:nth-of-type(2) {
-  padding-left: 2rem;
-  border-left: 1px solid var(--ws-rule);
-}
-
-/* Wide diagrams and code blocks may use the outer reading margin. A case is
-   already a bounded surface, so its materials must stay inside that surface. */
-body:not(:has(.home)):not(:has(.sysfig)) [dir] .md-typeset details.case .highlight {
-  width: 100%;
-  max-width: 100%;
-  margin-right: 0;
-  overflow-x: auto;
-}
-
-/* Major sections rely on spacing and weight. Only risks get a colour cue. */
-body:not(:has(.home)):not(:has(.sysfig)) .md-typeset > h2 {
-  padding: 0;
-  border: 0;
-}
-body:not(:has(.home)):not(:has(.sysfig)) .md-typeset > h2.section--risk {
-  padding-left: .9rem;
-  border-left: 3px solid var(--ws-rust);
-}
-
-/* Cases use the docs callout treatment, with one surface and one accent. */
-body:not(:has(.home)):not(:has(.sysfig)) [dir] .md-typeset details.case {
-  margin: 1.8rem 0 2.6rem;
-  padding: 0 1.1rem 1rem;
-  border: 1px solid var(--ws-rule);
-  border-left: 3px solid var(--ws-celadon);
-  border-radius: 8px;
-  background: var(--ws-paper);
-}
-body:not(:has(.home)):not(:has(.sysfig)) [dir] .md-typeset details.case > summary {
-  padding: .95rem 0 .85rem;
-  font-family: var(--ws-sans);
-  font-size: .92rem;
-  font-weight: 600;
-  line-height: 1.55;
-}
-
-/* Code has a clear edge, but no invented title bar. */
-body:not(:has(.home)):not(:has(.sysfig)) .md-typeset .highlight {
-  margin: 1.5rem 0;
-  border: 1px solid var(--ws-rule);
-  border-radius: 7px;
-  background: var(--md-code-bg-color);
-  overflow: hidden;
-}
-body:not(:has(.home)):not(:has(.sysfig)) .md-typeset .highlight > pre > code {
-  padding: 1rem 1.1rem;
-  line-height: 1.65;
-}
-
-body:not(:has(.home)):not(:has(.sysfig)) .md-content__button {
-  opacity: .35;
-  transition: opacity .2s, color .2s;
-}
-body:not(:has(.home)):not(:has(.sysfig)) .md-content__button:hover,
-body:not(:has(.home)):not(:has(.sysfig)) .md-content__button:focus-visible {
-  opacity: 1;
-  color: var(--ws-celadon);
 }

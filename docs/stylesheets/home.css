@@ -2,18 +2,19 @@
    The front page, the system figure on the lessons overview, plus the one
    control they need on every lesson page.
 
-   wabi.css is the reading skin: one paper tone, hairlines, no fills, a narrow
-   36rem column built for sitting with a lesson. This file gives index.md the
-   other job -- browsing and orientation -- without inventing a second visual
+   wabi.css is the skin -- white paper, system sans, hairlines, a narrow 36rem
+   reading column. This file gives index.md and the system figure the other
+   job -- browsing and orientation -- without inventing a second visual
    language for it.
 
    Rules kept from wabi.css, in full:
-   1. Structure comes from whitespace, hairlines and type scale. No cards,
-      no shadows, no fills, no radius beyond the 2px already in use.
-   2. Colour is spent on celadon (the path you are on) and rust (failure).
-      Nothing else is coloured.
-   3. No web fonts. Serif for headings and figure labels, mono for the
-      addressing marks -- lesson numbers, layer indices, eyebrows.
+   1. Structure comes from whitespace, hairlines and type scale. No shadows,
+      no tinted cards.
+   2. Colour is spent on the accent green (the path you are on) and rust
+      (failure). Nothing else is coloured.
+   3. No web fonts and no serif. One system sans carries the page; mono is
+      kept for the addressing marks -- lesson numbers, layer indices,
+      eyebrows.
 
    What is different here: the column runs to 56rem so a six-part contents
    list fits two abreast, while every run of prose inside it is still capped
@@ -76,9 +77,10 @@
    as one block on a laptop screen. */
 .home .band { margin-top: 3.6rem; }
 .md-typeset .home .band > h2 {
+  max-width: none;
   margin: 0 0 .8rem;
   font-size: 1.5rem;
-  font-weight: 400;
+  font-weight: 650;
 }
 .home .band__lede { color: var(--ws-ink-2); }
 .home .band__foot {
@@ -94,11 +96,12 @@
    screen. The Chinese name is the title; the English is the subtitle under it,
    the way the course is actually referred to in both languages. */
 .md-typeset .home .hero h1 {
+  max-width: none;
   margin: 2.2rem 0 .3rem;
-  font-size: 2.6rem;
-  line-height: 1.2;
-  font-weight: 400;
-  letter-spacing: -.01em;
+  font-size: 2.8rem;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -.03em;
 }
 
 .home .hero__en {
@@ -113,8 +116,7 @@
   margin: 0 0 1.4rem !important;
   padding-bottom: 1.2rem;
   border-bottom: 1px solid var(--ws-rule);
-  font-family: var(--ws-serif);
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   line-height: 1.6;
   color: var(--ws-ink-2);
 }
@@ -179,12 +181,11 @@
 
 .home .prog__count {
   margin: 0 0 .7rem !important;
-  font-family: var(--ws-serif);
   color: var(--ws-ink-2);
 }
 .home .prog__count strong {
   font-size: 1.9rem;
-  font-weight: 400;
+  font-weight: 600;
   line-height: 1;
   color: var(--ws-celadon);
 }
@@ -282,8 +283,8 @@
 }
 .home .picker__key {
   flex: 0 0 auto;
-  font-family: var(--ws-serif);
-  font-size: 1.1rem;
+  font-family: var(--ws-mono);
+  font-size: .95rem;
   line-height: 1.3;
   color: var(--ws-ink-2);
 }
@@ -445,8 +446,8 @@
 
 .md-typeset .home .part__head { margin: 0 !important; }
 .md-typeset .home .part__link {
-  font-family: var(--ws-serif);
-  font-size: 1.05rem;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--ws-ink) !important;
   text-decoration: none !important;
 }
@@ -740,8 +741,7 @@
   padding: .45em 1.3em;
   background: transparent;
   border: 1px solid var(--ws-rule);
-  border-radius: 2px;
-  font-family: var(--ws-serif);
+  border-radius: 6px;
   font-size: .82rem;
   color: var(--ws-ink-2);
   cursor: pointer;
