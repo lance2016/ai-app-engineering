@@ -5,6 +5,8 @@ part: Part 1 模型与上下文
 estimated_time: 约 1.5 小时
 ---
 
+<div class="lesson lesson--part1" markdown="1">
+
 # 04 Embedding 与向量检索基础
 
 > 这一课只讲工程：怎么选模型和维度、什么时候该从精确检索换成近似索引、切块怎样改变召回、pgvector 怎么建表建索引，以及向量检索什么时候不好使。为第 14 课 RAG 和第 15 课 Memory 打底。
@@ -32,18 +34,22 @@ estimated_time: 约 1.5 小时
 
 真实 embedding 模型能把同义的说法拉近、把只是共享词的推远，这类字面上的错会少很多。但换上它之后，剩下的问题一个都不会自动消失：查询和文档得落进同一个空间、切块粒度决定召回、精确检索什么时候该换近似索引、`ERR-5012` 这类查询向量检索本来就不擅长。换个更强的模型修不了错误的切块粒度，也修不了过时的向量。这一课讲的是这几件事。
 
-## 学习目标
+<div class="lesson-meta" markdown="1">
+
+## 学习目标 { .lesson-meta__heading }
 
 - 能为一个场景选 embedding 模型和维度，说出托管与自部署的取舍，以及换向量空间的迁移成本
 - 能实现精确 top-k 检索，并说出用什么办法判断该不该换成近似索引
 - 能说明切块大小如何改变检索结果，以及哪类查询用关键词检索比向量检索更合适
 - 能写出 pgvector 建表、建索引和带过滤条件查询的 SQL
 
-## 前置
+## 前置 { .lesson-meta__heading }
 
 - 这一课不解释向量为什么能比较、余弦为什么先归一化、embedding 层和文本 embedding 模型差在哪。要补就翻 [F02 Embedding 与向量空间](../../prerequisites/llm-foundations/02-embeddings/README.md)，不用先读完再回来
 
-## 四个工程事实
+</div>
+
+## 四个工程事实 { .section--concept }
 
 ```mermaid
 flowchart LR
@@ -93,7 +99,7 @@ encode_document(text)  ─┘
 
 ![本课核心关系：向量空间中的相似度、检索邻域与误召回](./images/embedding-vector-space.svg)
 
-## 从词袋到 pgvector
+## 从词袋到 pgvector { .section--practice }
 
 ### 一、词袋只有七行，短板就在这七行里
 
@@ -215,7 +221,7 @@ LIMIT 5;
 
 没有哪一行是「更好」的，参数也必须在自己的数据上调。向量库怎么选、参数怎么调，超出这一课的范围。
 
-## 常见错误
+## 常见错误 { .section--risk }
 
 **查询和文档不在同一个向量空间。** 换了模型、换了版本、维度不一样、非对称模型少加了那个 `query: ` 前缀——任何一条都会让相似度变成噪音。最难发现的是最后一条：代码跑得通，分数也有高有低，只是名次没意义。
 
@@ -229,14 +235,14 @@ LIMIT 5;
 
 **查询不带过滤条件。** 多租户系统里这是一个权限漏洞，不是性能问题；而加了过滤又没测过窄条件下的召回，会出现「明明有这条数据却搜不到」。
 
-## 托管还是自部署，精确还是近似
+## 托管还是自部署，精确还是近似 { .section--decision }
 
 - **托管 embedding 还是自部署。** 托管接口按 token 计费、零运维，但数据要出境到供应商；自部署开源模型（bge、gte 系列）数据不出门，要自己管 GPU 和版本。多数中文场景先用托管接口起步，数据敏感再迁。
 - **维度大小。** 同一个模型截断到更低维度，通常会掉一点精度，换来的是存储、索引内存和比较时间同比例下降。注意这条只在同一个模型内部成立：跨模型比维度没有意义，768 维的模型完全可能比 1536 维的准。很多模型支持调用时指定较低维度，掉多少、省多少，在自己的数据上测。
 - **精确还是近似。** 判断依据是压测，不是数据量。先跑精确检索，量出延迟、吞吐和带过滤条件时的表现，和 SLO 比；超了再上索引，并接受召回不再是 100%——上之前用精确检索的结果当分母，量一下 Recall@k 掉了多少。参数在自己的数据上调，抄别人的值没有意义。
 - **纯向量还是加上关键词。** 只上向量最省事，一套模型一套索引；加关键词检索和融合排序，`ERR-5012` 那类查询才救得回来，代价是两套索引、两套参数，还要决定怎么融合，中文场景还多一层分词。什么时候值得，第 14 课有完整判断。
 
-## 从一张表到能上线
+## 从一张表到能上线 { .section--practice }
 
 - **每条向量记一个 `embedding_space_id`**，查询时按它过滤。这个 id 由模型、版本、维度、预处理方式（归一化、query/document 前缀怎么加）一起拼出来。只记一个模型名不够：同一个模型换个维度、改个前缀，产出的向量就和旧的不能比了。**不能混的是空间，不是名字。**
 - **换空间用并行迁移，不要原地改。** 顺序是：建一份新索引（新表或新 collection）→ 后台回灌全量向量 → 双跑一段时间，用同一组样本比新旧的 Recall@k → 切读流量 → 观察 → 删旧的。这样任何一步出问题都能切回去。数据库能不能改列不是重点，重点是迁移期间要有两份可比较的索引和一个能回退的开关。
@@ -244,7 +250,7 @@ LIMIT 5;
 - **这些结论下一次用到是在第 14 课**，中间隔了八课。到那时如果记不清切块和召回的关系，回来看一眼这一课第一个例子和第三节就够，不用重读整课。
 - **怎么测。** 准备一组「查询 → 应该召回哪几条」的样本，量 Recall@k：前 k 条里捞回了几条该捞的。改切块、换向量空间、调索引参数，都跑这一组，比较才有意义。样本里要包含带过滤条件的查询，那是线上真实的形态。没有这个数字，一切检索优化都是感觉。第 14 课会在同一组样本上再加答案质量的评测。
 
-## 框架映射
+## 框架映射 { .section--reference }
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -253,7 +259,7 @@ LIMIT 5;
 
 只有 LangChain 生态在这一层做了抽象。好处是换向量库改一行；代价是多一层依赖，且各实现的能力差异被抽象藏起来了（有的支持元数据过滤，有的不支持）。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
-## 换了模型，忘了重灌旧向量
+## 换了模型，忘了重灌旧向量 { .section--risk }
 
 语音机器人项目里 embedding 用在两处：对话历史检索和长期记忆召回。
 
@@ -261,11 +267,11 @@ LIMIT 5;
 
 后来给每条向量加了一个标识向量空间的字段（先是模型加版本，后来把维度和前缀方式也拼了进去），查询时只在同一个空间内比较，迁移期间跑一个后台任务慢慢重算。这个字段成本几乎为零，省下的是一次很难定位的故障。
 
-## 参考实现
+## 参考实现 { .section--reference }
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md)，向量索引与 pgvector 建表。
 
-## 延伸阅读
+## 延伸阅读 { .section--reference }
 
 - [generative-ai-for-beginners · 08 Building Search Applications](https://github.com/microsoft/generative-ai-for-beginners/tree/main/08-building-search-applications)（访问日期 2026-09-04）：余弦相似度的图解，加一个用 YouTube 字幕做的检索示例。
 - [pgvector README](https://github.com/pgvector/pgvector)（访问日期 2026-09-04）：距离操作符、HNSW 和 IVFFlat 的参数、维度限制都在这一页。
@@ -276,3 +282,5 @@ LIMIT 5;
 ---
 
 [← 上一课 03](../prompt-engineering/README.md) · [下一课 05 →](../tool-calling/README.md)
+
+</div>

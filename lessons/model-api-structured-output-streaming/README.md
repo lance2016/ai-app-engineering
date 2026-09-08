@@ -5,6 +5,8 @@ part: Part 1 模型与上下文
 estimated_time: 约 2 小时
 ---
 
+<div class="lesson lesson--part1" markdown="1">
+
 # 02 模型调用、结构化输出与流式
 
 > 这一课讲模型 API 的运行时契约：请求里发什么、响应怎么拿回来、格式坏了怎么办、用量怎么记。课程用一套统一的说法来讲，各家 API 的线上格式并不长这样——两者的差别，就是 adapter 要吃掉的东西。
@@ -31,19 +33,23 @@ JSON 本身没问题，`json.loads` 一次通过。三个字段全是错的：`n
 
 另一半给同一次调用的其他坏法：流可能中途断、重试可能重复计费、用量可能压根没打开。把消息、schema、增量和用量拆开看，才知道故障出在协议、解析还是供应商。
 
-## 学习目标
+<div class="lesson-meta" markdown="1">
+
+## 学习目标 { .lesson-meta__heading }
 
 - 能说清一次调用的请求和响应里各有什么，以及课程的统一模型和某一家的线上格式差在哪
 - 能按「原生结构化输出 → schema 校验 → 修复重试」三层给一个抽取任务选方案，并说出哪些字段不能交给模型改
 - 能消费流式响应：文本增量边到边显示，结构化参数攒完整、校验过才交出去
 - 能把错误分成可重试和不可重试两类，并把每次调用的 usage 落库
 
-## 前置
+## 前置 { .lesson-meta__heading }
 
 - [00 起步](../setup/README.md)：三套线上格式并排看过一遍，知道字段名不同、做的是同一件事
 - [01 从模型到应用](../how-llms-work/README.md)：token、抽样、上下文窗口是预算
 
-## 一次调用的六件事
+</div>
+
+## 一次调用的六件事 { .section--concept }
 
 ```mermaid
 sequenceDiagram
@@ -90,7 +96,7 @@ sequenceDiagram
 
 重试要按错误类型分，不是按次数分：「再试一次结果可能不一样吗」是唯一的判断标准。用量要每次调用都记下来，因为账单月底才有。这一课只管把 usage 从 API 里拿出来并落库；这些 token 怎么变成钱，第 01 课算过；限流、熔断、降级到备用模型，第 20 课。
 
-## Adapter 要吃掉的五处差别
+## Adapter 要吃掉的五处差别 { .section--practice }
 
 ### 一、消息到线上格式的翻译有损耗
 
@@ -277,7 +283,7 @@ def record(self, label, usage, provider) -> None:
 
 **记原始 token 数，别只记算好的钱。** 单价会调、缓存折扣各家不同、推理 token 单独计价，拍成一个数字之后就再也拆不回来了，事后想按新单价重算也没得算。这几类 token 怎么变成账单，第 01 课的成本链讲过；这些记录怎么长成按租户按天的成本视图，第 19、20 课。
 
-## 常见错误
+## 常见错误 { .section--risk }
 
 **校验失败没有明确的去向。** 它是预期内的一类结果，该有一个明确的分支：这个字段可以让模型改，那个字段直接拒绝。删掉 `except` 让程序死在第一次不行，反过来一律回喂让模型改也不行——第三节那张表里的字段，改出来的合法值可能是假的。
 
@@ -295,7 +301,7 @@ def record(self, label, usage, provider) -> None:
 
 **用量只记输出，或者只记算好的钱。** 多轮对话里输入随历史增长，是主要开销，只记输出会低估几倍。而只落一个金额、不落 token 数，等于把缓存命中、推理 token 这些拆分永久丢掉，单价一调就再也对不上账。
 
-## 开几层校验，重试几次
+## 开几层校验，重试几次 { .section--decision }
 
 - **原生结构化输出和客户端校验不是二选一。** 服务端约束解码几乎消灭语法错误，但不是所有供应商和模型都支持，schema 特性也受限（有的不支持 `pattern`、`format`）；客户端校验永远要有，它挡的是语义错误。两者叠加是常态，只是叠加之后回喂重试会触发得少很多。
 - **流式还是一次返回。** 流式让首 token 快，代价是客户端逻辑复杂：半截文本、断线重连、结构化参数要自己攒。后台任务、结构化抽取、评测跑批不需要流式，别为不需要的东西付复杂度。
@@ -303,7 +309,7 @@ def record(self, label, usage, provider) -> None:
 - **图片直接喂模型，还是先转成文字。** 直接喂省一步、保留版式和图表；先做 OCR 或版面解析则便宜得多、结果可缓存可检索，而且出错时能看见是哪一步错的。文档量大的场景基本都走第二条，第 14 课展开。
 - **temperature 设多少。** 抽取、分类、工具选择用 0 或接近 0，要的是稳定；创作类任务才调高。**0 不保证正确，只保证每次一样**——评测时这一点很重要。
 
-## 从统一类型到能上线
+## 从统一类型到能上线 { .section--practice }
 
 - **首块超时和整体超时是两个值。** 首块超时短（用户等不了），整体超时长（长回答正常）。映射到 HTTP 上，首块超时返回 504，供应商报错返回 502，两者的排查方向完全不同。
 - **流式接口一旦开始推送，就不能再改 HTTP 状态码。** 首块之后出错，只能在流里推一个 `error` 事件。所以所有能在首块前做的检查（鉴权、限流、参数校验）都必须在首块前做完。
@@ -311,7 +317,7 @@ def record(self, label, usage, provider) -> None:
 - **重试和幂等要一起设计。** 一次带副作用的调用超时重试，可能产生两次副作用。第 05 课讲幂等键。
 - **怎么测。** 三层方案各测一层。校验层拿一组故意坏的 JSON（缺字段、类型错、枚举越界、外面包了代码围栏），断言每一类都走到「修复重试」而不是抛异常。流式层拿一段录好的 SSE 事件流回放，断言文本增量边到边发出去、结构化参数攒完整校验过才交出去、`usage` 不在最后一个事件上时不崩。录好的事件流不需要供应商，跑得比真调用快两个数量级（第 18 课）。
 
-## 框架映射
+## 框架映射 { .section--reference }
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -321,17 +327,17 @@ def record(self, label, usage, provider) -> None:
 
 官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
-## TTS 要边收边说，设备命令必须等全
+## TTS 要边收边说，设备命令必须等全 { .section--risk }
 
 语音机器人项目里，同一条流有两个消费者：TTS 要一边收文本一边合成，但设备动作命令必须等参数收全。前者按句号切句立刻发声，后者攒完整、校验过才发下去。这两个需求早期写在一个回调里，于是把半截参数发给了设备。
 
 另一条是格式。早期靠在提示词里反复强调「只输出 JSON」，线上仍有百分之几的返回带解释文字或代码围栏，每次都是客服反馈后手动补规则。改成本课的做法之后——schema 和校验共用一个 Pydantic 模型，失败原文回喂重试一次——格式类错误基本消失，剩下的都是语义错误。这些才值得人看。
 
-## 参考实现
+## 参考实现 { .section--reference }
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M1 API 骨架](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md)，SSE 流式与结构化错误。
 
-## 延伸阅读
+## 延伸阅读 { .section--reference }
 
 - [Anthropic · Messages API](https://platform.claude.com/docs/en/api/messages)（访问日期 2026-09-04）：一个供应商完整的请求体定义，注意角色、工具结果和参数都在同一层。
 - [Anthropic · Structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)（访问日期 2026-09-04）：服务端约束输出格式的做法和它的限制，读完就知道客户端校验为什么还是要留。
@@ -344,3 +350,5 @@ def record(self, label, usage, provider) -> None:
 ---
 
 [← 上一课 01](../how-llms-work/README.md) · [下一课 03 →](../prompt-engineering/README.md)
+
+</div>

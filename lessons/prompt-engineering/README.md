@@ -5,6 +5,8 @@ part: Part 1 模型与上下文
 estimated_time: 约 1.5 小时
 ---
 
+<div class="lesson lesson--part1" markdown="1">
+
 # 03 Prompt Engineering 与单次调用的上下文
 
 > 这一课只讲怎么构造一次调用：指令怎么写、数据怎么围起来、输出怎么约束、示例给几个，以及改完之后凭什么说没变差。Prompt 是要版本化、要能测的产物；它以什么形式存在——函数、模板还是一个 `.md` 文件——反而不是重点。Agent 多轮的上下文组装在第 08 课。
@@ -32,17 +34,21 @@ estimated_time: 约 1.5 小时
 
 所以这一课的落点在提示写法之外：**让一次调用的输入变成一个有版本、能 diff、能测、能回滚的东西**。
 
-## 学习目标
+<div class="lesson-meta" markdown="1">
+
+## 学习目标 { .lesson-meta__heading }
 
 - 能把一次调用的 prompt 拆成指令、数据、任务、输出契约、示例五块，并说出每块最容易出什么问题
 - 能给一个 prompt 配一组固定样例当回归门禁，用它比较两个版本，并说清它挡得住什么、挡不住什么
 - 能把不可信的内容围起来并声明为数据，在 token 预算内按语义边界裁剪且不静默丢字
 
-## 前置
+## 前置 { .lesson-meta__heading }
 
 - [02 模型调用、结构化输出与流式](../model-api-structured-output-streaming/README.md)：消息格式、系统消息的位置、JSON Schema 约束输出
 
-## 一次调用里有五块
+</div>
+
+## 一次调用里有五块 { .section--concept }
 
 | 块 | 放什么 | 最容易出的问题 |
 |---|---|---|
@@ -68,7 +74,7 @@ estimated_time: 约 1.5 小时
 
 一次调用里该放什么：这轮任务需要的指令、能让格式稳定的示例、回答所依赖的数据、任务本身。不该放什么：和本轮无关的历史、「以防万一」的工具定义、没人会读的免责声明。每一段都占注意力预算，第 08 课把这个判断做成可配置的组装器。
 
-## 模板、门禁、围栏
+## 模板、门禁、围栏 { .section--practice }
 
 ### 一、模板 + 有类型的输入 + 版本号
 
@@ -184,7 +190,7 @@ def trim_to_budget(text, budget) -> tuple[str, bool]:
 
 问题放在最后是个常见做法：靠近输出的位置通常有一点 recency 优势，模型更容易照着它答。但**这不是定律**，不同模型、不同上下文长度下的表现不一样。当默认值用可以，想确认就把问题放开头和放结尾各跑一遍固定样例，看哪版分高。
 
-## 常见错误
+## 常见错误 { .section--risk }
 
 **门禁只要求「不比旧版差」。** 上面那道 `scores["v2"] >= scores["v1"]` 有个洞：v2 从 1.0 掉到 0.8、和 v1 打平时，门禁照样放行，一个真实的退化就这样上线了。
 
@@ -200,7 +206,7 @@ def trim_to_budget(text, budget) -> tuple[str, bool]:
 
 **prompt 里放会变的东西。** 当前时间、用户名、会话 id 写进系统指令的开头，会让每次请求的前缀都不同。第 08 课会讲这为什么让供应商的前缀缓存全部失效。这一课先记住：系统指令里只放稳定的内容。
 
-## 长 prompt 还是短 prompt
+## 长 prompt 还是短 prompt { .section--decision }
 
 - **v2 值不值那一倍 token。** 它换来格式更稳、拒答有出口，代价是每次调用多付一倍指令 token。用固定样例上的准确率和 token 数一起决定，不凭感觉。
 - **给不给示例、给几个。** 常见的起点是一到三个，够定住格式；但这只是经验，不是规则——有的任务零示例就稳，有的要覆盖好几类边界。判断只有一条：在固定样例上加一个示例，分涨了多少、token 多了多少。示例本身要覆盖边界（一个正常、一个拒答），不是同一类型重复。
@@ -208,14 +214,14 @@ def trim_to_budget(text, budget) -> tuple[str, bool]:
 - **门禁严格度。** 太严，任何改动都过不了，团队会绕过它；太松，退化会上线。起点是「新版本严格优于旧版本，且不低于绝对阈值」，样本量大了再谈置信区间。
 - **分隔符的选择。** XML 风格标签、Markdown 围栏、明显的分隔线都行，重点是一致，且标签名要说明内容性质（`<document>`、`<tool_result>`），不要用泛泛的 `<data>`。
 
-## 从两个渲染函数到能上线
+## 从两个渲染函数到能上线 { .section--practice }
 
 - **版本要是显式的一份东西**：文件名里带版本（`assistant.v1.md`、`assistant.v2.md`）也好，代码里的 `render_v1/render_v2` 也好，两版同时在，切换只改一个配置项。模板放在代码之外时多一条：**加载不到指定版本就直接起不来**，静默回退到默认 prompt 是最坏的选择。
 - **每次响应带上 prompt 版本号**（响应头或事件字段）。事后排查「这条回答是哪版 prompt 生成的」，靠的是这个，不是靠猜上线时间。
 - **渲染结果进 diff**。上线前把 v(n) 和 v(n-1) 的渲染输出 diff 一遍，很多「模型突然变笨」的问题在 diff 里就看出是某个区段被误删了。
 - **怎么测。** 每个 prompt 版本配一组固定输入和期望输出的样例，和模板放在一起，改 prompt 的 PR 必须带上门禁结果。跑得快、天天跑、只挡退化。这批样例会攒进第 18 课的 golden set，那里才谈样本量、切片和置信区间。
 
-## 框架映射
+## 框架映射 { .section--reference }
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -225,17 +231,17 @@ def trim_to_budget(text, budget) -> tuple[str, bool]:
 
 三个框架都不管 prompt 版本化。这正是 factor 02 的意思：这层必须留在你自己手里。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
-## 几十个配置字段里的人设
+## 几十个配置字段里的人设 { .section--risk }
 
 语音机器人项目里，多个角色的人设 prompt 早期散在配置中心的几十个字段里，改一处要翻好几个页面，没人知道线上实际发出的完整文本长什么样。后来改成代码里的渲染函数加版本号，上线前先 diff 渲染结果——很多「模型突然变笨」的问题在 diff 里就看出是某个区段被误删了。
 
 另一条：把「不能承认自己是 AI」这类硬约束写在 prompt 里，线上仍然偶尔漏。最后的做法是 prompt 里保留约束，但输出后再过一道确定性检查。这就是第 21 课要讲的「守卫在代码不在提示词」。
 
-## 参考实现
+## 参考实现 { .section--reference }
 
 想看这一课的机制装进一个真实服务是什么样：参考实现的 [M1 API 骨架](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md)，system prompt 的版本化。
 
-## 延伸阅读
+## 延伸阅读 { .section--reference }
 
 - [12-factor-agents · factor 02 Own your prompts](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-02-own-your-prompts.md)（访问日期 2026-09-04）：为什么不把 prompt 交给框架，本课第一节的直接出处。
 - [Anthropic · Prompt engineering overview](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview)（访问日期 2026-09-04）及其下的 [Be clear and direct](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct)、[Use examples](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/multishot-prompting)、[Use XML tags](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/use-xml-tags)：官方写法指南，读顺序就是它列的顺序。
@@ -245,3 +251,5 @@ def trim_to_budget(text, budget) -> tuple[str, bool]:
 ---
 
 [← 上一课 02](../model-api-structured-output-streaming/README.md) · [下一课 04 →](../embeddings-and-vector-search/README.md)
+
+</div>
