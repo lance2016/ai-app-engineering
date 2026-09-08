@@ -24,6 +24,7 @@
   --ws-ink-3:      #8e8e8e;
   --ws-rule:       #e5e5e5;
   --ws-rule-faint: #eeeeee;
+  --ws-fig-fill:   #f1f2f4;
   --ws-celadon:    #0d806b;
   --ws-celadon-2:  #0d806b;
   --ws-rust:       #b5472d;
@@ -80,6 +81,7 @@
   --ws-ink-3:      #86868b;
   --ws-rule:       #2d2d31;
   --ws-rule-faint: #232326;
+  --ws-fig-fill:   #1e1e21;
   --ws-celadon:    #3fbf9c;
   --ws-celadon-2:  #58d3b1;
   --ws-rust:       #e08a63;
@@ -497,13 +499,19 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
    links and on the opening line, and nowhere else. */
 :root > * {
   --md-mermaid-font-family: var(--ws-sans);
-  --md-mermaid-node-bg-color: transparent;
+  /* A node reads as a block because of its fill; the border only closes the
+     shape, and the wiring sits a step lighter so the blocks are seen first.
+
+     Custom properties are the entire budget here. Material renders every
+     diagram into a closed shadow root, so no selector in this file can reach
+     inside one -- only inherited properties cross that boundary. */
+  --md-mermaid-node-bg-color: var(--ws-fig-fill);
   --md-mermaid-node-fg-color: var(--ws-ink-2);
   --md-mermaid-label-bg-color: var(--ws-paper);
   --md-mermaid-label-fg-color: var(--ws-ink);
-  --md-mermaid-edge-color: var(--ws-ink-2);
+  --md-mermaid-edge-color: var(--ws-ink-3);
 
-  --md-mermaid-sequence-actor-bg-color: transparent;
+  --md-mermaid-sequence-actor-bg-color: var(--ws-fig-fill);
   --md-mermaid-sequence-actor-fg-color: var(--ws-ink);
   --md-mermaid-sequence-actor-border-color: var(--ws-ink-2);
   --md-mermaid-sequence-actor-line-color: var(--ws-rule);
@@ -526,7 +534,16 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 }
 .md-typeset .mermaid { margin: 2.4rem 0; }
 
-/* One diagram language across the whole course, so a reader never has to
+/* NOTE (2026-09-08): the three blocks below never take effect. Material
+   renders each diagram into `attachShadow({mode:"closed"})`, and no selector
+   from this file crosses that boundary -- only inherited custom properties do,
+   which is why the variables above work and these do not. Verified with
+   `fill: red !important`, which changed nothing on the page. Kept because they
+   document the intended roles, and because they would start working if the
+   diagrams ever stop going through Material's shadow-root integration. To
+   colour a node today, use mermaid's own `classDef` inside the diagram source.
+
+   One diagram language across the whole course, so a reader never has to
    re-learn what a shape means. Declare the role in the diagram source --
    `class NodeName risk` in Mermaid -- and the colour is decided here:
    celadon is the path under discussion, rust is failure or risk. Shapes and

@@ -52,7 +52,7 @@ uv run python scripts/sync_numbering.py                    # 3. 课号全站对�
 raw HTML 的 `href` 不会被 MkDocs 改写，也逃过 `check_links.py`，别那样写。`data-lesson` 是进度脚本认课的唯一依据，值必须是 slug。
 
 **图示约定全站共用**，图例在 [课程总览](lessons/README.md)：青瓷色是正在讲的路径，铁锈色是失败和风险，实线同步、虚线可选或异步，
-矩形组件、圆形概念、菱形判断。Mermaid 里写 `class NodeName path` 或 `class NodeName risk`，颜色由 `wabi.css` 决定，不写 `style` 和色值。
+矩形组件、圆形概念、菱形判断。Mermaid 里写 `class NodeName path` 或 `class NodeName risk`，不写 `style` 和色值。**注意：这两个标记目前不上色**——Material 把每张图渲染进 closed shadow root，`wabi.css` 的选择器进不去，只有 CSS 变量能穿透。标记先照写，它记录的是角色；真要上色得用 mermaid 自己的 `classDef`。
 
 **Callout 只有两种。** `!!! note "……"` 管来源（见 4.3），`!!! warning "……"` 管不知道会踩坑的事实。别加第三种，
 别用 `tip`、`info`，没做样式，会露出 Material 的蓝色卡片。样式规则看 `docs/stylesheets/*.css` 开头的注释。
