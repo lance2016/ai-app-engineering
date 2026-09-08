@@ -874,8 +874,9 @@ html:has(.lesson--part1) [dir] .md-typeset h1 + blockquote {
    sections. */
 html:has(.lesson--part1) .lesson--part1 .lesson-meta {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, .65fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 2rem;
+  align-items: start;
   margin: 0 0 3rem;
   padding: 1.1rem 1.25rem;
   border: 1px solid var(--ws-rule);
@@ -883,12 +884,14 @@ html:has(.lesson--part1) .lesson--part1 .lesson-meta {
   background: var(--ws-paper-deep);
 }
 html:has(.lesson--part1) .lesson--part1 .lesson-meta > h2 {
+  margin: 0 0 .7rem;
   padding: 0;
   font-size: .74rem;
   letter-spacing: 0;
   color: var(--ws-ink-2);
 }
 html:has(.lesson--part1) .lesson--part1 .lesson-meta > ul {
+  margin: 0;
   font-size: .8rem;
   line-height: 1.7;
 }
@@ -896,6 +899,15 @@ html:has(.lesson--part1) .lesson--part1 .lesson-meta > h2:nth-of-type(2),
 html:has(.lesson--part1) .lesson--part1 .lesson-meta > ul:nth-of-type(2) {
   padding-left: 2rem;
   border-left: 1px solid var(--ws-rule);
+}
+
+/* Wide diagrams and code blocks may use the outer reading margin. A case is
+   already a bounded surface, so its materials must stay inside that surface. */
+html:has(.lesson--part1) [dir] .md-typeset .lesson--part1 details.case .highlight {
+  width: 100%;
+  max-width: 100%;
+  margin-right: 0;
+  overflow-x: auto;
 }
 
 /* Major sections rely on spacing and weight. Only risks get a colour cue. */
