@@ -28,7 +28,11 @@ estimated_time: 约 2.5 小时
 
 ```mermaid
 flowchart LR
-    R[请求] --> B[预算<br/>钱 / 时间 / 步数]
+    classDef model stroke:#7c6ee6,stroke-width:2.2px
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef data stroke:#4e83a3,stroke-width:1.8px
+    classDef risk stroke:#b5472d,stroke-width:2px
+    R([请求]) --> B[预算<br/>钱 / 时间 / 步数]
     B --> L[限流<br/>令牌桶]
     L --> C{熔断器}
     C -- closed --> P[主模型<br/>超时 + 重试]
@@ -37,6 +41,10 @@ flowchart LR
     P --> M[计费<br/>usage x 价格表]
     F --> M
     M --> O[指标 → SLO → 告警]
+    class B,L,C,M runtime
+    class P model
+    class F risk
+    class O data
 ```
 
 每一层防一种不同的失败，顺序也有讲究：

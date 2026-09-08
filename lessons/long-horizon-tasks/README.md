@@ -59,17 +59,21 @@ estimated_time: 约 1.5 小时
 
 ```mermaid
 flowchart LR
-    G[用户目标] --> E[探索<br/>只读，先看清情况]
+    classDef model stroke:#7c6ee6,stroke-width:2.2px
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef data stroke:#4e83a3,stroke-width:1.8px
+    G([用户目标]) --> E[探索<br/>只读，先看清情况]
     E --> P[列清单<br/>每项一条验收条件]
     P --> L[第 06 课那个循环]
     L --> V{验收过了吗}
     V -- 过了 --> N{还有 pending}
     N -- 有 --> L
-    N -- 没有 --> D[完成]
+    N -- 没有 --> D([完成])
     V -- 没过 --> R[改清单]
     R --> L
-    class P,V path
-    class R risk
+    class P,R model
+    class E,L,V,N runtime
+    class D runtime
 ```
 
 **循环没有变。** 图中间那个「第 06 课那个循环」是原样搬过来的：模型每一轮仍然自己决定下一步，运行时仍然执行、记账、判断该不该继续。这一课加的东西全在循环外面——上下文里多了一份清单，「完成」的判定权从模型手里挪回了代码。

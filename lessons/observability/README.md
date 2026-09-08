@@ -58,9 +58,15 @@ estimated_time: 约 2 小时
 
 ```mermaid
 flowchart LR
+    classDef model stroke:#7c6ee6,stroke-width:2.2px
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef risk stroke:#b5472d,stroke-width:2px
     R["invoke_agent support_bot<br/>steps=2 cost_usd=0.004"] --> C1["chat deepseek-chat<br/>input_tokens=182 output_tokens=24"]
     R --> T["execute_tool search<br/>ERROR error.type=TimeoutError"]
     R --> C2["chat deepseek-chat<br/>input_tokens=230 output_tokens=31"]
+    class R runtime
+    class C1,C2 model
+    class T risk
 ```
 
 根 span 是这次运行，子 span 是每次模型调用和工具调用。这棵树回答四类问题：

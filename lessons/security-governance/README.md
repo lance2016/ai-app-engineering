@@ -28,7 +28,11 @@ estimated_time: 约 2.5 小时
 
 ```mermaid
 flowchart LR
-    U[用户输入] --> M[模型]
+    classDef model stroke:#7c6ee6,stroke-width:2.2px
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef human stroke:#b88428,stroke-width:2px
+    classDef risk stroke:#b5472d,stroke-width:2px
+    U([用户输入]) --> M[模型]
     T[工具结果<br/>不可信数据] --> M
     M -- 工具调用 --> G{确定性守卫<br/>白名单 / 身份 / 确认}
     G -- 放行 --> X[执行]
@@ -36,6 +40,10 @@ flowchart LR
     X --> O[出口过滤<br/>PII / 提示泄露]
     O --> U
     S[Skill / MCP<br/>供应链] -. 钉版本与哈希 .-> M
+    class U human
+    class M model
+    class G,X,O runtime
+    class T,S risk
 ```
 
 一个原则贯穿全课：**模型是不可信组件，所有边界由代码执行**（原则 11）。模型的输入里有攻击者能控制的部分（用户消息、网页、文档、其他 Agent 的输出），所以模型的任何输出都可能是被操纵的结果。

@@ -27,6 +27,8 @@ estimated_time: 约 2 小时
 
 ```mermaid
 flowchart TB
+    classDef model stroke:#7c6ee6,stroke-width:2.2px
+    classDef runtime stroke:#0d806b,stroke-width:2px
     R[运行时<br/>持有线程，决定谁活跃] --> T[Triage Agent]
     R --> B[Billing Agent]
     R --> S[Shipping Agent]
@@ -34,6 +36,8 @@ flowchart TB
     R -- 按策略裁剪的历史 --> B
     B -- 失败 --> R
     R -- handoff_failed 事件 + 兜底 --> T
+    class R runtime
+    class T,B,S model
 ```
 
 多 Agent 不是让几个模型互相聊天。它是运行时的一个编排层，**Agent 之间不直接通信，所有交接都经过运行时**。这样三件事才有归属：

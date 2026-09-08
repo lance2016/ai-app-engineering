@@ -60,16 +60,22 @@ part: 总览
 
 <div class="legend" markdown="1">
 <p class="eyebrow eyebrow--sub">图例</p>
-<p class="legend__lede">全站的示意图共用这一套约定，看图之前不用先读图例。</p>
+<p class="legend__lede">全站的示意图共用这一套约定：<strong>颜色说这一块归谁管，形状说它是什么，线说它们怎么交互。</strong>看图之前不用先读图例。</p>
 <ul class="legend__list">
-<li><span class="lg lg--celadon"></span>青瓷色：当前路径、正常流程</li>
-<li><span class="lg lg--rust"></span>铁锈色：失败、风险、降级</li>
-<li><span class="lg lg--solid"></span>实线：运行时的同步流</li>
-<li><span class="lg lg--dashed"></span>虚线：可选调用、异步或离线</li>
-<li><span class="lg lg--rect"></span>矩形：一个组件</li>
-<li><span class="lg lg--circle"></span>圆形：一个概念</li>
+<li><span class="lg lg--model"></span>紫：模型的概率性决策</li>
+<li><span class="lg lg--runtime"></span>青瓷：运行时与确定性代码</li>
+<li><span class="lg lg--data"></span>蓝：数据、上下文与状态</li>
+<li><span class="lg lg--human"></span>琥珀：需要人</li>
+<li><span class="lg lg--risk"></span>铁锈：失败与风险路径</li>
+<li><span class="lg lg--neutral"></span>灰：外部系统，或这张图不区分角色</li>
+<li><span class="lg lg--rect"></span>矩形：组件或动作</li>
 <li><span class="lg lg--diamond"></span>菱形：一次判断</li>
+<li><span class="lg lg--cyl"></span>圆柱：持久化存储</li>
+<li><span class="lg lg--round"></span>圆角：起点或终态</li>
+<li><span class="lg lg--solid"></span>实线：同步的主流程</li>
+<li><span class="lg lg--dashed"></span>虚线：异步、可选或离线</li>
 </ul>
+<p class="legend__foot">紫和青瓷的对照是全课最常用的一组：<strong>模型决定做什么，运行时决定允不允许做。</strong>只在颜色能帮上忙的图里上色，单一角色的示意图保持中性灰。</p>
 </div>
 
 </div>

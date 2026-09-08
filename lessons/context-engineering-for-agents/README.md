@@ -27,12 +27,18 @@ estimated_time: 约 2 小时
 
 ```mermaid
 flowchart LR
+    classDef model stroke:#7c6ee6,stroke-width:2.2px
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef data stroke:#4e83a3,stroke-width:1.8px
     T[事件线程<br/>全部历史] --> B[ContextBuilder]
     D[检索结果] --> B
     S[压缩摘要] --> B
     R[工具结果<br/>整形后] --> B
     B --> W["窗口<br/>系统指令 → 资料 → 摘要 → 近期历史 → 本轮输入"]
     W --> M[模型]
+    class T,D,S,R,W data
+    class B runtime
+    class M model
 ```
 
 Anthropic 把上下文叫作 attention budget：窗口里每多一个 token，模型对其他 token 的注意力就少一点。上下文越长，模型对窗口中段内容的召回越容易出问题，各家模型上都反复观测到，只是程度不同。所以上下文工程的目标不是「塞得越多越好」，而是**在预算内放进信号最强的一组 token**。
@@ -55,6 +61,8 @@ factor 03 的核心主张。框架帮你拼上下文时，你要能打印出最�
 
 ```mermaid
 flowchart LR
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef data stroke:#4e83a3,stroke-width:1.8px
     I[稳定指令] --> W[Context Builder]
     H[历史] --> W
     T[工具结果] --> W
@@ -63,6 +71,8 @@ flowchart LR
     B -- 否 --> C[裁剪 / 压缩 / 摘要]
     C --> M[最终消息]
     B -- 是 --> M
+    class I,H,T,K,M data
+    class W,B,C runtime
 ```
 
 ## 机制拆解

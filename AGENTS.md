@@ -51,8 +51,33 @@ uv run python scripts/sync_numbering.py                    # 3. 课号全站对�
 
 raw HTML 的 `href` 不会被 MkDocs 改写，也逃过 `check_links.py`，别那样写。`data-lesson` 是进度脚本认课的唯一依据，值必须是 slug。
 
-**图示约定全站共用**，图例在 [课程总览](lessons/README.md)：青瓷色是正在讲的路径，铁锈色是失败和风险，实线同步、虚线可选或异步，
-矩形组件、圆形概念、菱形判断。Mermaid 里写 `class NodeName path` 或 `class NodeName risk`，不写 `style` 和色值。**注意：这两个标记目前不上色**——Material 把每张图渲染进 closed shadow root，`wabi.css` 的选择器进不去，只有 CSS 变量能穿透。标记先照写，它记录的是角色；真要上色得用 mermaid 自己的 `classDef`。
+**图示约定全站共用**，图例在 [课程总览](lessons/README.md)。三个维度各管一件事，别让它们重复表达：
+**颜色说这一块归谁管，形状说它是什么，线说它们怎么交互。**
+
+| 语义 | class | 描边色 | 什么时候用 |
+|---|---|---|---|
+| 模型的概率性决策 | `model` | `#7c6ee6` | LLM、Agent、Router、Planner |
+| 运行时与确定性代码 | `runtime` | `#0d806b` | 循环、工具执行、守卫、业务代码；正常终态也用它 |
+| 数据、上下文与状态 | `data` | `#4e83a3` | 消息、上下文、事件线程、记忆、检索、存储、trace |
+| 需要人 | `human` | `#b88428` | 用户、人工确认、审批、等待人工 |
+| 失败与风险 | `risk` | `#b5472d` | 错误、超时、预算耗尽、越权、降级、被拒 |
+| 外部或不区分角色 | 不标 | 默认灰 | 第三方系统，或这张图不谈分层 |
+
+形状：`[矩形]` 组件或动作，`{菱形}` 判断，`[(圆柱)]` 持久化存储，`([圆角])` 起点或终态，`((圆形))` 概念。
+线：`-->` 同步主流程，`-.->` 异步、可选或离线。
+
+写法是 mermaid 自己的 `classDef`，**只设描边，不设 fill 和 color**——填充和文字跟着主题走，同一份色值在亮暗两套皮肤下都成立：
+
+```
+classDef model stroke:#7c6ee6,stroke-width:2.2px
+class D model
+```
+
+色值必须和 `wabi.css` 顶部的 `--ws-fig-*` 一致（`classDef` 不接受 `var()`，只能手抄）。不写 `style`，不写 fill。
+
+**只在颜色帮得上忙的图里上色。** 一张只有一条线的示意图、或者通篇同一个角色的图，保持默认灰；
+每张图只定义它用到的那几行 `classDef`。`wabi.css` 里没有节点级的 mermaid 规则，
+因为 Material 把每张图渲染进 closed shadow root，外部选择器进不去——那里只留全局 CSS 变量。
 
 **Callout 只有两种。** `!!! note "……"` 管来源（见 4.3），`!!! warning "……"` 管不知道会踩坑的事实。别加第三种，
 别用 `tip`、`info`，没做样式，会露出 Material 的蓝色卡片。样式规则看 `docs/stylesheets/*.css` 开头的注释。

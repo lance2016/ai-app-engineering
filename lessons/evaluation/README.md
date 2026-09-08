@@ -32,10 +32,16 @@ AI 应用的评测分成三层，成本递增、频率递减：
 
 ```mermaid
 flowchart TB
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef data stroke:#4e83a3,stroke-width:1.8px
+    classDef human stroke:#b88428,stroke-width:2px
     L1["Level 1 断言<br/>确定性、毫秒级、每次改动都跑"] --> L2["Level 2 人工 + 模型评审<br/>看 trace、二元 pass/fail 加 critique、校准 judge"]
     L2 --> L3["Level 3 A/B 与线上指标<br/>只在重大改动后"]
     L1 -. 从失败里补新案例 .-> G[(Golden Set<br/>带切片标签)]
     L2 -. 分歧案例回流 .-> G
+    class L1 runtime
+    class L2 human
+    class G data
 ```
 
 **评测集先于优化。** 第一版 prompt 写完之前，先有 10 条带预期的案例。每条案例三样东西：输入、什么算好（可断言的）、标签。标签是切片的来源：总分 92% 说明不了什么，「adversarial 切片 0%」才说明问题。
@@ -48,12 +54,18 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-    R[代码 / prompt 改动] --> E[golden set]
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef data stroke:#4e83a3,stroke-width:1.8px
+    classDef risk stroke:#b5472d,stroke-width:2px
+    R[代码 / prompt 改动] --> E[(golden set)]
     E --> D{按 slice 对比基线}
-    D -- 退化 --> X[阻断合并 + 分析 trace]
-    D -- 通过 --> S[发布]
+    D -- 退化 --> X([阻断合并 + 分析 trace])
+    D -- 通过 --> S([发布])
     S --> P[线上失败案例]
     P --> E
+    class E,P data
+    class D,S runtime
+    class X risk
 ```
 
 ## 机制拆解

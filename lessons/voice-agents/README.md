@@ -32,6 +32,9 @@ estimated_time: 约 2 小时
 
 ```mermaid
 flowchart LR
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef human stroke:#b88428,stroke-width:2px
+    classDef risk stroke:#b5472d,stroke-width:2px
     U((用户说话)) --> V[VAD 判停]
     V --> A[ASR<br/>音频 → 文本]
     A --> L[Agent 循环<br/>05～13 课那一套]
@@ -40,7 +43,8 @@ flowchart LR
     P --> U
     U -. 随时开口 .-> B{打断}
     B -. 停播 + 停生成 .-> L
-    class V,A,T path
+    class U human
+    class V,A,L,T,P runtime
     class B risk
 ```
 

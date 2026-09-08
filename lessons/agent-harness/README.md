@@ -31,7 +31,10 @@ estimated_time: 约 2 小时
 
 ```mermaid
 flowchart TB
-    U[用户请求] --> L[Agent 循环]
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef human stroke:#b88428,stroke-width:2px
+    classDef risk stroke:#b5472d,stroke-width:2px
+    U([用户请求]) --> L[Agent 循环]
     L --> P{权限门<br/>这个动作可逆吗}
     P -- 只读 / 可撤销 --> H1[调用前 hook]
     P -- 不可逆 --> A[停下来问人]
@@ -42,7 +45,8 @@ flowchart TB
     C -- 是 --> K[压缩 / 挪到文件 / 派子 Agent]
     C -- 否 --> L
     K --> L
-    class P,H1,H2 path
+    class U,A human
+    class L,P,H1,T,H2,C runtime
     class K risk
 ```
 

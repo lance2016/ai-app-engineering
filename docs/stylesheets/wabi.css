@@ -129,6 +129,21 @@
 /* --- type --------------------------------------------------------------- */
 
 :root {
+  /* The diagram vocabulary. Stroke colours only -- a node's fill and its text
+     keep following the scheme, so one set of values works in light and dark.
+
+     These are duplicated by hand inside every diagram that uses them, because
+     mermaid's `classDef` rejects `var()`. Change a value here and you change
+     it in the diagrams too; the legend on the course overview reads from these
+     custom properties, so it cannot drift silently. */
+  --ws-fig-model:   #7c6ee6;
+  --ws-fig-runtime: #0d806b;
+  --ws-fig-data:    #4e83a3;
+  --ws-fig-human:   #b88428;
+  --ws-fig-risk:    #b5472d;
+}
+
+:root {
   /* System faces only: the audience reads from mainland China and a Google
      Fonts request would stall first paint. One sans carries the whole page,
      headings included -- that is what a docs site looks like. */
@@ -534,35 +549,22 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 }
 .md-typeset .mermaid { margin: 2.4rem 0; }
 
-/* NOTE (2026-09-08): the three blocks below never take effect. Material
-   renders each diagram into `attachShadow({mode:"closed"})`, and no selector
-   from this file crosses that boundary -- only inherited custom properties do,
-   which is why the variables above work and these do not. Verified with
-   `fill: red !important`, which changed nothing on the page. Kept because they
-   document the intended roles, and because they would start working if the
-   diagrams ever stop going through Material's shadow-root integration. To
-   colour a node today, use mermaid's own `classDef` inside the diagram source.
+/* Node semantics live in the diagram source, not here. Material renders every
+   diagram into `attachShadow({mode:"closed"})`, so a selector in this file
+   cannot reach a node -- only inherited custom properties cross that boundary,
+   which is why the variables above work. The role colours are therefore
+   declared with mermaid's own `classDef`, using the `--ws-fig-*` values at the
+   top of this file:
 
-   One diagram language across the whole course, so a reader never has to
-   re-learn what a shape means. Declare the role in the diagram source --
-   `class NodeName risk` in Mermaid -- and the colour is decided here:
-   celadon is the path under discussion, rust is failure or risk. Shapes and
-   edges carry the rest, and Mermaid's own syntax already says them: rectangle
-   for a component, circle (`((...))`) for a concept, diamond (`{...}`) for a
-   decision, `-.->` for an optional or asynchronous edge. Only nodes take a
-   class -- Mermaid gives edges no hook for one.
-   Mermaid writes its own rules into the SVG under an id selector, so these
-   need !important to land; that is the whole reason for it. */
-.md-typeset .mermaid .node.path > :is(rect, polygon, circle, path) {
-  stroke: var(--ws-celadon) !important;
-  stroke-width: 1.6px !important;
-}
-.md-typeset .mermaid .node.path .nodeLabel { color: var(--ws-celadon) !important; }
-.md-typeset .mermaid .node.risk > :is(rect, polygon, circle, path) {
-  stroke: var(--ws-rust) !important;
-  stroke-width: 1.6px !important;
-}
-.md-typeset .mermaid .node.risk .nodeLabel { color: var(--ws-rust) !important; }
+       classDef model stroke:#7c6ee6,stroke-width:2.2px
+       class D model
+
+   Colour says which layer owns a node, shape says what kind of thing it is,
+   and the line says how they interact -- rectangle for a component, diamond
+   for a decision, `[( )]` for storage, `([ ])` for a terminal state, `-.->`
+   for an optional or asynchronous edge. Only diagrams with more than one role
+   are coloured; a single-role sketch stays neutral grey. The legend on the
+   course overview is the reader-facing copy of this. */
 
 .md-typeset img { border-radius: 2px; }
 
@@ -750,6 +752,9 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
 
 @media screen and (max-width: 44.9375em) {
   .md-typeset { font-size: .82rem; line-height: 1.85; }
+  /* A diagram scales to fit its container, so on a phone every pixel of width
+     is a pixel of legibility. Reclaim the content gutter for it. */
+  .md-typeset .mermaid { margin-inline: -.8rem; }
   .md-typeset h1 { font-size: 1.55rem; }
   .md-main__inner:has(.md-sidebar--primary[hidden]) .md-content__inner > h1 {
     font-size: 2rem;

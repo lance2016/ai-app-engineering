@@ -643,7 +643,9 @@
   font-size: .8rem;
   color: var(--ws-ink-2);
 }
-.md-typeset .legend__list {
+/* Material's own list rule carries a [dir] prefix, so the plain
+   .md-typeset .legend__list lost to it and the grid never applied. */
+[dir] .md-typeset .legend__list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
   gap: .6rem 1.6rem;
@@ -651,11 +653,17 @@
   padding: 0;
   list-style: none;
 }
-.md-typeset .legend__list li {
+[dir] .md-typeset .legend__list li {
   display: flex;
   align-items: center;
   gap: .7rem;
   margin: 0;
+  font-size: .76rem;
+  color: var(--ws-ink-2);
+}
+.md-typeset .legend__foot {
+  margin-top: 1rem;
+  max-width: 34rem;
   font-size: .76rem;
   color: var(--ws-ink-2);
 }
@@ -664,12 +672,19 @@
   width: 1.4rem;
   height: .8rem;
 }
-.lg--celadon { border: 1px solid var(--ws-celadon); background: var(--ws-celadon); }
-.lg--rust    { border: 1px solid var(--ws-rust); }
+/* Colour swatches are outlines, not fills, because that is how the diagrams
+   carry role: the stroke is the semantic, the fill stays neutral. */
+.lg--model   { border: 2px solid var(--ws-fig-model); }
+.lg--runtime { border: 2px solid var(--ws-fig-runtime); }
+.lg--data    { border: 2px solid var(--ws-fig-data); }
+.lg--human   { border: 2px solid var(--ws-fig-human); }
+.lg--risk    { border: 2px solid var(--ws-fig-risk); }
+.lg--neutral { border: 1px solid var(--ws-ink-3); }
 .lg--solid   { height: 0; border-top: 1px solid var(--ws-ink-2); }
 .lg--dashed  { height: 0; border-top: 1px dashed var(--ws-ink-2); }
 .lg--rect    { border: 1px solid var(--ws-ink-2); }
-.lg--circle  { width: .8rem; border: 1px solid var(--ws-ink-2); border-radius: 50%; }
+.lg--round   { border: 1px solid var(--ws-ink-2); border-radius: .22rem; }
+.lg--cyl     { border: 1px solid var(--ws-ink-2); border-radius: 50% / .28rem; }
 .lg--diamond {
   width: .8rem;
   height: .8rem;

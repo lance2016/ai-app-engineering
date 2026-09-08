@@ -63,14 +63,22 @@ BM25 匹配精确词，擅长型号、数字、专有名词，对同义改写无
 
 ```mermaid
 flowchart LR
-    S[源文档] --> I[索引]
+    classDef model stroke:#7c6ee6,stroke-width:2.2px
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef data stroke:#4e83a3,stroke-width:1.8px
+    classDef risk stroke:#b5472d,stroke-width:2px
+    S[源文档] --> I[(索引)]
     I --> Q[检索]
     Q --> C{候选相关?}
-    C -- 否 --> F1[召回失败]
+    C -- 否 --> F1([召回失败])
     C -- 是 --> G[生成]
     G --> V{引用可验证?}
-    V -- 否 --> F2[生成 / 引用失败]
-    V -- 是 --> O[带来源回答]
+    V -- 否 --> F2([生成 / 引用失败])
+    V -- 是 --> O([带来源回答])
+    class S,I data
+    class Q,C,V runtime
+    class G model
+    class F1,F2 risk
 ```
 
 ## 机制拆解

@@ -53,12 +53,16 @@ estimated_time: 约 1.5 小时
 
 ```mermaid
 flowchart LR
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef data stroke:#4e83a3,stroke-width:1.8px
     D[文档切块] -->|encode_document| V[向量 + 原文 + 元数据]
     V --> IX[(索引<br/>pgvector / 向量库)]
     Q[查询] -->|encode_query| QV[查询向量]
     QV --> F{元数据过滤<br/>租户 · 权限 · 类型}
     F --> IX
     IX --> R[最相近的 k 块]
+    class V,QV,IX,R data
+    class F runtime
 ```
 
 [F02](../../prerequisites/llm-foundations/02-embeddings/README.md) 讲了向量为什么能比较，也讲了归一化之后余弦就是点积（pgvector 的 `<=>` 算的是余弦距离，等于 1 减余弦相似度；存归一化后的向量可以用内积代替，省一次开方）。这里补四个工程事实。

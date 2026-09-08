@@ -27,12 +27,17 @@ estimated_time: 约 30 分钟
 
 ```mermaid
 flowchart LR
+    classDef model stroke:#7c6ee6,stroke-width:2.2px
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef human stroke:#b88428,stroke-width:2px
     U((用户)) --> A[应用<br/>你写的代码]
     A -->|请求 JSON| G[Model API]
     G --> M((模型))
     M -->|响应 JSON| A
     A --> U
-    class A,G path
+    class U human
+    class A runtime
+    class M model
 ```
 
 这条链上只有应用是你的。模型是一个外部部件，它只做一件事：收一段 JSON，回一段 JSON。

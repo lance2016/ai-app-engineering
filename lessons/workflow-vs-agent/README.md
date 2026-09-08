@@ -29,14 +29,16 @@ Anthropic 的分类把 agentic system 分成两类：**workflow** 是模型和�
 
 ```mermaid
 flowchart LR
+    classDef model stroke:#7c6ee6,stroke-width:2.2px
+    classDef runtime stroke:#0d806b,stroke-width:2px
     A[确定性代码] --> B[Prompt chaining<br/>固定步骤 + 门]
     B --> C[Routing<br/>先分类再分流]
     C --> D[Parallelization<br/>分段 / 投票]
     D --> E[Orchestrator-workers<br/>运行时拆任务，数量有上限]
     E --> F[Evaluator-optimizer<br/>生成-评审循环，轮数有上限]
     F --> G[自治 Agent<br/>模型决定路径]
-    style A fill:#eee,stroke:#999
-    style G fill:#fdd,stroke:#c66
+    class A runtime
+    class G model
 ```
 
 从左到右，模型的决策权越来越大，系统的可预测性越来越小，成本和延迟越来越高。**默认从最左边开始，只在简单方案确实不够时向右移一格。**
@@ -59,6 +61,8 @@ flowchart LR
 
 ```mermaid
 flowchart TD
+    classDef model stroke:#7c6ee6,stroke-width:2.2px
+    classDef runtime stroke:#0d806b,stroke-width:2px
     Q[需求] --> F{步骤是否固定?}
     F -- 是 --> W[Workflow]
     F -- 否 --> E{需要探索和工具选择?}
@@ -66,6 +70,8 @@ flowchart TD
     E -- 是 --> A[受预算约束的 Agent]
     W --> T[测试每条边]
     A --> G[测试轨迹与停止条件]
+    class W,R runtime
+    class A model
 ```
 
 ## 机制拆解

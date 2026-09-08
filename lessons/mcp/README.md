@@ -102,12 +102,18 @@ server 说它有 `delete_note`，不代表这次请求可以删除。第 05 课�
 
 ```mermaid
 flowchart LR
+    classDef model stroke:#7c6ee6,stroke-width:2.2px
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef risk stroke:#b5472d,stroke-width:2px
     S["MCP Server（另一个进程）<br/>Tools · Resources"] -->|tools/list · resources/list| W
     W["Host：白名单<br/>决定告诉模型哪些"] --> M[模型提出调用]
     M --> G{"Host：鉴权 · 超时<br/>版本校验"}
     G -- 放行 --> C["tools/call"]
-    G -- 拦下 --> X[请求根本不发出]
+    G -- 拦下 --> X([请求根本不发出])
     C --> S
+    class W,G,C runtime
+    class M model
+    class X risk
 ```
 
 这张图和上面那张回答的不是同一个问题：上面那张是消息按什么顺序走，这张是哪一侧在做决定。要看的是 `拦下` 那条分支——被白名单挡住的调用不会变成一条 `tools/call`，server 永远不知道有人想删你的笔记。

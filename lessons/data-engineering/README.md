@@ -29,13 +29,19 @@ RAG 的数据会更新、重复、过期和被删除。只写一个 ingest 脚�
 
 ```mermaid
 flowchart LR
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef data stroke:#4e83a3,stroke-width:1.8px
+    classDef risk stroke:#b5472d,stroke-width:2px
     S[源文档<br/>version, acl] --> P[解析<br/>结构化元素]
     P --> C[chunk<br/>source_id, version, section, acl, hash]
     C --> Q{质量检查}
     Q -- 通过 --> I[(索引 / 向量)]
-    Q -- 拒绝 --> R[质量报告]
+    Q -- 拒绝 --> R([质量报告])
     I --> A[答案缓存 / 摘要 / 记忆]
     S -. 删除 .-> X[所有派生物一起删]
+    class S,C,I,A data
+    class P,Q runtime
+    class R,X risk
 ```
 
 四个原则贯穿这条链：

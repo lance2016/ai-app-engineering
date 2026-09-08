@@ -39,11 +39,15 @@ estimated_time: 约 1.5 小时
 
 ```mermaid
 flowchart LR
+    classDef data stroke:#4e83a3,stroke-width:1.8px
+    classDef human stroke:#b88428,stroke-width:2px
     T[事件线程] -->|提取| C[候选记忆<br/>带来源 event id]
     C -->|整合| S[(记忆存储<br/>active + history)]
     S -->|检索| X[本轮上下文]
-    U[用户: 忘掉 X] -->|删除| S
+    U([用户: 忘掉 X]) -->|删除| S
     S --> A[审计记录]
+    class T,C,S,X,A data
+    class U human
 ```
 
 **提取**是一次结构化输出的模型调用。输入是带编号的对话，输出是候选记忆列表，每条必须指回它来自哪几行。

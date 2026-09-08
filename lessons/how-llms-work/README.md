@@ -97,11 +97,17 @@ POST /v1/chat/completions → 400
 
 ```mermaid
 flowchart LR
+    classDef model stroke:#7c6ee6,stroke-width:2.2px
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef risk stroke:#b5472d,stroke-width:2px
     I[请求 + 上下文] --> M[模型<br/>概率输出]
-    M -->|低风险生成<br/>改写 · 归纳 · 起草| A[直接作为回答]
+    M -->|低风险生成<br/>改写 · 归纳 · 起草| A([直接作为回答])
     M -->|涉及事实 · 权限 · 副作用| G{确定性代码<br/>检索 · 鉴权 · 确认}
     G -- 放行 --> A
-    G -- 拦下 --> R[拒绝并说明原因]
+    G -- 拦下 --> R([拒绝并说明原因])
+    class M model
+    class G runtime
+    class R risk
 ```
 
 模型说得多确信，都不构成系统授权。这条边界是原则 01，后面每一课都在它上面加东西。

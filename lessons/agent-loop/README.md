@@ -35,14 +35,25 @@ estimated_time: 约 1.5 小时
 
 ```mermaid
 flowchart LR
-    G[目标] --> D{模型：下一步？}
+    classDef model stroke:#7c6ee6,stroke-width:2.2px
+    classDef runtime stroke:#0d806b,stroke-width:2px
+    classDef data stroke:#4e83a3,stroke-width:1.8px
+    classDef human stroke:#b88428,stroke-width:2px
+    classDef risk stroke:#b5472d,stroke-width:2px
+    G([目标]) --> D{模型：下一步？}
     D -- 工具调用 --> A[运行时：执行工具]
-    A --> O[结果追加到消息]
+    A --> O[(结果追加到消息)]
     O --> B{运行时：预算还够？<br/>是否跑偏？}
     B -- 够 --> D
-    B -- 不够 --> S1[停止：报告原因]
-    D -- 直接回答 --> S2[停止：完成]
-    D -- 需要人 --> S3[跳出：等待人工]
+    B -- 不够 --> S1([停止：报告原因])
+    D -- 直接回答 --> S2([停止：完成])
+    D -- 需要人 --> S3([跳出：等待人工])
+    class D model
+    class A,B runtime
+    class O data
+    class S3 human
+    class S1 risk
+    class S2 runtime
 ```
 
 那个菱形问的是「下一步做什么」。其余全归运行时：执行、记账、判断该不该继续、决定怎么处理失败。这条边界画清楚之后，Agent 的可靠性就是普通软件的可靠性问题了。
