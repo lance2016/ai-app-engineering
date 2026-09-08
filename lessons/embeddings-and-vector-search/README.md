@@ -269,7 +269,7 @@ LIMIT 5;
 
 ## 参考实现 { .section--reference }
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md)，向量索引与 pgvector 建表。
+embedding 走 adapter：[`adapters/embeddings.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/embeddings.py)，离线那个是纯哈希的确定性实现。建表和两条检索路径在 [`knowledge/postgres_store.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/postgres_store.py)，pgvector 走向量，tsvector 走文本。「换了模型忘了重建」那个事故的代码级防线是 [`m4/test_knowledge_store_contract.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m4/test_knowledge_store_contract.py) 里「不同模型的向量永不比较」那条，全貌见 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md)。
 
 ## 延伸阅读 { .section--reference }
 

@@ -234,7 +234,7 @@ def load_thread(thread_id, cache, repo) -> Thread | None:
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [项目总览](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/README.md)，整条请求链和存储边界。
+整条请求链在 [`api/app.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/app.py) 装配，租户与依赖注入在 [`deps.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/deps.py)，一次消息从进来到 SSE 出去的全过程在 [`routes/threads.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/routes/threads.py)。想对着这一课的图找代码，[参考实现总览](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/README.md) 那张课程到文件的映射表最快。
 
 ## 延伸阅读
 

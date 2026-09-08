@@ -210,7 +210,7 @@ Skill 目前主要是 Anthropic 生态的概念，但三级加载的思路和框
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，那个 Skill 包。
+三级加载在 [`runtime/skills.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/skills.py)：目录进 system prompt，正文和引用各是一个只读工具。示例 Skill 是 [`skills/expense-report/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/skills/expense-report)，安装前校验 frontmatter、slug、描述长度和 allowed-tools 的代码在同一个文件里。装配见 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)。
 
 ## 延伸阅读
 

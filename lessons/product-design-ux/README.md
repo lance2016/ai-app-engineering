@@ -296,7 +296,7 @@ citations: list[str]     # ["refund-policy#0", "shipping#2"]
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md)（还是草稿），交互与反馈闭环的设计。
+能点的那个界面是 [`api/routes/playground.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/routes/playground.py)：纯 HTML 加 JavaScript，没有构建步骤，调的是客户端会调的同一套 `/v1` 接口，所以批准工具、灌文档、看记忆都不绕过鉴权。起完服务开 `http://localhost:8000/playground` 就能试。反馈闭环的设计记在 [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md)（还是草稿）。
 
 ---
 

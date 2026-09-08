@@ -327,7 +327,7 @@ def build_payload() -> dict:
 
 ## 参考实现
 
-这一课的机制装进一个真实服务是什么样：参考实现的 [M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md)，OpenTelemetry 接线与故障演练。那里的故障演练脚本能真的跑出上面四棵树。
+OpenTelemetry 接线在 [`ops/telemetry.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/telemetry.py)，结构化日志在 [`logging.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/logging.py)，异常同时记录并把 span 标成 ERROR 的那段也在 telemetry 里。用例在 [`m5/test_telemetry_and_api.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m5/test_telemetry_and_api.py)；[M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md) 里的故障演练脚本能真的跑出上面那四棵树。
 
 ---
 

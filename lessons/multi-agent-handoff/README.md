@@ -192,7 +192,7 @@ OpenAI Agents SDK 把 handoff 做成了核心概念，它的 input filter 就是
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，可选的 handoff 分支。
+参考实现**没有做** handoff。不做的理由记在 [M3 的选型记录](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)：工具只有五个，一个 Agent 的上下文装得下，拆成两个只是把问题换成消息传递。想看拆开之后长什么样，[framework-lab](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/framework-lab/README.md) 把同一个审批需求在三个框架上各做了一遍。
 
 ## 延伸阅读
 

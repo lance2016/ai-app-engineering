@@ -307,7 +307,7 @@ Claude Agent SDK 对 MCP 的支持最深，因为 Claude Code 本身就是 MCP h
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，MCP client 接入。
+MCP client 在 [`mcp/client.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/mcp/client.py)，走 stdio 上的 JSON-RPC；把外部工具注册进本地注册表的是 [`runtime/mcp_source.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/mcp_source.py)；还有一个能真跑的玩具服务器 [`toy_notes_server.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/mcp/toy_notes_server.py)。服务器死了算瞬时错误、重连一次，这些用例在 [`m3/test_mcp.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m3/test_mcp.py)。
 
 ## 延伸阅读
 

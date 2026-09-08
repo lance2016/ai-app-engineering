@@ -227,7 +227,7 @@ async def refine(generator, evaluator, task) -> tuple[str, bool]:
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，那份「为什么还不需要自治 Agent」的选型记录。
+这一课没有单独的代码落点，它的产物是一份选型记录：[M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md) 里「按第 09 课的分类，M3 是什么」那一段，写清了当前这套工具集为什么用确定性链加受控循环，以及什么条件下该换。
 
 ## 延伸阅读
 

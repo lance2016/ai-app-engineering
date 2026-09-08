@@ -236,7 +236,7 @@ Claude Agent SDK 的自动压缩最省事，代价是压缩策略不在你手里
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，ContextBuilder。
+[`runtime/context.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/context.py) 的 `ContextBuilder` 就是这一课：可缓存的稳定前缀放最前，历史按整轮从最早开始裁到预算内，超长的工具结果只给模型看头尾、线程里留全文，每次组装完记一份各段 token 的报告。装配见 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)。
 
 ## 延伸阅读
 

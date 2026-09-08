@@ -245,7 +245,7 @@ def flips(step: float = 0.10) -> list[str]:
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md)（还是草稿），那份多租户平台 RFC。
+这一课的产物是文档，不是代码。[M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md)（还是草稿）就是照这套框架写的一份多租户平台 RFC，四个 [capstone](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/capstones/README.md) 也都要求先写一页设计再动手。
 
 ## 延伸阅读
 

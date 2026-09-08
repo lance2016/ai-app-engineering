@@ -272,7 +272,7 @@ OpenAI Agents SDK 把 guardrails 做成了框架概念；另两个要自己写�
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md)，注入与越权测试、多租户边界。
+白名单和确认门在 [`runtime/runner.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/runner.py)，租户边界在 [`api/deps.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/deps.py)——检索只从 `RunContext` 取租户，不接受模型传进来的租户。带注入的文档能不能诱导模型删东西、跨租户查询会不会漏，两条都在 [`tests/project/m5`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/tests/project/m5) 里。PII 出站过滤还没做，这一条记在 [M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md) 的验收清单里。
 
 ## 延伸阅读
 

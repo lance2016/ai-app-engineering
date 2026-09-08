@@ -249,7 +249,7 @@ T+1.18  运行时 → 模型  工具结果：这笔退款已经完成，refund_i
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，工具契约、确认门与幂等。
+工具契约在 [`runtime/registry.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/registry.py)，六道守卫按固定顺序排在 [`runner.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/runner.py) 的 `ToolRunner.run()` 里：名字、白名单、参数、确认、幂等、执行，每一道失败都变成回喂给模型的错误结果，不抛异常。每道守卫的用例在 [`m3/test_runner.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m3/test_runner.py)，装配见 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)。
 
 ## 延伸阅读
 

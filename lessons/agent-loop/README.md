@@ -199,7 +199,7 @@ else:
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，循环的步数与预算控制。
+循环是 [`runtime/loop.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/loop.py) 的 `run_agent()`，步数、token 和时间三种预算在 [`budget.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/budget.py)，失败怎么分类和路由在 [`errors.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/errors.py)。停止条件和跑偏检测的用例在 [`m3/test_loop.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m3/test_loop.py)，装配见 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)。
 
 ## 延伸阅读
 

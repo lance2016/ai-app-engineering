@@ -238,7 +238,7 @@ def gate(current: dict, baseline: dict) -> list[str]:
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md)，golden set 回归与门禁。
+评测套件在 [`eval/suites.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/eval/suites.py)，LLM 判分器和它的人机一致性校准在 [`judge.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/eval/judge.py)，回归门禁在 [`gate.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/eval/gate.py)，golden set、判分校准和阈值这些数据在 [`project/eval/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/eval)。「整体没退但某个切片退了」能不能被拦住，看 [`m5/test_eval_gate.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m5/test_eval_gate.py)。
 
 ## 延伸阅读
 

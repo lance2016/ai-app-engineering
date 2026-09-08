@@ -238,7 +238,7 @@ if any(stores.residue(source_id).values()):
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md)，文档版本与删除演练。
+文档版本与增量重建在 [`knowledge/ingest.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/ingest.py)：内容哈希没变就不重新算 embedding。删除演练要的那两张表在 [`migrations/0002`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/storage/migrations/versions/0002_knowledge_and_memory.py)，切分不跨节、编码问题和重复文档能被标出来，用例在 [`m4/test_ingest.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m4/test_ingest.py)。
 
 ## 延伸阅读
 

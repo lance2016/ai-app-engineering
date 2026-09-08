@@ -169,7 +169,7 @@ def readback(slots: dict) -> str:
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md)（还是草稿）。
+参考实现里**没有**语音链路，这一课只在课程里讲。真要动手，[M1 API 骨架](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md) 的 SSE 那一段是最近的起点：把文本增量换成音频帧，打断和 barge-in 的状态机得自己加。
 
 ## 延伸阅读
 

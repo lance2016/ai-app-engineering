@@ -324,7 +324,7 @@ SLO 是对用户的承诺，用可测量的指标表达：
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md)，限流、fallback、成本统计与容器化。
+超时、带抖动的重试、熔断和绕过病号的 fallback adapter 在 [`ops/resilience.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/resilience.py)，按租户的令牌桶在 [`ratelimit.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/ratelimit.py)（有 Redis 走一个原子 Lua 脚本，没有就退回内存），计价与日预算在 [`cost.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/cost.py)。主模型病了怎么绕，用例在 [`m5/test_resilience.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m5/test_resilience.py)。
 
 ## 延伸阅读
 

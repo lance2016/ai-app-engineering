@@ -239,7 +239,7 @@ def trim_to_budget(text, budget) -> tuple[str, bool]:
 
 ## 参考实现 { .section--reference }
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M1 API 骨架](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md)，system prompt 的版本化。
+版本化的做法在 [`prompts/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/src/aiapp/prompts)：一个提示是一个 `<名字>.<版本>.md` 文件，改动就是一次 git diff，用的哪个版本随响应头返回。切版本会同时改掉响应头和发给模型的内容，这条用例在 [`m1/test_threads.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m1/test_threads.py)，装配见 [M1 API 骨架](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md)。
 
 ## 延伸阅读 { .section--reference }
 

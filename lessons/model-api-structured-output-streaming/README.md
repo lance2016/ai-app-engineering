@@ -335,7 +335,7 @@ def record(self, label, usage, provider) -> None:
 
 ## 参考实现 { .section--reference }
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M1 API 骨架](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md)，SSE 流式与结构化错误。
+供应商中立的消息与工具类型在 [`adapters/base.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/base.py)，最小的一次流式调用在 [`runtime/turn.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/turn.py)，错误契约在 [`api/errors.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/errors.py)。SSE 逐条到达、四类错误各自的状态码，用例在 [`m1/test_threads.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m1/test_threads.py) 和 [`test_errors.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m1/test_errors.py)，装配见 [M1 API 骨架](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md)。
 
 ## 延伸阅读 { .section--reference }
 

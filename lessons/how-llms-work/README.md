@@ -268,7 +268,7 @@ PROBES = [
 
 ## 参考实现 { .section--reference }
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md)，看成本账与 fallback 那两节就够，它前面的内容要等学到第 20 课才用得上。
+选型的落点是 [`adapters/openai_compat.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/openai_compat.py) 里的 `PRESETS`，成本模型是 [`ops/cost.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/cost.py)——一张带日期的价格表，按租户计价，边跑边和日预算比。[M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md) 看成本账与 fallback 那两节就够，它前面的内容要等学到第 20 课才用得上。
 
 ## 延伸阅读 { .section--reference }
 

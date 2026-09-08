@@ -174,7 +174,7 @@ async def call_tool(tool, args, mode, hooks):
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)，工具注册表与确认门。
+这一课讲的骨架就是整个 [`runtime/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/src/aiapp/runtime) 包：注册表、runner、循环、预算、上下文、Skill 加载各一个文件，彼此只通过协议说话。喂给它的演示工具在 [`tools/demo.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/tools/demo.py)，两个只读、一个有副作用、一个专门注入瞬时故障。整套验收在 [`tests/project/m3`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/tests/project/m3)，装配见 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)。
 
 ## 延伸阅读
 

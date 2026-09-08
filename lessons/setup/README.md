@@ -272,7 +272,7 @@ messages.append({"role": "user", "content": [{                     # ← 工具�
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M0 并发实验](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m0-concurrency/README.md)，fake adapter 与离线回放。
+这一课的 fake adapter 在参考实现里是 [`adapters/fake.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/fake.py)，[`base.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/base.py) 是全课共用的那个 `ModelAdapter` 协议。离线怎么跑，看 [M0 并发实验](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m0-concurrency/README.md)。
 
 ## 延伸阅读
 

@@ -208,7 +208,7 @@ def forget(memories, user_id: str, subject: str, requested_by: str) -> list[Memo
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md)，记忆提取、冲突合并与删除。
+提取、合并、遗忘三件事在 [`knowledge/memory.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/memory.py)，存储协议在 [`memory_store.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/memory_store.py)，PostgreSQL 实现在 [`postgres_memory.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/postgres_memory.py)。每条记忆都带来源，冲突怎么合并、删除请求怎么落到每个派生存储，用例在 [`m4/test_memory.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m4/test_memory.py)。
 
 ## 延伸阅读
 

@@ -9,7 +9,7 @@ part: 总览
 
 首页管的是选路线和接着读，这一页管的是**知识体系**：一个 AI 应用由哪些部分构成、这些部分按什么顺序学、每个 Part 学完该具备什么能力。
 
-下面有两张地图，回答两个不同的问题。
+下面有三张地图，回答三个不同的问题：这个系统由什么构成、按什么顺序学、以及这些机制装进一个真实服务之后长什么样。
 
 ## 地图一：一个 AI 应用由哪些组件构成
 
@@ -105,6 +105,35 @@ flowchart TB
 ```
 
 两张地图对不齐是正常的：**能力域按系统结构分，Part 按学习依赖分。** 比如检索能力横跨 04 和 14，中间隔了九课，因为要先懂工具和运行时才谈得上把检索装进 Agent。
+
+## 地图三：那个服务是怎么长出来的
+
+前两张地图讲这门课**教什么**，这一张讲这些机制**装进一个真实服务之后长什么样**。
+
+课程只讲机制，正文的代码是示意，不追求能跑。可运行的那一份在 [ai-app-engineering-ref](https://github.com/lance2016/ai-app-engineering-ref)：一个不绑供应商的 AI 应用后端，七个里程碑，每一步只加一簇能力。默认走离线的 fake 模型，不需要任何 API Key。
+
+```mermaid
+flowchart TB
+    M0["M0 并发与 fake 模型"] --> M1["M1 API 骨架"]
+    M1 --> M2["M2 数据与状态"]
+    M2 --> M3["M3 工具与运行时"]
+    M3 --> M4["M4 检索与记忆"]
+    M4 --> M5["M5 生产化"]
+    M5 --> M6["M6 平台设计（草稿）"]
+```
+
+| 学完 | 服务这时候能做什么 | 里程碑 | 离线验收 |
+|---|---|---|---|
+| Part 0 | 五个并发对照实验，一个离线 fake 模型 | [M0](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m0-concurrency/README.md) | `python project/m0-concurrency/code/01_sequential_vs_gather.py` |
+| Part 1 | 能被 HTTP 调用、流式返回、错误有结构、prompt 有版本 | [M1](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md) | `uv run pytest tests/project/m1 -q` |
+| Part 2 | 能调工具、副作用要人批准、能暂停能续跑、重启不丢 | [M2](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m2-state-and-storage/README.md) · [M3](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md) | `uv run pytest tests/project/m2 tests/project/m3 -q` |
+| Part 3 | 会检索、引用能对上原文、记得住用户偏好 | [M4](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md) | `uv run pytest tests/project/m4 -q` |
+| Part 4 | 有回归门禁、trace、限流、fallback 和成本账 | [M5](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md) | `uv run pytest tests/project/m5 -q` |
+| Part 5 | 多租户平台的设计与 ADR，还是草稿 | [M6](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md) | 暂无 |
+
+**里程碑的顺序和课程顺序对不上，这是有意的。** 课按理解顺序排，代码按装配顺序排。第 01 课讲成本模型，可成本账要等服务能记账才写得出来，所以它落在 M5；第 04 课讲 embedding，要等 M4 有了检索管线才用得上。想按代码顺序读，顺着 M0 到 M6 走；想按课程顺序读，每课末尾的「参考实现」直接指到对应的文件。
+
+有三课在参考实现里没有落点：10 的 handoff 和 22 的微调是有意不做，理由分别记在 M3 的选型记录和 M6；24 语音应用只在课程里讲。
 
 四条判断贯穿全课，哪一课都在用：**模型是不可信的部件**（Part 1）、**执行和状态归运行时**（Part 2）、**知识来自外部而不是权重**（Part 3）、**没有评测就没有「变好了」**（Part 4）。
 

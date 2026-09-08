@@ -251,7 +251,7 @@ LangGraph 在这一层做得最完整，但要注意一个坑：节点内 `inter
 
 ## 参考实现
 
-想看这一课的机制装进一个真实服务是什么样：参考实现的 [M2 数据与状态](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m2-state-and-storage/README.md)，checkpoint 与 resume。
+事件线程的存储协议在 [`storage/base.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/storage/base.py)，PostgreSQL 实现在 [`postgres.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/storage/postgres.py)，幂等键和「一个线程同时只有一个运行」的锁在 [`redis_kv.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/storage/redis_kv.py)。内存版和数据库版共用同一组契约测试（[`m2/test_thread_store_contract.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m2/test_thread_store_contract.py)、[`test_kv_contract.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m2/test_kv_contract.py)），每步存盘的取舍记在 [M2 数据与状态](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m2-state-and-storage/README.md)。
 
 ## 延伸阅读
 
