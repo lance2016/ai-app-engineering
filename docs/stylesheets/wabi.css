@@ -752,12 +752,11 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
   }
 }
 
-/* --- Part 1 desktop documentation skin ----------------------------------
-   A focused trial of the developer-docs direction. It is enabled only on
-   pages carrying .lesson--part1, so the other Parts remain unchanged while
-   this visual language is being reviewed. */
+/* --- desktop documentation skin ------------------------------------------
+   Shared by reading pages. The home page and the course overview keep their
+   own browsing layouts. */
 
-html:has(.lesson--part1) {
+body:not(:has(.home)):not(:has(.sysfig)) {
   --ws-paper: #ffffff;
   --ws-paper-deep: #f7f7f8;
   --ws-ink: #202123;
@@ -781,7 +780,7 @@ html:has(.lesson--part1) {
   --md-code-bg-color: #f7f7f8;
   --md-code-fg-color: var(--ws-ink);
 }
-html:has(.lesson--part1) body {
+body:not(:has(.home)):not(:has(.sysfig)) {
   --ws-paper: #ffffff;
   --ws-paper-deep: #f7f7f8;
   --ws-ink: #202123;
@@ -802,24 +801,24 @@ html:has(.lesson--part1) body {
   background: #ffffff;
 }
 
-html:has(.lesson--part1) body,
-html:has(.lesson--part1) input,
-html:has(.lesson--part1) .md-typeset {
+body:not(:has(.home)):not(:has(.sysfig)),
+body:not(:has(.home)):not(:has(.sysfig)) input,
+body:not(:has(.home)):not(:has(.sysfig)) .md-typeset {
   font-family: var(--ws-sans);
 }
-html:has(.lesson--part1) .md-typeset {
+body:not(:has(.home)):not(:has(.sysfig)) .md-typeset {
   font-size: .86rem;
   line-height: 1.8;
   letter-spacing: 0;
 }
-html:has(.lesson--part1) .md-typeset h1,
-html:has(.lesson--part1) .md-typeset h2,
-html:has(.lesson--part1) .md-typeset h3,
-html:has(.lesson--part1) .md-typeset h4 {
+body:not(:has(.home)):not(:has(.sysfig)) .md-typeset h1,
+body:not(:has(.home)):not(:has(.sysfig)) .md-typeset h2,
+body:not(:has(.home)):not(:has(.sysfig)) .md-typeset h3,
+body:not(:has(.home)):not(:has(.sysfig)) .md-typeset h4 {
   font-family: var(--ws-sans);
   letter-spacing: -.02em;
 }
-html:has(.lesson--part1) .md-typeset h1 {
+body:not(:has(.home)):not(:has(.sysfig)) .md-typeset h1 {
   max-width: 42rem;
   margin-bottom: 1rem;
   font-size: 2.35rem;
@@ -827,36 +826,36 @@ html:has(.lesson--part1) .md-typeset h1 {
   font-weight: 650;
   text-wrap: balance;
 }
-html:has(.lesson--part1) .md-typeset h2 {
+body:not(:has(.home)):not(:has(.sysfig)) .md-typeset h2 {
   margin-top: 3.5rem;
   margin-bottom: .9rem;
   font-size: 1.35rem;
   line-height: 1.35;
   font-weight: 650;
 }
-html:has(.lesson--part1) .md-typeset h3 {
+body:not(:has(.home)):not(:has(.sysfig)) .md-typeset h3 {
   margin-top: 2rem;
   font-size: 1rem;
   font-weight: 650;
 }
 
-html:has(.lesson--part1) .md-header {
+body:not(:has(.home)):not(:has(.sysfig)) .md-header {
   background: var(--ws-paper);
   border-bottom: 1px solid var(--ws-rule);
 }
-html:has(.lesson--part1) .md-sidebar--primary,
-html:has(.lesson--part1) .md-sidebar--secondary {
+body:not(:has(.home)):not(:has(.sysfig)) .md-sidebar--primary,
+body:not(:has(.home)):not(:has(.sysfig)) .md-sidebar--secondary {
   background: var(--ws-paper);
 }
-html:has(.lesson--part1) .md-nav__link {
+body:not(:has(.home)):not(:has(.sysfig)) .md-nav__link {
   border-radius: 6px;
 }
-html:has(.lesson--part1) .md-nav__link--active {
+body:not(:has(.home)):not(:has(.sysfig)) .md-nav__link--active {
   background: #f0f7f5;
 }
 
 /* The opening line reads as a compact callout, like a docs introduction. */
-html:has(.lesson--part1) [dir] .md-typeset h1 + blockquote {
+body:not(:has(.home)):not(:has(.sysfig)) [dir] .md-typeset > h1 + blockquote {
   max-width: 42rem;
   margin: 0 0 2.4rem;
   padding: 1rem 1.2rem;
@@ -872,7 +871,7 @@ html:has(.lesson--part1) [dir] .md-typeset h1 + blockquote {
 
 /* Orientation information is a single compact surface, not two competing
    sections. */
-html:has(.lesson--part1) .lesson--part1 .lesson-meta {
+body:not(:has(.home)):not(:has(.sysfig)) .lesson-meta {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 2rem;
@@ -883,27 +882,27 @@ html:has(.lesson--part1) .lesson--part1 .lesson-meta {
   border-radius: 8px;
   background: var(--ws-paper-deep);
 }
-html:has(.lesson--part1) .lesson--part1 .lesson-meta > h2 {
+body:not(:has(.home)):not(:has(.sysfig)) .lesson-meta > h2 {
   margin: 0 0 .7rem;
   padding: 0;
   font-size: .74rem;
   letter-spacing: 0;
   color: var(--ws-ink-2);
 }
-html:has(.lesson--part1) .lesson--part1 .lesson-meta > ul {
+body:not(:has(.home)):not(:has(.sysfig)) .lesson-meta > ul {
   margin: 0;
   font-size: .8rem;
   line-height: 1.7;
 }
-html:has(.lesson--part1) .lesson--part1 .lesson-meta > h2:nth-of-type(2),
-html:has(.lesson--part1) .lesson--part1 .lesson-meta > ul:nth-of-type(2) {
+body:not(:has(.home)):not(:has(.sysfig)) .lesson-meta > h2:nth-of-type(2),
+body:not(:has(.home)):not(:has(.sysfig)) .lesson-meta > ul:nth-of-type(2) {
   padding-left: 2rem;
   border-left: 1px solid var(--ws-rule);
 }
 
 /* Wide diagrams and code blocks may use the outer reading margin. A case is
    already a bounded surface, so its materials must stay inside that surface. */
-html:has(.lesson--part1) [dir] .md-typeset .lesson--part1 details.case .highlight {
+body:not(:has(.home)):not(:has(.sysfig)) [dir] .md-typeset details.case .highlight {
   width: 100%;
   max-width: 100%;
   margin-right: 0;
@@ -911,17 +910,17 @@ html:has(.lesson--part1) [dir] .md-typeset .lesson--part1 details.case .highligh
 }
 
 /* Major sections rely on spacing and weight. Only risks get a colour cue. */
-html:has(.lesson--part1) .lesson--part1 > h2 {
+body:not(:has(.home)):not(:has(.sysfig)) .md-typeset > h2 {
   padding: 0;
   border: 0;
 }
-html:has(.lesson--part1) .lesson--part1 > h2.section--risk {
+body:not(:has(.home)):not(:has(.sysfig)) .md-typeset > h2.section--risk {
   padding-left: .9rem;
   border-left: 3px solid var(--ws-rust);
 }
 
 /* Cases use the docs callout treatment, with one surface and one accent. */
-html:has(.lesson--part1) [dir] .md-typeset .lesson--part1 details.case {
+body:not(:has(.home)):not(:has(.sysfig)) [dir] .md-typeset details.case {
   margin: 1.8rem 0 2.6rem;
   padding: 0 1.1rem 1rem;
   border: 1px solid var(--ws-rule);
@@ -929,7 +928,7 @@ html:has(.lesson--part1) [dir] .md-typeset .lesson--part1 details.case {
   border-radius: 8px;
   background: var(--ws-paper);
 }
-html:has(.lesson--part1) [dir] .md-typeset .lesson--part1 details.case > summary {
+body:not(:has(.home)):not(:has(.sysfig)) [dir] .md-typeset details.case > summary {
   padding: .95rem 0 .85rem;
   font-family: var(--ws-sans);
   font-size: .92rem;
@@ -938,24 +937,24 @@ html:has(.lesson--part1) [dir] .md-typeset .lesson--part1 details.case > summary
 }
 
 /* Code has a clear edge, but no invented title bar. */
-html:has(.lesson--part1) .lesson--part1 .highlight {
+body:not(:has(.home)):not(:has(.sysfig)) .md-typeset .highlight {
   margin: 1.5rem 0;
   border: 1px solid var(--ws-rule);
   border-radius: 7px;
   background: var(--md-code-bg-color);
   overflow: hidden;
 }
-html:has(.lesson--part1) .lesson--part1 .highlight > pre > code {
+body:not(:has(.home)):not(:has(.sysfig)) .md-typeset .highlight > pre > code {
   padding: 1rem 1.1rem;
   line-height: 1.65;
 }
 
-html:has(.lesson--part1) .md-content__inner:has(.lesson--part1) .md-content__button {
+body:not(:has(.home)):not(:has(.sysfig)) .md-content__button {
   opacity: .35;
   transition: opacity .2s, color .2s;
 }
-html:has(.lesson--part1) .md-content__inner:has(.lesson--part1) .md-content__button:hover,
-html:has(.lesson--part1) .md-content__inner:has(.lesson--part1) .md-content__button:focus-visible {
+body:not(:has(.home)):not(:has(.sysfig)) .md-content__button:hover,
+body:not(:has(.home)):not(:has(.sysfig)) .md-content__button:focus-visible {
   opacity: 1;
   color: var(--ws-celadon);
 }
