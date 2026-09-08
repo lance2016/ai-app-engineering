@@ -524,6 +524,10 @@ code, kbd, pre, .md-typeset code, .md-typeset pre { font-family: var(--ws-mono);
   font-size: .78rem;
   letter-spacing: .04em;
 }
+/* The provenance note lives inside the fold, since it labels the fold's own
+   numbers. Its hairline would otherwise sit a full stanza above the block's
+   closing one and read as two separate rules. */
+[dir] .md-typeset details.case > .admonition:last-child { margin: 1.2rem 0 .2rem; }
 
 /* --- callouts ------------------------------------------------------------- */
 
