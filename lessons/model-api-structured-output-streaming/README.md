@@ -12,7 +12,7 @@ estimated_time: 约 2 小时
 > 这一课讲模型 API 的运行时契约：请求里发什么、响应怎么拿回来、格式坏了怎么办、用量怎么记。课程用一套统一的说法来讲，各家 API 的线上格式并不长这样——两者的差别，就是 adapter 要吃掉的东西。
 
 <details class="case" markdown="1">
-<summary>例子：HTTP 200，JSON 也解析得开，三个字段却全是错的</summary>
+<summary>例子：HTTP 200，JSON 解析也没报错，三个字段却全是错的</summary>
 
 一个发票抽取接口，模型返回的这段进了下游入库：
 
