@@ -205,7 +205,7 @@ def replan_reason(thread, budget, replans: int) -> str | None:
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
-| 清单本身 | 自己在 state 里放一个字段 | 自己写一个工具 | 内置 todo 跟踪 |
+| 清单本身 | 自己在 state 里放一个字段 | 自己写一个工具 | 内置 [todo 跟踪](https://code.claude.com/docs/en/agent-sdk/todo-tracking) |
 | 每轮回注 | 自己在节点里拼 | 自己在 session 里拼 | 随内置压缩一起处理 |
 | 验收判定 | 自己写节点 | 自己写 | 自己写 |
 | 重规划触发 | 条件边自己接 | 自己写 | 自己写 |

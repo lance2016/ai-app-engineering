@@ -59,7 +59,7 @@ estimated_time: 约 1.5 小时
 
 一句话区分：**Tool 和 MCP 是运行时执行的，Skill 是模型阅读的。** 一个 Skill 不会自己做任何事，它只是让模型在合适的时候知道该调哪些工具、按什么顺序、注意什么。第 05 课的守卫对 Skill 里提到的每一个工具照样生效。
 
-Skill 的形态很简单：一个目录，里面一个 `SKILL.md`，YAML frontmatter 里至少有 `name` 和 `description`，正文是给模型看的说明，可以带 `scripts/`、`references/` 等附属文件。这个形式来自 Anthropic 的 Agent Skills，有一份公开规范。
+Skill 的形态很简单：一个目录，里面一个 `SKILL.md`，YAML frontmatter 里至少有 `name` 和 `description`，正文是给模型看的说明，可以带 `scripts/`、`references/` 等附属文件。这个形式来自 Anthropic 的 [Agent Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)，有一份公开规范。
 
 **渐进式加载是 Skill 有用的前提。** 几十个 Skill 全文都放进上下文，模型还没开始干活就先花掉几万 token。所以分三级：
 

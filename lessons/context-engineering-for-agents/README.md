@@ -64,7 +64,7 @@ flowchart LR
     class M model
 ```
 
-Anthropic 把上下文叫作 attention budget：窗口里每多一个 token，模型对其他 token 的注意力就少一点。上下文越长，模型对窗口中段内容的召回越容易出问题。这一点在各家模型上都反复出现过，只是程度不同。所以上下文工程的目标不是「塞得越多越好」，而是**在预算内放进信号最强的一组 token**。
+Anthropic 把上下文叫作 [attention budget](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)：窗口里每多一个 token，模型对其他 token 的注意力就少一点。上下文越长，模型对窗口中段内容的召回越容易出问题。这一点在各家模型上都反复出现过，只是程度不同。所以上下文工程的目标不是「塞得越多越好」，而是**在预算内放进信号最强的一组 token**。
 
 ### 组装有顺序
 
@@ -80,7 +80,7 @@ Anthropic 把上下文叫作 attention budget：窗口里每多一个 token，�
 
 ### 自己掌控最终的消息列表
 
-factor 03 的核心主张。框架帮你拼上下文时，你要能打印出最终发给模型的每一条消息。看不到就调不了。
+[factor 03](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-03-own-your-context-window.md) 的核心主张。框架帮你拼上下文时，你要能打印出最终发给模型的每一条消息。看不到就调不了。
 
 ```mermaid
 flowchart LR

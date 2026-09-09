@@ -148,7 +148,7 @@ invoke_agent support_bot       11.42s  OK     aiapp.stop_reason=step_limit  step
 
 ## 决定 trace 有用还是没用的细节
 
-**属性名用标准的。** OpenTelemetry 的 GenAI 语义约定规定了 `gen_ai.operation.name`、`gen_ai.provider.name`、`gen_ai.request.model`、`gen_ai.usage.input_tokens` 等名字，span 名规定为 `{operation} {model}`（如 `chat deepseek-chat`）、`execute_tool {tool}`、`invoke_agent {agent}`。用这些名字，Phoenix、Langfuse、任何 collector 都直接识别。
+**属性名用标准的。** OpenTelemetry 的 [GenAI 语义约定](https://github.com/open-telemetry/semantic-conventions-genai)规定了 `gen_ai.operation.name`、`gen_ai.provider.name`、`gen_ai.request.model`、`gen_ai.usage.input_tokens` 等名字，span 名规定为 `{operation} {model}`（如 `chat deepseek-chat`）、`execute_tool {tool}`、`invoke_agent {agent}`。用这些名字，Phoenix、Langfuse、任何 collector 都直接识别。
 
 !!! warning "这两个名字已经废弃"
 
@@ -311,7 +311,7 @@ def build_payload() -> dict:
 
 - **自制 tracer 还是 SDK。** 五十行自制版足够教学和小项目，没有依赖、行为完全可见。缺点是没有采样、批量导出、上下文跨 HTTP 传播这些成熟功能。生产用 SDK，但先用自制版理解它在做什么。
 - **记多少内容。** `gen_ai.input.messages` 和 `gen_ai.output.messages` 可以把完整对话放进 span，工单 #4471 那种问题靠它五分钟就能定位。代价是隐私、成本和后端存储。常见做法是默认只记 token 数和长度，按采样率或按用户开关记全文。
-- **Phoenix 还是 Langfuse。** 两者都吃 OTLP，都能自托管。Phoenix 一条命令起本地实例、和评测结合紧；Langfuse 团队协作和 prompt 管理更强。属性名标准化之后，换后端的成本是配置而不是代码。
+- **[Phoenix](https://github.com/Arize-ai/phoenix) 还是 [Langfuse](https://github.com/langfuse/langfuse)。** 两者都吃 OTLP，都能自托管。Phoenix 一条命令起本地实例、和评测结合紧；Langfuse 团队协作和 prompt 管理更强。属性名标准化之后，换后端的成本是配置而不是代码。
 
 ## 从五十行到生产
 

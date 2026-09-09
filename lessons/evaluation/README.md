@@ -72,7 +72,7 @@ flowchart TB
 
 **断言能测的不要用 judge。** 必须包含、不能包含、必须调某个工具、不超过几步、不泄露邮箱格式。这些零成本、确定、每次提交都跑。Judge 留给「回答是否切题」这类断言写不出来的判断。
 
-**Judge 先校准再信。** 让人先给 20～50 条打 pass/fail 并写一句 critique，再让 judge 打同一批。算一致率，更要算 Cohen's kappa。分歧案例连同人的 critique 放进 judge 的 prompt 当 few-shot，再来一轮。坚持二元 pass/fail，不要 1～5 分——分数看着精细，实际上和专家判断不相关。
+**Judge 先校准再信。** 让人先给 20～50 条打 pass/fail 并写一句 critique，再让 judge 打同一批。算一致率，更要算 [Cohen's kappa](https://en.wikipedia.org/wiki/Cohen%27s_kappa)。分歧案例连同人的 critique 放进 judge 的 prompt 当 few-shot，再来一轮。坚持二元 pass/fail，不要 1～5 分——分数看着精细，实际上和专家判断不相关。
 
 **Agent 要评路径。** 最终答案对了，但中途多调了一个发邮件的工具，这不是通过。
 

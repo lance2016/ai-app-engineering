@@ -130,7 +130,7 @@ async def call_with_retry(fn, attempts, per_attempt_timeout, base, cap) -> str:
     ...
 ```
 
-`random.uniform(0, ...)` 是重点，不是 `base * 2**attempt` 本身。一千个客户端在同一秒失败，如果都等固定的 1 秒，下游在第二秒又被打垮一次。full jitter 把这个尖峰摊平。
+`random.uniform(0, ...)` 是重点，不是 `base * 2**attempt` 本身。一千个客户端在同一秒失败，如果都等固定的 1 秒，下游在第二秒又被打垮一次。[full jitter](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/) 把这个尖峰摊平。
 
 `per_attempt_timeout` 也不能省。只设总超时的话，一次挂住的调用会把所有重试机会都耗光。
 
@@ -287,7 +287,7 @@ CMD ["uv", "run", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
 
 ## SLO 与告警
 
-SLO 是对用户的承诺，用可测量的指标表达：
+[SLO](https://sre.google/sre-book/service-level-objectives/) 是对用户的承诺，用可测量的指标表达：
 
 | 指标 | 例子 | 为什么选它 |
 |---|---|---|

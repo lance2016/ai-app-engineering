@@ -159,7 +159,7 @@ async def run_tool(store, call: ToolCall) -> Message:
 
 ### ④ 幂等键：两笔退款，缺的是第二层
 
-第一层挡重试。同一次工具调用超时后重试，不能变成两笔。
+第一层挡重试。同一次工具调用超时后重试，不能变成两笔——[Stripe 的幂等键](https://docs.stripe.com/api/idempotent_requests)就是这个语义。
 
 ```python
 def retry_key(call: ToolCall) -> str:

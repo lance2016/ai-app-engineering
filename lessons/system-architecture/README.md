@@ -82,7 +82,7 @@ sequenceDiagram
 | 形态 | 客户端拿到什么 | 适合 | 代价 |
 |---|---|---|---|
 | 同步 | 等到最后拿一个完整回答 | 短请求、内部 API、批处理 | 用户盯着空白等 |
-| SSE 流式 | 边生成边收增量，最后一个 done 事件 | 对话界面 | 代理和负载均衡要配成不缓冲 |
+| [SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events) 流式 | 边生成边收增量，最后一个 done 事件 | 对话界面 | 代理和负载均衡要配成不缓冲 |
 | 长任务 | 立刻拿到 task id，之后轮询或订阅 | 超过几十秒的工作、批量、定时 | 要有任务表、worker、结果通知 |
 
 三种形态**共用同一个 runtime 和同一条事件线程**，差别只在「什么时候把什么交给客户端」。

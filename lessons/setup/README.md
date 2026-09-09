@@ -129,7 +129,7 @@ flowchart LR
 
 最后两行最容易写错。**Claude 把工具结果算成用户说的话**，因为它的协议里只有 user 和 assistant 两种角色；工具结果是「外部世界带回来的信息」，所以挂在 user 那边。适配器如果按 OpenAI 的习惯造一条 `role="tool"`，Claude 直接报错。
 
-**为什么 OpenAI 有两套。** Chat Completions 2023 年定型，早已成了事实标准——DeepSeek、通义千问、vLLM、Ollama 都实现了它，所以「OpenAI 兼容」这四个字才有意义。Responses 是后来推出的新端点，把两件老接口做不了的事收了进来：对话历史可以存在服务端（下一轮只传 `previous_response_id`），以及网页搜索、文件检索、代码执行这类内置工具直接在同一个请求里声明。OpenAI 明确说 Chat Completions 会长期支持，不是弃用关系。
+**为什么 OpenAI 有两套。** [Chat Completions](https://platform.openai.com/docs/api-reference/chat) 2023 年定型，早已成了事实标准——DeepSeek、通义千问、vLLM、Ollama 都实现了它，所以「OpenAI 兼容」这四个字才有意义。[Responses](https://platform.openai.com/docs/api-reference/responses) 是后来推出的新端点，把两件老接口做不了的事收了进来：对话历史可以存在服务端（下一轮只传 `previous_response_id`），以及网页搜索、文件检索、代码执行这类内置工具直接在同一个请求里声明。OpenAI 明确说 Chat Completions 会长期支持，不是弃用关系。
 
 Responses 的兼容层也在铺开：vLLM 已经提供 `/v1/responses`，DeepSeek 的文档里有专门一节讲怎么用它。所以「非 OpenAI 就只有 Chat Completions」这个判断已经过期了——但支持程度参差，内置工具和服务端历史这些依赖服务端状态的能力，各家的完整度差很多。**用之前查它自己的文档，别按 OpenAI 的字段表想当然。**
 

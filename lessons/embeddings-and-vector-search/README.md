@@ -185,7 +185,7 @@ def by_sentence(text): return [s.strip() for s in re.split(r"(?<=\.)\s+", text) 
 
 ### 四、pgvector 的最小用法
 
-用 PostgreSQL 加 pgvector 存向量，一个库同时管业务数据和检索。核心 SQL 是这几句：
+用 PostgreSQL 加 [pgvector](https://github.com/pgvector/pgvector) 存向量，一个库同时管业务数据和检索。核心 SQL 是这几句：
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;

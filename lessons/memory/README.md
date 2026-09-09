@@ -57,7 +57,7 @@ estimated_time: 约 1.5 小时
 | 任务记忆 | 走到哪一步、拿到了什么中间结果 | 从事件线程推导 | **不需要**，第 07 课已经解决 |
 | 长期记忆 | 跨会话仍然成立的事实、偏好、经历 | 独立的记忆存储 | 需要，这一课讲的就是它 |
 
-分类名不重要（有人分 semantic / episodic / procedural，有人分 persona / entity），重要的是它们的处理流程一样：
+分类名不重要（有人分 [semantic / episodic / procedural](https://docs.langchain.com/oss/python/concepts/memory)，有人分 persona / entity），重要的是它们的处理流程一样：
 
 ```mermaid
 flowchart LR

@@ -6,7 +6,7 @@ estimated_time: 约 2 小时
 
 # 11 多智能体、Handoff 与 Racing
 
-> 一个 Agent 管 3～10 步是可靠的上限。任务再大，就拆成几个小 Agent，让运行时把它们串起来或并起来。这一课讲三个具体问题：控制权怎么交接、交接时历史给多少、两个 Agent 并行时谁的输出算数。它们的共同答案是：**由运行时决定，不由任何一个 Agent 决定**。
+> 一个 Agent 管 [3～10 步](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-10-small-focused-agents.md)是可靠的上限。任务再大，就拆成几个小 Agent，让运行时把它们串起来或并起来。这一课讲三个具体问题：控制权怎么交接、交接时历史给多少、两个 Agent 并行时谁的输出算数。它们的共同答案是：**由运行时决定，不由任何一个 Agent 决定**。
 
 <details class="case" markdown="1">
 <summary>例子：转给账单 Agent 之后，它把用户五轮前给过的订单号又问了一遍</summary>

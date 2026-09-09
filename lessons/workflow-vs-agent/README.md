@@ -47,7 +47,7 @@ estimated_time: 约 2 小时
 
 ## 怎么理解它
 
-Anthropic 的分类把 agentic system 分成两类：**workflow** 是模型和工具按预先写好的代码路径编排；**agent** 是模型自己决定过程和工具用法。两者之间不是好坏，是可预测性和灵活性的交换。
+Anthropic [把 agentic system 分成两类](https://www.anthropic.com/engineering/building-effective-agents)：**workflow** 是模型和工具按预先写好的代码路径编排；**agent** 是模型自己决定过程和工具用法。两者之间不是好坏，是可预测性和灵活性的交换。
 
 ```mermaid
 flowchart LR

@@ -149,7 +149,7 @@ Message(role="assistant", content=[
 
 ### 三、开了原生约束，照样要校验
 
-能开供应商的原生结构化输出就先开：服务端按 schema 约束解码，缺半个花括号、前面多一段解释文字这类语法错误基本消失，重试次数跟着降。代价是有的模型不支持，schema 特性也受限——`pattern`、`format`、嵌套深度、`additionalProperties`，各家支持面不一样，写之前先查。
+能开供应商的原生结构化输出就先开（[OpenAI](https://platform.openai.com/docs/guides/structured-outputs)、[Anthropic](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)）：服务端按 schema 约束解码，缺半个花括号、前面多一段解释文字这类语法错误基本消失，重试次数跟着降。代价是有的模型不支持，schema 特性也受限——`pattern`、`format`、嵌套深度、`additionalProperties`，各家支持面不一样，写之前先查。
 
 **但开了它，下面这套「一份 schema 用两次」照样要留着。**约束解码保证的是「解析得出来」，保证不了「值是对的」——格式合法、值不对的返回，就是从这条缝里漏下去的：
 

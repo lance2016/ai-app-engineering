@@ -58,7 +58,7 @@ flowchart LR
     E <--> D[(存储<br/>JSON / PostgreSQL)]
 ```
 
-一句话：**发生过什么是唯一的事实，其他都是它的推导。** 这是 12-factor 的 factor 05 和 factor 12 合起来的意思。
+一句话：**发生过什么是唯一的事实，其他都是它的推导。** 这是 12-factor 的 [factor 05](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-05-unify-execution-state.md) 和 [factor 12](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-12-stateless-reducer.md) 合起来的意思。
 
 运行时不维护「当前第几步、是否在等用户」这类变量，需要时从事件列表里算。好处是存盘只存一个列表，恢复只加载一个列表，界面展示和日志排障看的也是同一个列表——它们永远不会对不上。
 

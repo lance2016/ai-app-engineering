@@ -141,7 +141,7 @@ def estimate(a: Assumptions) -> Estimate:
 
 ### 二、ADR：多两个字段
 
-Nygard 的原始格式是标题、上下文、决定、状态、后果。这门课坚持再加两个：
+[Nygard](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions) 的原始格式是标题、上下文、决定、状态、后果。这门课坚持再加两个：
 
 ```python
 @dataclass(frozen=True)

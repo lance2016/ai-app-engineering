@@ -67,7 +67,7 @@ sequenceDiagram
 
 !!! note "这段往返是构造的教学案例"
 
-    server 名、版本号和参数名都是编的。协议消息的形状和 `-32602` 的语义按 MCP 规范和 JSON-RPC 2.0 写的，两份链接在本课末尾。
+    server 名、版本号和参数名都是编的。协议消息的形状和 `-32602` 的语义按 [MCP 规范](https://modelcontextprotocol.io/specification/latest) 和 [JSON-RPC 2.0](https://www.jsonrpc.org/specification#error_object) 写的。
 
 这个 bug 难查，因为链上每一环看起来都是对的：
 
@@ -279,9 +279,9 @@ def call(client, tool):
 
 ## 真实项目不要自己写这些
 
-上面是为了看清协议。实际用官方 Python SDK：server 端 `FastMCP` 一个装饰器把函数变成工具，类型注解自动生成 `inputSchema`；client 端 `stdio_client` 加 `ClientSession`，`initialize()` 之后 `list_tools()` / `call_tool()`。
+上面是为了看清协议。实际用[官方 Python SDK](https://github.com/modelcontextprotocol/python-sdk)：server 端 `FastMCP` 一个装饰器把函数变成工具，类型注解自动生成 `inputSchema`；client 端 `stdio_client` 加 `ClientSession`，`initialize()` 之后 `list_tools()` / `call_tool()`。
 
-**MCP Inspector** 是一个网页工具，能连上任何 server 手动发消息看响应。开头那个案例用它三十秒就能看出来：连上 0.2 版的 server，`tools/list` 一看，`q` 和 `limit` 就在那里。排查握手和 schema 问题，它比打日志快得多。
+**[MCP Inspector](https://github.com/modelcontextprotocol/inspector)** 是一个网页工具，能连上任何 server 手动发消息看响应。开头那个案例用它三十秒就能看出来：连上 0.2 版的 server，`tools/list` 一看，`q` 和 `limit` 就在那里。排查握手和 schema 问题，它比打日志快得多。
 
 ## 常见错误
 
