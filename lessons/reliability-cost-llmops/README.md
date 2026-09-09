@@ -190,7 +190,7 @@ class CircuitBreaker:
 
 `record_failure` 里 `self.state == State.HALF_OPEN` 那个条件很关键：**探测失败立刻重新打开**，不等再攒够阈值。
 
-只有 open / closed 两态的熔断器，要么永远不恢复，要么恢复时一次放进全部流量，把刚好转的下游再打倒一次。
+只有 open / closed 两态的熔断器，要么永远不恢复，要么恢复时一次放进全部流量，把刚缓过来的下游再打倒一次。
 
 配上路由：
 
