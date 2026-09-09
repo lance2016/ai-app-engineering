@@ -49,14 +49,14 @@ POST /v1/chat/completions → 400
 
 <div class="lesson-meta" markdown="1">
 
-## 学习目标 { .lesson-meta__heading }
+## 选型前要拿到哪些证据 { .lesson-meta__heading }
 
 - 能为一个具体需求写出模型的硬约束清单，用它筛掉候选，再按「每段对话的成本」而不是「每百万 token 单价」排序
 - 能为自己依赖的每一项模型能力写一个确定性探针，并说清探针为什么只能排雷、不能当成评测集
 - 能说清推理模型多出来的那笔 token 怎么计费、为什么事前估不准，以及哪类任务不该交给它
 - 能用「统计模式而非事实存储」解释幻觉，并为三类场景分别选出应用层的对策
 
-## 前置 { .lesson-meta__heading }
+## 模型知识缺口怎么补 { .lesson-meta__heading }
 
 - [00 起步](../setup/README.md)：一次调用就是一次 POST，请求体里有哪四类东西
 - 这一课不解释 token、上下文窗口、采样、模型分类是什么。要补的话，[F00 LLM 是什么](../../prerequisites/llm-foundations/00-what-an-llm-is/README.md)、[F01 Tokenization](../../prerequisites/llm-foundations/01-tokenization/README.md)、[F04 Context Window 与 Sampling](../../prerequisites/llm-foundations/04-context-window-and-sampling/README.md)、[F07 模型地图](../../prerequisites/llm-foundations/07-model-landscape/README.md) 分别讲这四件事。不用先读完再回来，正文点到哪篇翻哪篇就行
@@ -225,7 +225,7 @@ PROBES = [
 
 **探针的作用到此为止。** 四五条自己挑的确定性用例覆盖不了真实请求的分布，通过率从 4/5 变成 5/5 也说明不了模型变好了。探针挡的是「这个模型连 JSON 都写不对」这种硬伤，几分钟出结果，所以可以天天跑。要回答「A 和 B 哪个在我的工单分类上更准」，得按真实请求采样、标注、算指标，那是第 19 课的评测集：跑一次贵得多，但结论才算数。别用探针替它，也别因为有了评测集就把探针删掉，两者挡的不是同一类问题。第 03 课给 prompt 配的那组固定样例，和探针是同一类东西，同一条界限也适用。
 
-## 常见错误 { .section--risk }
+## 模型选型最容易错在哪里 { .section--risk }
 
 **按榜单选模型。** [榜单](https://artificialanalysis.ai/)测的是别人的任务。真实模型在探针上的表现往往参差不齐：算术过了，数字母挂了。没在自己任务上跑过探针就选定模型，等于把评测外包给了不认识的人。
 
@@ -254,7 +254,7 @@ PROBES = [
 - **fallback 和按任务路由到不同模型，是选型的下游产物。** 主模型超时、限流、熔断时切哪一个，切过去之后质量怎么保证，第 21 课展开。这里只留一句：fallback 模型要过同一组探针，否则切过去的那一刻质量未知。
 - **怎么测。** 五个探针加一条通过率基线，就是这门课的第一道回归门禁。换模型、换版本、供应商悄悄升级，都重跑一遍，跌破基线不上线。这批样本会一路攒进第 19 课的 golden set。
 
-## 框架映射 { .section--reference }
+## 框架把模型放在哪一层 { .section--reference }
 
 三个框架对「模型」这一层的抽象方式不同，决定了换供应商的代价。
 
@@ -272,11 +272,22 @@ PROBES = [
 
 另一件事是提示词的语言。早期系统提示用中文写了两千多字的人设和规则，每轮对话固定开销超过三千 token。后来把规则部分改成英文并精简，token 减少约四成，延迟和成本同时下降，用户感知不到区别。这个四成是那一份提示词在那个模型上的实测值，换个 tokenizer 结果可能完全不同，别当换算比例用。
 
-## 参考实现 { .section--reference }
+## 看一次成本记账和模型替换
+
+参考项目把模型价格和用量记在运行时外面，先用内存账本跑一遍：
+
+```bash
+cd ai-app-engineering-ref
+uv run pytest tests/project/m5/test_ratelimit_and_cost.py -q
+```
+
+测试会按模型汇总输入 token、输出 token、调用次数和金额；`adapters/openai_compat.py` 的 preset 决定接哪个端点，`ops/cost.py` 的价格表决定如何计费。换模型时，先确认适配器和价格表都更新，再把本课的探针集重跑一遍。
+
+## 参考实现里的模型适配器 { .section--reference }
 
 选型的落点是 [`adapters/openai_compat.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/openai_compat.py) 里的 `PRESETS`，成本模型是 [`ops/cost.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/cost.py)——一张带日期的价格表，按租户计价，边跑边和日预算比。[M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md) 看成本账与 fallback 那两节就够，它前面的内容要等学到第 21 课才用得上。
 
-## 延伸阅读 { .section--reference }
+## 把模型选型接到调用链 { .section--reference }
 
 - [generative-ai-for-beginners · 02 Exploring and comparing LLMs](https://github.com/microsoft/generative-ai-for-beginners/tree/main/02-exploring-and-comparing-different-llms)（访问日期 2026-09-04）：模型分类和「在自己的数据上测」的讲法。
 - [OpenAI · Model selection](https://platform.openai.com/docs/guides/model-selection)（访问日期 2026-09-04）：「先用最强的模型建评测，再往下换」的顺序值得借。

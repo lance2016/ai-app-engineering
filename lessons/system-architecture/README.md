@@ -1,5 +1,6 @@
 ---
 status: complete
+structure: narrative
 part: Part 4 生产工程
 estimated_time: 约 1.5 小时
 ---
@@ -27,26 +28,26 @@ estimated_time: 约 1.5 小时
 这三跳不属于任何一个团队：它们算不上一个「服务」，只是 runtime 里三段没人计时的代码。每个部件都有自己的指标，链路本身没有。
 
 !!! note "构造的例子"
-    这四个数字和那次逐跳计时是为讲清端到端数据流编的。本课 [一线经验](#一线经验) 那一节才是作者自己的经历。
+    这四个数字和那次逐跳计时是为讲清端到端数据流编的。本课 [事件驱动之后，trace 成了唯一地图](#事件驱动之后trace-成了唯一地图) 那一节才是作者自己的经历。
 
 </details>
 
-## 为什么需要
+## 一次请求为什么会在系统里走丢
 
 部件单独看都能工作，组合后却常在边界处出问题：请求、流、状态、后台任务和数据存储的生命周期不同。端到端数据流是排障地图。
 
-## 学习目标
+## 系统图要能回答什么
 
 - 能画出一次 AI 应用请求的完整链路，标出每一跳的职责和它读写的状态
 - 能说清同步请求、SSE 流式、长任务三种形态各适用什么场景
 - 能划出 Redis 和 PostgreSQL 的边界，并用「把缓存清空」这个实验证明边界画对了
 
-## 前置
+## 系统图需要哪些零件
 
 - [07 Agent State 与 Runtime](../agent-state-and-runtime/README.md)：事件线程和事件流，本课的持久化就是存它
 - [15 RAG 端到端](../rag-end-to-end/README.md)：检索这一跳的内部
 
-## 怎么理解它
+## 先沿着一条请求走一遍
 
 ### 一条请求链
 
@@ -99,7 +100,7 @@ sequenceDiagram
 
 判断标准只有一条：**这个东西丢了能不能重建**。能重建的放 Redis，不能的放 PostgreSQL。热拷贝可以同时放两边，但权威只有一个。
 
-## 机制拆解
+## 入口、状态、模型和外部系统如何接上
 
 ### 一、每一跳是一个小函数，自带计时
 
@@ -213,7 +214,7 @@ def load_thread(thread_id, cache, repo) -> Thread | None:
 
 这个错误在原型阶段特别常见，因为「先放 Redis 快」。写这个五分钟的测试，比上线后处理数据丢失便宜得多。
 
-## 常见错误
+## 分层之后，故障会藏在哪里
 
 **历史只在缓存里。** 见第四节。
 
@@ -223,13 +224,13 @@ def load_thread(thread_id, cache, repo) -> Thread | None:
 
 **每一跳都自己连数据库。** 网关查一次用户，runtime 再查一次，工具又查一次。连接数和延迟都翻倍。**用户身份在网关解析一次后作为参数往下传。**
 
-## 取舍
+## 单体、队列和事件流怎么选
 
 - **单体 vs 拆服务。** 一条链上的跳先放在一个进程里，用模块边界隔开。等某一跳（通常是检索或工具执行）需要独立扩容或独立部署时再拆。过早拆服务换来的是网络调用和分布式状态，不是可维护性。
 - **SSE vs WebSocket。** SSE 单向、走普通 HTTP、浏览器原生支持自动重连，对话界面够用。WebSocket 双向，语音这类需要客户端持续上行的场景才需要。
 - **热拷贝放不放。** 每次都从 PostgreSQL 读线程，简单但慢；加 Redis 热拷贝快，但多一个要保持一致的地方。判断它是不是缓存有个简单办法：把 Redis 清空，系统应该只是变慢；如果会丢数据或者行为变了，那它就不是缓存，是第二个事实来源。
 
-## 工程落地
+## 把边界画成可检查的接口
 
 - **每一跳的超时要分别设。** 一个总超时会让你分不清是检索慢还是模型慢。分开设，超时异常里带上是哪一跳。
 - **`hop` 事件要能开关采样率。** 全量记录在高 QPS 下是可观的写入压力。
@@ -237,7 +238,7 @@ def load_thread(thread_id, cache, repo) -> Thread | None:
 - **健康检查要分层**：`/healthz` 只看进程活着，`/readyz` 要探数据库和 Redis。两者混在一起会让滚动发布把还没连上数据库的实例放进流量。
 - **怎么测。** 上面那个「把 Redis 清空」的实验就是一条测试，写下来：清空缓存，断言请求仍然成功、只是变慢。另外两条：断言每一跳的超时异常里带了是哪一跳（否则排障时分不清检索慢还是模型慢），以及断言数据库连不上时 `/readyz` 真的返回失败而 `/healthz` 仍然通过。三条都不需要模型（第 19 课）。
 
-## 框架映射
+## 框架只编排局部，系统边界仍归你
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -247,7 +248,7 @@ def load_thread(thread_id, cache, repo) -> Thread | None:
 
 **HTTP 这一层三个框架都不管**，网关、鉴权、SSE、任务队列全是你自己的代码——这也是本课存在的理由。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
-## 一线经验
+## 事件驱动之后，trace 成了唯一地图
 
 语音机器人项目是一个「两个进程通过 PostgreSQL、Redis 和实时音视频通道通信」的系统。
 
@@ -255,11 +256,24 @@ def load_thread(thread_id, cache, repo) -> Thread | None:
 
 另一个和三种形态相关的经验：语音场景的模型输出是流式的，但设备端的动作指令必须等一个完整的工具调用才能下发。所以同一条响应里文本走流式、指令走「攒够再发」——两种形态在一个请求里并存。
 
-## 参考实现
+## 用一条请求检查整条链
+
+参考项目的完整编排把应用、PostgreSQL、Redis 和 Phoenix 放在一起：
+
+```bash
+cd ai-app-engineering-ref
+docker compose --profile full up -d --build --wait
+curl http://localhost:8000/healthz
+curl http://localhost:8000/readyz
+```
+
+打开 `http://localhost:8000/playground` 发一条消息，再到 `http://localhost:6006` 看同一次请求的 span。`/healthz` 只回答进程是否活着，`/readyz` 会分别检查 PostgreSQL、Redis 和模型；这两个接口正好对应上面说的存储边界和分层健康检查。结束后运行 `docker compose --profile full down`，不要加 `-v`，这样可以保留本地数据卷。
+
+## 参考实现里的服务装配
 
 整条请求链在 [`api/app.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/app.py) 装配，租户与依赖注入在 [`deps.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/deps.py)，一次消息从进来到 SSE 出去的全过程在 [`routes/threads.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/routes/threads.py)。想对着这一课的图找代码，[参考实现总览](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/README.md) 那张课程到文件的映射表最快。
 
-## 延伸阅读
+## 从服务装配继续读部署
 
 - [ai-agents-for-beginners · 16 Deploying Scalable Agents](https://github.com/microsoft/ai-agents-for-beginners/blob/main/16-deploying-scalable-agents/README.md)（访问日期 2026-09-04）：「From Prototype to Production」那张七行的对照表和「Scaling Strategies」一节是通用的。
 - [MDN · Using server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)（访问日期 2026-09-04）：SSE 帧格式和浏览器端 `EventSource` 的重连行为。

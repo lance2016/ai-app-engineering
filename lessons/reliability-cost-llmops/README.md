@@ -1,5 +1,6 @@
 ---
 status: complete
+structure: narrative
 part: Part 4 生产工程
 estimated_time: 约 2.5 小时
 ---
@@ -27,27 +28,27 @@ estimated_time: 约 2.5 小时
 三样东西一起缺席：退避没有抖动，所有客户端同时醒来；没有熔断，明知道下游在挂，每个请求还是去等满超时；服务端说了等 30 秒，客户端没听。
 
 !!! note "构造的例子"
-    这条时间线和这些 QPS 数字是为讲清「重试会放大故障」编的。本课 [一线经验](#一线经验) 那一节才是作者自己的经历。
+    这条时间线和这些 QPS 数字是为讲清「重试会放大故障」编的。本课 [熔断之前，用户只能等满超时](#熔断之前用户只能等满超时) 那一节才是作者自己的经历。
 
 </details>
 
-## 为什么需要
+## 一次供应商故障为什么会变成账单和投诉
 
 供应商抖动、突发流量和失控循环，会把一次模型调用变成超时、重试和账单尖峰。可靠性是循环外的控制面，不是部署结束后才补的装饰。
 
-## 学习目标
+## 上线前要算清哪些账
 
 - 能区分可重试和不可重试的失败，并实现带抖动的退避、单次超时和总次数上限
 - 能在模型客户端前面加令牌桶限流和熔断器，在主模型故障时自动切到备用模型，并说清两者各防什么
 - 能按请求计算成本、按租户归因、在运行时用预算停止失控的循环
 - 能写出一个 AI 服务的最小部署链：容器、CI、配置与密钥分离、灰度与回滚
 
-## 前置
+## 可靠性要读哪些运行时信息
 
 - [06 Agent 循环与控制流](../agent-loop/README.md)：预算和停止条件，本课把它扩展到钱和时间
 - [20 可观测性](../observability/README.md)：SLO 和告警建立在指标之上
 
-## 怎么理解它
+## 先把失败、成本和延迟放在一张表上
 
 ```mermaid
 flowchart LR
@@ -93,7 +94,7 @@ flowchart LR
 
 A 是其余两块的前提，B 和 C 谁先读都行。
 
-## 机制拆解
+## 从请求进入，到故障被接住
 
 ### 一、失败分类决定要不要重试
 
@@ -310,7 +311,7 @@ CMD ["uv", "run", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
 5. 一个租户的流量突增十倍：限流应只影响这个租户，其他租户的 SLO 不变
 6. 回滚到上一个镜像：五分钟内完成，回滚后的评测分数应回到基线
 
-## 常见错误
+## 可靠性问题通常长什么样
 
 **重试所有异常。** 参数错、鉴权错、模型不存在，重试一百次结果一样，只是把一个明确的错误拖成了一个超时。
 
@@ -322,14 +323,14 @@ CMD ["uv", "run", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
 
 **预算只在请求开始时检查一次。** 见第四节。
 
-## 取舍
+## 重试、降级和预算怎么取舍
 
 - **重试次数与延迟预算。** 每次重试都在花用户的等待时间。面向用户的实时对话通常只允许一次重试，后台任务可以多试几次。所以重试次数要按调用类型配置，不要写成全局常量。
 - **备用模型的质量。** 备用通常更便宜也更弱。切到备用后回答质量下降，用户是否能接受、是否要告知，是产品决定。降级率进 SLO 的原因就在这里。
 - **限流放在哪一层。** 按全局限保护下游配额，按租户限保护其他租户，按用户限防滥用。三层都要，但每层的参数来源不同。
 - **自建还是托管。** 容器、CI、灰度这套东西，云平台的托管服务都能替你做。托管省人力，自建省钱且不被锁定。团队小的时候托管几乎总是对的。
 
-## 工程落地
+## 把 SLO 和故障演练接进服务
 
 - **每个外部依赖一个独立的熔断器实例。** 共用一个，向量库挂了会把模型调用也一起断掉。熔断器的状态是按依赖分的，不是按服务分的。
 - **价格表是带生效日期的配置，不是代码里的常量。** 供应商调价之后，新调用按新价算，历史账单不能被改写——否则上个月的成本报表每天都在变。
@@ -337,7 +338,7 @@ CMD ["uv", "run", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
 - **配置和密钥分两条路。** 配置可以进镜像和代码库，密钥只能运行时注入。这条界线一旦破了，回滚一个旧镜像就可能把已经轮换掉的密钥带回线上。
 - **怎么测。** 故障演练要能在 CI 里跑，不是一份手工操作手册：把下游换成会超时、会返 429、会吐坏 JSON 的假实现，断言熔断器如期打开、fallback 生效、并且账单记录仍然完整。演练写成测试才会被持续执行。
 
-## 框架映射
+## 这些控制面不属于 Agent 框架
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -347,17 +348,33 @@ CMD ["uv", "run", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
 
 **这一层三个框架基本都不管。** 它是你自己的控制面，也是原型和生产的真正分界。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
-## 一线经验
+## 熔断之前，用户只能等满超时
 
 语音机器人项目早期模型调用没有熔断。供应商一次十分钟的故障期间，每个用户请求都等满 15 秒超时再失败，机器人在用户面前「发呆」——**这比直接说「我现在有点问题」糟糕得多**。加了熔断和备用模型后，故障期间用户听到的是备用模型稍显生硬的回答，但响应时间正常。
 
 另一个经验和成本有关：一个多轮玩法的循环在特定用户输入下不收敛，每轮都带完整历史，直到步数上限才停。按会话计费加上 80% 告警之后，这类问题**在发生的当天就能看到**，而不是在账单上。
 
-## 参考实现
+## 让六类故障各发生一次
+
+一次跑完六类可重复故障：
+
+```bash
+uv run python scripts/chaos.py --all
+```
+
+先单独看 fallback：
+
+```bash
+uv run python scripts/chaos.py --inject provider_down
+```
+
+连续失败三次后，熔断器打开，后续请求由 fallback 提供；输出里的 `served_by` 和 span 属性会把这次切换留下来。`rate_limit` 和 `budget` 场景则分别返回 429 和 402，说明失败路径也要给客户端一个能采取行动的结果。实现入口是 [`ops/resilience.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/resilience.py)、[`ops/ratelimit.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/ratelimit.py) 和 [`ops/cost.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/cost.py)。
+
+## 参考实现里的故障注入
 
 超时、带抖动的重试、熔断和绕过病号的 fallback adapter 在 [`ops/resilience.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/resilience.py)，按租户的令牌桶在 [`ratelimit.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/ratelimit.py)（有 Redis 走一个原子 Lua 脚本，没有就退回内存），计价与日预算在 [`cost.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/cost.py)。主模型病了怎么绕，用例在 [`m5/test_resilience.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m5/test_resilience.py)。
 
-## 延伸阅读
+## 从故障注入继续读 SRE
 
 - [Google SRE Book · Service Level Objectives](https://sre.google/sre-book/service-level-objectives/)（访问日期 2026-09-04）：SLI、SLO、错误预算的原始定义，本课 SLO 一节的方法来源。
 - [AWS Architecture Blog · Exponential Backoff and Jitter](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/)（访问日期 2026-09-05）：full jitter 的出处，有对比实验数据。

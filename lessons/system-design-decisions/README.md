@@ -1,5 +1,6 @@
 ---
 status: complete
+structure: narrative
 part: Part 5 产品与技术决策
 estimated_time: 约 2 小时
 ---
@@ -34,27 +35,27 @@ estimated_time: 约 2 小时
 三周的争论里，没有一句话是关于这个数的。
 
 !!! note "构造的例子"
-    这张假设表和算出来的数字是为讲清「算数是决策的产出物」编的。本课 [一线经验](#一线经验) 那一节才是作者自己的经历。
+    这张假设表和算出来的数字是为讲清「算数是决策的产出物」编的。本课 [第二个退出条件真的被触发过](#第二个退出条件真的被触发过) 那一节才是作者自己的经历。
 
 </details>
 
-## 为什么需要
+## 选型争论为什么总是没有结果
 
 技术选型不是列出最多方案，而是找出会改变结论的假设。没有容量、成本、威胁和退出条件的方案，无法被团队复盘，也无法被安全地替换。
 
-## 学习目标
+## 技术决策要留下什么
 
 - 能用同一套框架处理四类常见决策，并写出可被推翻的假设
 - 能为一个 AI 服务做容量与成本估算，说清 Little's law 的适用条件，以及为什么峰值加 p95 只是它的一个保守用法
 - 能针对模型并发、SSE 连接、数据库连接池、工作进程分别定容量，而非拿同一个数去填所有池子
 - 能写一份带备选方案和退出条件的 ADR
 
-## 前置
+## 技术决策从哪条请求链开始
 
 - [18 系统架构与端到端数据流](../system-architecture/README.md)：本课的估算落在那条请求链的每个环节上
 - [09 Workflow 还是 Agent](../workflow-vs-agent/README.md)：本课把那一课的架构选择放进更大的决策框架
 
-## 怎么理解它
+## 先写假设，再比较方案
 
 ```mermaid
 flowchart LR
@@ -83,7 +84,7 @@ flowchart LR
 | Workflow vs Agent | 能枚举步骤就 Workflow | 路径是否真的不可枚举；失败代价是否允许探索 |
 | 单体 vs 平台 | 第二个团队出现之前是单体 | 有没有真实的第二个消费者；配额和隔离是否已经成为事故来源 |
 
-## 机制拆解
+## 从容量算式到退出条件
 
 ### 一、容量估算：假设是一张表，不是一段话
 
@@ -243,7 +244,7 @@ def flips(step: float = 0.10) -> list[str]:
 
 这是决策矩阵唯一不容易被滥用的用法。先有答案再填分数，矩阵就只是装饰。
 
-## 常见错误
+## 设计决策最容易漏掉什么
 
 **估算没有假设表。** 只有结论「需要 20 台机器」，没人能复核。假设要是一个数据结构，每个数字有名字，改一个看全局。
 
@@ -253,13 +254,13 @@ def flips(step: float = 0.10) -> list[str]:
 
 **平台化太早。** 第一个消费者还没稳定就抽象成平台，抽象层按想象中的第二个消费者设计，第二个真出现时发现不匹配。默认是单体，等真实的第二个团队来提需求。
 
-## 取舍
+## 可逆性、速度和锁定成本
 
 - **精确 vs 及时。** 估算的目的是决策，误差在两倍以内就够用。花一周把误差压到 10%，往往不如先按两倍余量上线再用真实数据修正。
 - **可逆决策与不可逆决策。** 换一个 reranker 是可逆的，直接试；选数据库、选多租户隔离模型是不可逆的，值得写 ADR 和做验证。精力花在不可逆的那几个上。
 - **自建的隐性成本。** 自建的账面成本是工程时间，隐性成本是维护、值班、安全补丁和「没人敢改」。Buy 的隐性成本是退出成本和数据出境。矩阵里两者都要有一列。
 
-## 工程落地
+## 让 ADR 能被复算和监控
 
 - **ADR 进代码仓库**，和代码一起 review、一起版本化。放在 wiki 里的 ADR 半年后没人找得到。
 - **容量估算要复盘。** 上线三个月后拿真实数据对一遍假设表，看哪个假设错得最离谱。下次估算会准很多。
@@ -267,7 +268,7 @@ def flips(step: float = 0.10) -> list[str]:
 - **「什么都不做」要真的评估。** 它是唯一零成本、零风险的方案，很多时候被跳过是因为它不够有趣，而不是因为它不够好。
 - **怎么测。** 估算部分能测：把假设表写成代码里的常量，断言 `concurrent_peak` 那一步算出来的数和手算一致，断言把 p95 减半时它跟着减半，改一个假设时哪些结论跟着变也就看得见了。ADR 部分测不了，但退出条件可以：每条退出条件对应一条告警，那条告警本身要有测试，否则条件被触发时没人知道。
 
-## 框架映射
+## 选框架本身也是一次决策
 
 选框架本身就是一次本课讲的决策。三个候选的翻盘点：
 
@@ -280,7 +281,7 @@ def flips(step: float = 0.10) -> list[str]:
 
 官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。更完整的对比见 [reference/frameworks.md](../../reference/frameworks.md)。
 
-## 一线经验
+## 第二个退出条件真的被触发过
 
 语音机器人项目里的一个决策实例：意图分类最初用大模型直接做，延迟和成本都高。备选是微调一个小模型专做分类，或者用规则加关键词。最终选了微调小模型加大模型兜底的双模型方案。
 
@@ -288,11 +289,15 @@ def flips(step: float = 0.10) -> list[str]:
 
 **后来第二个条件真的被触发过一次**，团队据此调整了冲突时的裁决规则，而不是争论方案对错。当时没有人需要先说服谁。
 
-## 参考实现
+## 用 M6 草稿对照 ADR
+
+参考项目把这一课的产物放在 [`m6-platform-design`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/m6-platform-design)：先读多租户平台 RFC，再看每个 ADR 的备选、假设、容量数字和退出条件。它当前是设计稿，不能当成已经上线的架构；读者要检查的是一条决定能否被复算、被监控、被撤回。
+
+## 参考实现里的 M6 决策
 
 这一课的产物是文档，不是代码。[M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md)（还是草稿）就是照这套框架写的一份多租户平台 RFC，四个 [capstone](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/capstones/README.md) 也都要求先写一页设计再动手。
 
-## 延伸阅读
+## 从 ADR 继续读容量估算
 
 - [Michael Nygard · Documenting Architecture Decisions](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)（访问日期 2026-09-04）：ADR 的原始提议。本课加了备选方案和退出条件两节。
 - [ADR GitHub organization](https://adr.github.io/)（访问日期 2026-09-04）：各种 ADR 模板和工具的汇总。

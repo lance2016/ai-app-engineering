@@ -1,5 +1,6 @@
 ---
 status: complete
+structure: narrative
 part: Part 3 知识与记忆
 estimated_time: 约 1.5 小时
 ---
@@ -26,15 +27,15 @@ estimated_time: 约 1.5 小时
 一条记错的偏好本身不算大事。麻烦的是它进库之后就成了「事实」：每次检索都可能被捞出来，捞出来一次，它看着就更可信一分，而链路上没有任何一处能追回它是怎么来的。
 
 !!! note "构造的例子"
-    这段对话和这条记录是为讲清「来源为什么是硬性字段」编的。本课 [一线经验](#一线经验) 那一节才是作者自己的经历。
+    这段对话和这条记录是为讲清「来源为什么是硬性字段」编的。本课 [记忆更新曾经覆盖了用户原话](#记忆更新曾经覆盖了用户原话) 那一节才是作者自己的经历。
 
 </details>
 
-## 为什么需要
+## 一条记忆为什么会反咬用户
 
 把整段对话永久塞回上下文，又贵又不可靠；没有来源的长期记忆还可能把错误变成「事实」。记忆必须有生命周期、证据和删除路径。
 
-## 学习目标
+## 记忆设计的三个判断
 
 - 能区分会话记忆、任务记忆、长期记忆，说清各自的权威来源和生命周期
 - 能判断哪一种场景根本不需要「记忆系统」
@@ -42,12 +43,12 @@ estimated_time: 约 1.5 小时
 - 能实现按用户过滤的相关性检索，和留审计的定向删除
 - 能解释为什么「没有来源的记忆」和「不做整合的记忆」各会造成什么故障
 
-## 前置
+## 记忆依赖哪两类状态
 
 - [07 Agent State 与 Runtime](../agent-state-and-runtime/README.md)：事件线程。长期记忆的来源就是线程里的事件编号
 - [原则 05](../../principles/05-runtime-owns-state.md)：四类状态。本课只讲第四类
 
-## 怎么理解它
+## 记忆不是聊天记录的副本
 
 先把三个常被混为一谈的东西分开：
 
@@ -80,7 +81,7 @@ flowchart LR
 
 **删除**按来源和主题定向删，删的时候写一条审计事件。
 
-## 机制拆解
+## 提取、合并和遗忘
 
 ### 一、提取：来源是硬性字段
 
@@ -191,7 +192,7 @@ def forget(memories, user_id: str, subject: str, requested_by: str) -> list[Memo
 
 `requested_by` 区分用户主动要求和系统按策略清理，两者的合规含义完全不同。
 
-## 常见错误
+## 记忆最容易在哪里失真
 
 **记忆没有来源。** 见第一节。
 
@@ -201,13 +202,13 @@ def forget(memories, user_id: str, subject: str, requested_by: str) -> list[Memo
 
 **删除只删了记忆本身。** 如果记忆已经被拷贝进某个摘要、某个用户画像字段或某个缓存，只删记忆表那一行不够。第 17 课的删除演练讲怎么证明删干净了。
 
-## 取舍
+## 记多少、信多少、留多久
 
 - **热路径提取 vs 后台提取。** 边聊边提取，用户下一句就能用上，但每轮多一次模型调用；后台批量提取省钱，但有延迟。常见做法是热路径只提取用户明确说「记住」的，其余后台做。
 - **profile vs collection。** 一个固定字段的用户画像结构清楚、容易展示给用户、容易删除；一个开放的记忆条目集合更灵活但需要整合逻辑。上面用的是集合加按主题整合，两头的好处都沾一点。
 - **记多少。** 记得越多检索越难、隐私风险越大。一个实用的标准：**这条记忆下次对话用得上的概率有多大**，用不上就不记。episode 类默认设过期。
 
-## 工程落地
+## 把记忆接进数据生命周期
 
 - **记忆的注入要可见。** 这一轮召回了哪几条记忆，要进 trace，也最好让用户能看到。用户看到「我记得你不吃辣」时能纠正，看不到就只能困惑。
 - **区分「用户明说」和「模型推断」。** 推断出来的东西在回答里要用可被纠正的语气（「我记得你好像……」），而不是当成事实陈述。
@@ -215,7 +216,7 @@ def forget(memories, user_id: str, subject: str, requested_by: str) -> list[Memo
 - **记忆表要有 TTL 和容量上限。** 一个聊了三年的用户，记忆条数不该无限增长。
 - **怎么测：两类样本都要有。** 该记住的——说过一次，几轮之后还能用上；该忘掉的——用户改了口径，旧的不能再出现。第二类最容易漏测也最容易出事：记忆系统的典型故障不是想不起来，是记住了一件已经不成立的事。
 
-## 框架映射
+## 框架只提供存储接缝
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -224,7 +225,7 @@ def forget(memories, user_id: str, subject: str, requested_by: str) -> list[Memo
 
 三个框架都给存储，都不给整合逻辑。这正是本课的重点：整合是业务判断，不该外包。官方文档：[LangGraph Memory](https://langchain-ai.github.io/langgraph/concepts/memory/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
-## 一线经验
+## 记忆更新曾经覆盖了用户原话
 
 语音机器人的家庭场景下，多个家庭成员共用一台设备。早期记忆只按设备存，结果孩子说的偏好出现在给家长的回答里。
 
@@ -232,11 +233,24 @@ def forget(memories, user_id: str, subject: str, requested_by: str) -> list[Memo
 
 另一个经验是记忆里要标「用户明说」还是「模型推断」。推断出来的东西说错了，用户会觉得被冒犯；标明是推断并用可纠正的语气说出来，用户反而会主动更正——这本身就是一次高质量的记忆更新。
 
-## 参考实现
+## 提取一条记忆，再删掉它
+
+启动 Memory 场景，不需要 API Key：
+
+```bash
+AIAPP_DEMO_SCENARIO=memory \
+  uv run uvicorn aiapp.api.app:create_app --factory --port 8000
+```
+
+新建线程，发送“我喜欢简短的回答”，点击“从当前线程提取”，再点击“列出记忆”。返回记录里有 `source_event_seqs`，它指向本线程的用户事件；删除后勾选“包含历史”，可以看到软删除原因仍然保留。提取、冲突整合和遗忘逻辑在 [`knowledge/memory.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/memory.py)，HTTP 验收在 [test_memory.py](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m4/test_memory.py)。
+
+把用户 ID 换成另一个值再刷新列表，原来的记忆不会出现。这个失败案例由租户和用户过滤保证，不能靠模型“记得不要泄露”。
+
+## 参考实现里的记忆操作
 
 提取、合并、遗忘三件事在 [`knowledge/memory.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/memory.py)，存储协议在 [`memory_store.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/memory_store.py)，PostgreSQL 实现在 [`postgres_memory.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/postgres_memory.py)。每条记忆都带来源，冲突怎么合并、删除请求怎么落到每个派生存储，用例在 [`m4/test_memory.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m4/test_memory.py)。
 
-## 延伸阅读
+## 把记忆接到数据生命周期
 
 - [ai-agents-for-beginners · 13 Agent Memory](https://github.com/microsoft/ai-agents-for-beginners/blob/main/13-agent-memory/README.md)（访问日期 2026-09-04）：记忆类型的分法比本课细，「实现与存储」一节讲了 Mem0 的两阶段流程，和本课的提取加整合是同一个思路。
 - [langchain-academy · module-5](https://github.com/langchain-ai/langchain-academy/tree/main/module-5)（访问日期 2026-09-04）：从跨线程的 store 讲到 profile 和 collection 两种 schema。看 markdown 说明就够。

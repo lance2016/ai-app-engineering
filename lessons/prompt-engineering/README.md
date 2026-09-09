@@ -36,13 +36,13 @@ estimated_time: 约 1.5 小时
 
 <div class="lesson-meta" markdown="1">
 
-## 学习目标 { .lesson-meta__heading }
+## 改 Prompt 前先固定什么 { .lesson-meta__heading }
 
 - 能把一次调用的 prompt 拆成指令、数据、任务、输出契约、示例五块，并说出每块最容易出什么问题
 - 能给一个 prompt 配一组固定样例当回归门禁，用它比较两个版本，并说清它挡得住什么、挡不住什么
 - 能把不可信的内容围起来并声明为数据，在 token 预算内按语义边界裁剪且不静默丢字
 
-## 前置 { .lesson-meta__heading }
+## Prompt 课要先懂哪些调用字段 { .lesson-meta__heading }
 
 - [02 模型调用、结构化输出与流式](../model-api-structured-output-streaming/README.md)：消息格式、系统消息的位置、JSON Schema 约束输出
 
@@ -190,7 +190,7 @@ def trim_to_budget(text, budget) -> tuple[str, bool]:
 
 问题放在最后是个常见做法：靠近输出的位置通常有一点 recency 优势，模型更容易照着它答。但**这不是定律**，不同模型、不同上下文长度下的表现不一样。当默认值用可以，想确认就把问题放开头和放结尾各跑一遍固定样例，看哪版分高。
 
-## 常见错误 { .section--risk }
+## Prompt 改坏时先查哪里 { .section--risk }
 
 **门禁只要求「不比旧版差」。** 上面那道 `scores["v2"] >= scores["v1"]` 有个洞：v2 从 1.0 掉到 0.8、和 v1 打平时，门禁照样放行，一个真实的退化就这样上线了。
 
@@ -221,7 +221,7 @@ def trim_to_budget(text, budget) -> tuple[str, bool]:
 - **渲染结果进 diff**。上线前把 v(n) 和 v(n-1) 的渲染输出 diff 一遍，很多「模型突然变笨」的问题在 diff 里就看出是某个区段被误删了。
 - **怎么测。** 每个 prompt 版本配一组固定输入和期望输出的样例，和模板放在一起，改 prompt 的 PR 必须带上门禁结果。跑得快、天天跑、只挡退化。这批样例会攒进第 19 课的 golden set，那里才谈样本量、切片和置信区间。
 
-## 框架映射 { .section--reference }
+## 框架把 prompt 放在哪一层 { .section--reference }
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -231,17 +231,28 @@ def trim_to_budget(text, budget) -> tuple[str, bool]:
 
 三个框架都不管 prompt 版本化。这正是 factor 02 的意思：这层必须留在你自己手里。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
+## 在参考项目里看一次 prompt 版本切换
+
+参考项目把 prompt 放在源码目录，并在启动时加载指定版本。先跑 M1 的回归用例：
+
+```bash
+cd ai-app-engineering-ref
+uv run pytest tests/project/m1/test_threads.py -q
+```
+
+然后对照 [`prompts/assistant.v1.md`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/prompts/assistant.v1.md)、[`assistant.v2.md`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/prompts/assistant.v2.md) 和 [`api/routes/threads.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/routes/threads.py)：同一个请求的响应会带 `X-Prompt-Version`，测试同时检查这个版本号和实际送给模型的内容。删掉一个版本文件再启动，应用会在启动阶段报错，避免第一条请求才静默换成默认 prompt。
+
 ## 几十个配置字段里的人设 { .section--risk }
 
 语音机器人项目里，多个角色的人设 prompt 早期散在配置中心的几十个字段里，改一处要翻好几个页面，没人知道线上实际发出的完整文本长什么样。后来改成代码里的渲染函数加版本号，上线前先 diff 渲染结果——很多「模型突然变笨」的问题在 diff 里就看出是某个区段被误删了。
 
 另一条：把「不能承认自己是 AI」这类硬约束写在 prompt 里，线上仍然偶尔漏。最后的做法是 prompt 里保留约束，但输出后再过一道确定性检查。这就是第 22 课要讲的「守卫在代码不在提示词」。
 
-## 参考实现 { .section--reference }
+## 参考实现里的 Prompt 版本 { .section--reference }
 
 版本化的做法在 [`prompts/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/src/aiapp/prompts)：一个提示是一个 `<名字>.<版本>.md` 文件，改动就是一次 git diff，用的哪个版本随响应头返回。切版本会同时改掉响应头和发给模型的内容，这条用例在 [`m1/test_threads.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m1/test_threads.py)，装配见 [M1 API 骨架](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md)。
 
-## 延伸阅读 { .section--reference }
+## 把 Prompt 版本接到评测门 { .section--reference }
 
 - [12-factor-agents · factor 02 Own your prompts](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-02-own-your-prompts.md)（访问日期 2026-09-04）：为什么不把 prompt 交给框架，本课第一节的直接出处。
 - [Anthropic · Prompt engineering overview](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview)（访问日期 2026-09-04）及其下的 [Be clear and direct](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct)、[Use examples](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/multishot-prompting)、[Use XML tags](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/use-xml-tags)：官方写法指南，读顺序就是它列的顺序。

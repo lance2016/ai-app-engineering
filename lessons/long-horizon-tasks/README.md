@@ -41,7 +41,7 @@ estimated_time: 约 1.5 小时
 
 三道防线全部合法通过，因为它们看的都是**单步是否正常**。目标漂移是跨几十步才显形的，它在每一个单步上都无懈可击。
 
-## 学习目标
+## 长任务何时算完成
 
 - 能说清目标漂移和第 06 课跑偏检测的差别，并解释为什么后者抓不到前者
 - 能把一份清单接进第 06 课的循环：作为工具写入、作为受保护内容每轮回注、作为事件落进线程
@@ -49,14 +49,14 @@ estimated_time: 约 1.5 小时
 - 能列出触发重规划的信号，并解释重规划本身为什么要有上限
 - 能说清哪些东西模型可以改（计划）、哪些不能悄悄改（原始目标和验收标准），并用代码守住
 
-## 前置
+## 长任务建立在哪些机制上
 
 - [06 Agent 循环与控制流](../agent-loop/README.md)：本课在它上面加一层，循环结构一行不改
 - [07 Agent State 与 Runtime](../agent-state-and-runtime/README.md)：清单的每次变更都是一条事件
 - [08 Context Engineering](../context-engineering-for-agents/README.md)：每轮回注用的就是那里的受保护内容
 - [09 Workflow 还是 Agent](../workflow-vs-agent/README.md)：先判断这件事该不该交给 Agent，再谈要不要上清单
 
-## 怎么理解它
+## 清单是外部记忆
 
 ```mermaid
 flowchart LR
@@ -83,7 +83,7 @@ flowchart LR
 
 **这和把任务拆成多个 Agent 是两条路。** 第 06 课给的办法是拆：一个 Agent 管 3～10 步，任务大就切成几个小 Agent，靠确定性代码串起来（第 11 课展开）。这一课给的办法是不拆，靠回注把长任务撑住。任务能干净切块的，拆更省心；切不开、必须一路做下来的，才轮到清单。
 
-## 机制拆解
+## 清单、验收和重规划
 
 下面六段代码只为说明机制，省略了适配器、并发控制和类型定义，不能直接运行。
 
@@ -233,7 +233,7 @@ def replan_reason(thread, budget, replans: int) -> Replan | None:
 
 改计划这件事本身不需要新事件，`todos_updated` 就够了——每一条就是计划的一个版本。计划的演变史留在线程里，第 20 课那棵 trace 树上能看出它在第几步改了主意，以及那一版是不是缩了水。
 
-## 常见错误
+## 长任务为什么会漂
 
 **三步的任务先列十二步计划。** 清单是有成本的：一轮工具调用、每轮占掉的上下文、以及模型盯着清单而不看真实情况。查询类任务和 3～10 步的任务，照第 06 课那样直接跑就行。
 
@@ -249,14 +249,14 @@ def replan_reason(thread, budget, replans: int) -> Replan | None:
 
 **重规划没有上限。** 见上面第五节。三次改计划之后还没收敛的任务，多半一开始就该拆。
 
-## 取舍
+## 清单还是拆 Agent
 
 - **上不上清单。** 门槛大致在「步数超过十几轮，且中途会触发压缩」。短任务上清单是纯开销；长任务不上清单，开头那种失败迟早会撞上。
 - **清单的粒度。** 项太粗（「重构日志模块」）没法验收，太细（每个文件一项）挤占上下文，还会让模型陷在勾选动作里。一个可用的判据是：每一项都能配一条可执行的 `check`，配不出来的项就是太粗了。
 - **给清单还是拆 Agent。** 两条路都为长任务而设。拆 Agent 靠隔离上下文，让每个子任务都短，代价是交接、视图计算和多一层 trace（第 11 课）；清单靠回注目标，不拆，代价是上下文里长期占着一块。任务能干净切块的拆，切不开的上清单。
 - **谁来列清单。** 让干活的模型顺手列，省一次调用，但它容易列成自己想干的事；单独一次调用专门列清单，贵一点，人也好审。需要人过目的场景，配一个只读模式更稳——模型先读、先搜、先问，拿出清单等人批准之后才允许动手。这个只读模式是权限档位（第 14 课），和清单本身是两件事，只是常常一起出现。
 
-## 工程落地
+## 把清单接进运行时
 
 - **清单进 trace。** 根 span 上记清单项数、完成数、验收通过数、重规划次数。第 20 课那棵树上，「模型说完成但验收没过」是一眼能看出来的一行。
 - **压缩之后先看清单还在不在。** 这条断言比什么都便宜：压缩一次，断言最新清单在窗口里逐字未变。
@@ -264,7 +264,7 @@ def replan_reason(thread, budget, replans: int) -> Replan | None:
 - **`check` 覆盖率要盯。** 空 `check` 的项占比越高，「完成」这个信号就越接近模型的自我报告。
 - **怎么测。** 用剧本式的假模型，不需要真模型：给一段跑到一半的线程，压缩一次，断言最新清单在窗口里逐字未变；给一个 `check` 注定失败的项，断言它退回 pending 且失败原因回喂给了模型；给一段「预算过半、完成不到三成」的线程，断言 `replan_reason` 返回 `behind_schedule`；把 `MAX_REPLANS` 设成 1，断言第二次触发时返回 `handoff_to_human`，不是 `None`；给一个退出码为 0 但输出不为 `expect` 的 `check`，断言这一项没有变成 completed；把一版 23 项的清单换成 14 项，断言 `accept_plan` 报出项数缩水。六条都是确定性的，一秒内跑完，能进 CI（第 19 课）。
 
-## 框架映射
+## 框架有没有内置清单
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -275,11 +275,24 @@ def replan_reason(thread, budget, replans: int) -> Replan | None:
 
 三家里只有 Claude Agent SDK 把清单做成了内置能力，另外两家要自己拼；验收和重规划触发三家都不管，那部分永远是你自己的代码。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-08）。
 
-## 参考实现
+## 项目里的边界：有循环，还没有清单
+
+参考项目当前没有实现长任务清单，所以不能把 M3 的循环测试说成这一课的完整实现。可以先运行两个已有边界，确认项目已经提供了后续接入清单所需的停止条件和上下文裁剪：
+
+```bash
+cd ai-app-engineering-ref
+uv run pytest \
+  tests/project/m3/test_loop.py::test_step_limit_stops_an_endless_model \
+  tests/project/m3/test_loop.py::test_context_drops_oldest_turns_and_shapes_big_tool_results -q
+```
+
+完整的清单、`check` 验收和重规划，仍然是本课的设计内容；参考实现的 [`runtime/loop.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/loop.py) 和 [`runtime/context.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/context.py) 只是明确的接入位置。
+
+## 代码在项目里的接入位置
 
 参考实现里**没有**这一层。它的 M3 运行时管的是单个任务的循环、预算和确认门，任务本身都足够短，用不上清单。要补的话，落点在 [`runtime/loop.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/loop.py) 旁边加一个工具，加上 [`runtime/context.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/context.py) 里那份受保护内容——这两个文件是这一课两个主要机制的现成挂钩点。
 
-## 延伸阅读
+## 从清单继续读控制流
 
 - [Claude Code · Track todos](https://code.claude.com/docs/en/agent-sdk/todo-tracking)（访问日期 2026-09-08）：一套已经上线的清单实现，注意它的三种状态和「每次提交完整清单」的接口选择。
 - [OpenAI · Run long horizon tasks with Codex](https://developers.openai.com/blog/run-long-horizon-tasks-with-codex)（访问日期 2026-09-08）：另一家的同类做法，`update_plan` 工具加一个只读的计划模式，正好对照本课「谁来列清单」那一条取舍。

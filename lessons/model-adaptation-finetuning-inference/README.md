@@ -1,5 +1,6 @@
 ---
 status: complete
+structure: narrative
 part: Part 4 生产工程
 estimated_time: 约 1.5 小时
 ---
@@ -30,26 +31,26 @@ estimated_time: 约 1.5 小时
 判断「该改哪一层」花的时间，比改那一层本身少得多。
 
 !!! note "构造的例子"
-    这三周和这张分布表是为讲清「先定位再选方案」编的。本课 [一线经验](#一线经验) 那一节才是作者自己的经历。
+    这三周和这张分布表是为讲清「先定位再选方案」编的。本课 [分类模型最后为什么改成小模型](#分类模型最后为什么改成小模型) 那一节才是作者自己的经历。
 
 </details>
 
-## 为什么需要
+## 先定位瓶颈，再决定改哪里
 
 质量问题常被误诊为「需要微调」，结果花了训练和部署成本，却没有解决数据、提示或评测缺口。选择模型适配方式前要先定位问题并算账。
 
-## 学习目标
+## 适配、推理和托管的选择
 
 - 能用一棵决策树判断一个质量问题该用提示、RAG 还是微调解决，并说出微调的前置条件
 - 能估算一个模型在给定精度、批大小和上下文长度下的显存，解释 KV cache 和 GQA 为什么决定了能不能服务长上下文
 - 能算出托管 API 和自建 GPU 的成本临界点，并列出临界点之外还要考虑的因素
 
-## 前置
+## 适配课用到哪些推理知识
 
 - 这一课直接用几条结论：LoRA 为什么有效、prefill 与 decode 的区别、KV cache 怎么算、GQA 和量化各省了什么。想知道这些结论从哪来，看 [F05 训练与对齐](../../prerequisites/llm-foundations/05-training-and-alignment/README.md) 和 [F06 KV Cache 与推理](../../prerequisites/llm-foundations/06-kv-cache-and-inference/README.md)，不用先读完再回来
 - [19 评测](../evaluation/README.md)：没有评测集就无法判断微调有没有用
 
-## 怎么理解它
+## 权重、推理和成本是三件事
 
 ### 决策树：改哪一层
 
@@ -92,7 +93,7 @@ flowchart TD
 
 一个实际的顺序：**先修评测，再加约束，再拆任务，再考虑换模型，最后才是微调**。微调排在最后不是因为它没用，是因为它是这几项里唯一会产生长期维护负担的——模型要重训、要版本管理、要跟着基座升级重来一遍。
 
-## 机制拆解
+## 从显存账到部署选择
 
 ### 一、显存估算：两项，都要算
 
@@ -170,7 +171,7 @@ def breakeven_tokens_per_month() -> float:
 
 两者都提供 OpenAI 兼容接口，所以第 00 课的适配器换个 base URL 就能接。**这也是课程一直强调协议兼容的原因：换推理后端不该改业务代码。**
 
-## 常见错误
+## 模型适配最容易走错哪几步
 
 **只算权重不算 KV cache。** 见第一节。
 
@@ -180,14 +181,14 @@ def breakeven_tokens_per_month() -> float:
 
 **没有评测集就开始微调。** 微调完看几个例子觉得「好像好了」，上线后发现另一类问题变差了。第 19 课在这一课之前，是有意的顺序。
 
-## 取舍
+## 质量、延迟和运维成本
 
 - **微调的小模型 vs 提示的大模型。** 微调后的 7B 在特定任务上可以追平大模型，成本和延迟低一个量级，但每次任务定义变化都要重训。任务稳定、量大时值得；任务还在变时不值得。
 - **量化精度。** int8 几乎总是值得的；int4 要在自己的评测集上验，尤其是数学、代码、多语言。质量下降不均匀，**平均分掩盖了某些切片的崩塌**。
 - **自建的隐性成本。** 上面算的是 GPU 小时费。没算的是搭建和维护推理服务的工程师、值班、模型升级、容量规划、故障切换用的第二张卡。**这些通常比 GPU 本身贵。** 临界点计算给出的是「自建可能划算」的必要条件，不是充分条件。
 - **锁定。** 托管 API 换供应商只改适配器；自建换推理引擎也只改适配器，但换硬件不是。协议兼容保护的是代码，不是采购。
 
-## 工程落地
+## 把模型升级接进评测门
 
 - **模型升级要走评测门禁。** 供应商发新版本、你换了量化精度、换了推理引擎，都要跑一遍第 19 课的评测集再上线。
 - **线上和离线的活要分开算钱。** 同一个模型，实时问答走同步接口，夜里跑的重建索引和评测走批处理，成本差一倍。混在一个入口里，账单上就分不出来了。
@@ -197,7 +198,7 @@ def breakeven_tokens_per_month() -> float:
 - **混合部署是常态。** 高频简单任务走自建小模型，低频复杂任务走托管大模型。适配器层做路由，业务层无感。
 - **怎么测。** 显存估算写成一个函数，拿几个已知配置对一遍（参数量、精度、批大小、上下文长度 → 显存），偏差超过一成就是公式抄错了，这条能进 CI。微调和量化的效果只能靠第 19 课的评测集，而且必须按切片比：int4 的质量下降不均匀，平均分掩盖了某些切片的崩塌。
 
-## 框架映射
+## 框架只看见适配器这一层
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -206,7 +207,7 @@ def breakeven_tokens_per_month() -> float:
 
 自建推理的接入点是OpenAI 兼容协议，不是框架特性。官方文档：[vLLM](https://docs.vllm.ai/en/latest/) · [llama.cpp](https://github.com/ggml-org/llama.cpp) · [LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)（核对日期 2026-09-05）。
 
-## 一线经验
+## 分类模型最后为什么改成小模型
 
 语音机器人项目里，意图分类最终用的是一个针对命令集微调过的小模型，而不是通用大模型加长提示。三条理由：任务定义稳定（命令集半年不变）、有大量真实对话可以标注、延迟要求苛刻（用户说完话到设备动作要在一秒内）。
 
@@ -214,11 +215,22 @@ def breakeven_tokens_per_month() -> float:
 
 **同一个系统里两种选择并存**，判断依据就是上面那棵决策树。这也说明「要不要微调」不是一个系统级的决定，是一个任务级的决定。
 
-## 参考实现
+## 在参考项目里验证适配器接缝
+
+参考项目没有训练流程，但把“换推理端点不改业务代码”落成了适配器协议。先跑这条不需要供应商 key 的用例：
+
+```bash
+cd ai-app-engineering-ref
+uv run pytest tests/project/m1/test_errors.py::test_injection_switch_wraps_the_adapter -q
+```
+
+再看 [`adapters/base.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/base.py) 和 [`adapters/openai_compat.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/openai_compat.py)。测试只验证替换接缝，不代表已经完成微调或自托管部署；那部分仍要在自己的评测集和容量数据上做 ADR。
+
+## 参考实现里的 Adapter seam
 
 参考实现**没有做**微调。托管、自托管还是混合，这个决策留在 [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md) 的 ADR-4（还是草稿）。现在能换的只有推理侧：[`adapters/openai_compat.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/openai_compat.py) 改一个 base URL 就能指向自托管的 OpenAI 兼容端点，上层一行不用动。
 
-## 延伸阅读
+## 从适配器继续读部署
 
 - [llm-course · The LLM Engineer](https://github.com/mlabonne/llm-course)（访问日期 2026-09-04）：Engineer 路线的 Inference optimization 和 Deploying LLMs 两节，链接了 Flash Attention、MQA/GQA、speculative decoding 的原始资料。
 - [LLMs-from-scratch · ch05–ch07](https://github.com/rasbt/LLMs-from-scratch)（访问日期 2026-09-04）：预训练、分类微调、指令微调的从零实现。想知道微调在代码层面是什么就读这三章。

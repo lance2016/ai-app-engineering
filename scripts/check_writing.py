@@ -53,7 +53,7 @@ BOLD_CLOSER = re.compile(r"\*\*[^*]{4,40}\*\*\s*$")
 # Bold spans that are a document's own field labels rather than emphasis.
 # `二、ADR：多两个字段` shows an example ADR whose fields are bolded the way
 # any template's fields are.
-EMPHASIS_EXEMPT = {("system-design-decisions", "机制拆解", "二、ADR：多两个字段")}
+EMPHASIS_EXEMPT = {("system-design-decisions", "从容量算式到退出条件", "二、ADR：多两个字段")}
 
 CEILINGS = {
     "negation": 92,         # 「不是 X，是 Y」and「而不是」across the course

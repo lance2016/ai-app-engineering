@@ -1,5 +1,6 @@
 ---
 status: complete
+structure: narrative
 part: Part 3 知识与记忆
 estimated_time: 约 1.5 小时
 ---
@@ -32,26 +33,26 @@ DELETE FROM documents WHERE source_id = 'contract-2891';
 那条 `DELETE` 一个字都没写错。错在没人列过这张表——「删了源文档」和「删干净了」之间隔着四个系统，而这四个里只有第一个会因为写错而报错。
 
 !!! note "构造的例子"
-    这张派生物清单和上面那些数字是为讲清删除演练编的。本课 [一线经验](#一线经验) 那一节才是作者自己的经历。
+    这张派生物清单和上面那些数字是为讲清删除演练编的。本课 [旧版本索引曾经没有被替换](#旧版本索引曾经没有被替换) 那一节才是作者自己的经历。
 
 </details>
 
-## 为什么需要
+## 一次删除为什么删不干净
 
 RAG 的数据会更新、重复、过期和被删除。只写一个 ingest 脚本，无法证明旧版本不会继续被召回，也无法证明租户权限没有泄露。
 
-## 学习目标
+## 数据管道的验收标准
 
 - 能把一份文档切成带来源、版本、权限标签和内容哈希的 chunk
 - 能在入库前拦住空块、重复块和编码错误，并说出每一类漏过去之后会怎么坏
 - 能实现增量更新：文档改了一段只重新处理那一段，并能查出索引里有没有落后于源文档的陈旧数据
 - 能设计并执行一次删除演练，证明删掉一个源文档后所有派生数据都不存在了
 
-## 前置
+## 数据管道依赖什么
 
 - [15 RAG 端到端](../rag-end-to-end/README.md)：知道 chunk 是什么、索引是给谁用的
 
-## 怎么理解它
+## 文档从进入系统到离开系统
 
 一份文档进了系统之后会「长出」很多东西：
 
@@ -84,7 +85,7 @@ flowchart LR
 
 解析这一步下面用 markdown 示意。真实项目里 PDF、扫描件、PPT 要用专门的解析器：[Docling](https://github.com/docling-project/docling) 和 [Unstructured](https://github.com/Unstructured-IO/unstructured) 都能把多种格式转成带结构的元素（标题、段落、表格），输出形状和这里一样，后面的流程不变。
 
-## 机制拆解
+## 解析、切块、索引和删除
 
 ### 一、chunk 自带全套元数据
 
@@ -228,7 +229,7 @@ if any(stores.residue(source_id).values()):
 
 每个派生存储都要有一个字段能反查到源文档。答案缓存加一个「本条回答基于哪些文档」的字段，成本几乎为零，但没有它，删除时只能全量扫描或者干脆漏掉。
 
-## 常见错误
+## 数据故障通常没有红灯
 
 **chunk 跨章节。** 见第二节。
 
@@ -238,13 +239,13 @@ if any(stores.residue(source_id).values()):
 
 **删除漏掉派生物。** 最常见的漏法是答案缓存：文档删了，缓存里那条基于它生成的回答还在，用户下次问同样的问题还能拿到已删除内容。**[「被遗忘权」](https://gdpr-info.eu/art-17-gdpr/)要求的是删除，不是「从主表删除」。**
 
-## 取舍
+## 质量、速度和删除成本
 
 - **chunk 大小。** 小 chunk 检索精确但上下文碎，大 chunk 上下文完整但容易混入无关内容。按文档类型调：FAQ 类小，长篇说明类大。先按章节边界切、再在节内按大小切，是稳妥的起点。
 - **增量更新的粒度。** 按 chunk 哈希 diff 最省，但一段话改一个词整段重做。可以接受——一段就是最小的语义单位，再细分不值得。
 - **删除的彻底程度 vs 成本。** 派生物越多，删除越贵。**设计派生物的时候就要想好怎么删**，事后补反查字段的代价高得多。
 
-## 工程落地
+## 把数据生命周期变成契约
 
 - **入库要有报告**：这批文档产出多少 chunk、拒了多少、原因分布、embedding 花了多少钱。没有报告，数据质量退化时你不会知道。
 - **陈旧检查每天跑**，见第四节。
@@ -253,7 +254,7 @@ if any(stores.residue(source_id).values()):
 - **ACL 变更也要触发重新索引**。一份文档从「内部」改成「公开」，索引里的 acl 字段要跟着变，否则权限判断用的还是旧值。
 - **怎么测。** 删除演练本身就是一条测试，见第五节。另外两条：拿一份只改了一段的文档跑增量更新，断言只有那一段的 chunk 变了、其余 chunk 的哈希一个都没动；再造一份故意落后于源文档的索引，断言 `stale_chunks()` 把它报出来。两条都不调模型（embedding 用假实现），能进 CI（第 19 课）。
 
-## 框架映射
+## 框架没有替你管的部分
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -262,7 +263,7 @@ if any(stores.residue(source_id).values()):
 
 **没有框架管数据生命周期。** 这一层是纯工程，也是最容易被跳过、最后代价最大的一层。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)（核对日期 2026-09-05）。
 
-## 一线经验
+## 旧版本索引曾经没有被替换
 
 语音机器人的知识库是玩法和故事内容。一个真实教训：内容团队更新了某个故事文本，索引里的旧版本没被替换，机器人念的还是旧的。
 
@@ -270,11 +271,22 @@ if any(stores.residue(source_id).values()):
 
 这类故障的特点是**不报错**：入库脚本成功退出，日志一片绿，只有用户会发现内容不对。这也是为什么数据层的检查必须是主动巡检，而不是等异常。
 
-## 参考实现
+## 把一份文档更新，再删干净
+
+参考项目的 M4 测试不依赖真实 embedding 服务，先跑增量更新和删除演练：
+
+```bash
+cd ai-app-engineering-ref
+uv run pytest tests/project/m4/test_ingest.py tests/project/m4/test_knowledge_store_contract.py -q
+```
+
+重点看 `test_new_version_replaces_old_chunks_and_reuses_unchanged_vectors` 和 `test_delete_leaves_no_residue_anywhere`。前者证明只重算变过的 chunk，后者检查向量、chunk 和检索结果都不再留下旧文档。实现入口是 [`knowledge/ingest.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/ingest.py)。
+
+## 参考实现里的 ingest 与删除
 
 文档版本与增量重建在 [`knowledge/ingest.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/ingest.py)：内容哈希没变就不重新算 embedding。删除演练要的那两张表在 [`migrations/0002`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/storage/migrations/versions/0002_knowledge_and_memory.py)，切分不跨节、编码问题和重复文档能被标出来，用例在 [`m4/test_ingest.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m4/test_ingest.py)。
 
-## 延伸阅读
+## 把数据管道接到检索系统
 
 - [Docling](https://github.com/docling-project/docling)（访问日期 2026-09-04）：多格式文档转结构化输出的开源解析器，看 README 的 Features 和 Python usage 两节。
 - [Unstructured](https://github.com/Unstructured-IO/unstructured)（访问日期 2026-09-04）：另一个常用解析库，`partition` 系列函数把文档拆成带类型的元素。

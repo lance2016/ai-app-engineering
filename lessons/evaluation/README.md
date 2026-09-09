@@ -1,5 +1,6 @@
 ---
 status: complete
+structure: narrative
 part: Part 4 生产工程
 estimated_time: 约 2 小时
 ---
@@ -28,17 +29,17 @@ estimated_time: 约 2 小时
 这不叫「测得不够多」。三个问题换成三十个，只要这三十个都是正常提问，结果一模一样。缺的是一类标着 `adversarial` 的样本，和一条「这一类的通过率不许掉」的规则。
 
 !!! note "构造的例子"
-    这三组回答和那张截图是为讲清切片和门禁编的。本课 [一线经验](#一线经验) 那一节才是作者自己的经历。
+    这三组回答和那张截图是为讲清切片和门禁编的。本课 [退出类 bad case 如何变成回归集](#退出类-bad-case-如何变成回归集) 那一节才是作者自己的经历。
 
 </details>
 
-## 为什么需要
+## 总分变好，为什么用户还是在投诉
 
 「我感觉 prompt 变好了」不能阻止回归，也不能解释哪类用户被伤害。评测集、轨迹断言和门禁把主观判断变成可重复的证据。
 
 **这一课不是评测的起点。** 前面每一课都在「工程落地」里留了一块碎片：01 的能力探针、03 的 prompt golden case、04 和 13 的 Recall@k、05 的工具调用断言、06 的停止原因分布、08 的上下文回归样本、14 的「该记住 / 该忘掉」两类样本。它们各自都能用，但各跑各的：没有统一的切片标签，没有基线，没有门禁，也没人知道哪个数字掉了该找谁。这一课把它们合成一个系统。
 
-## 学习目标
+## 评测结果要支持哪些决定
 
 - 能为一个 AI 功能建一份带切片标签的 golden set，并用确定性断言在一秒内跑完
 - 能校准一个 LLM judge：算它和人工标注的一致率与 kappa，从分歧案例改 judge 的 prompt
@@ -46,12 +47,12 @@ estimated_time: 约 2 小时
 - 能实现一个按切片比对基线的回归门禁，说明为什么总分会掩盖退化
 - 能分清确定性断言、录制回放、真实模型评测、judge 和线上实验各证明了什么，不把 CI 绿灯当成模型表现的证据
 
-## 前置
+## 评测样本从哪里来
 
 - [07 Agent State 与 Runtime](../agent-state-and-runtime/README.md)：轨迹评测直接对事件线程做断言
 - [15 RAG 端到端](../rag-end-to-end/README.md)：Recall@k 是本课方法在检索层的应用
 
-## 怎么理解它
+## 先分质量、轨迹和门禁
 
 AI 应用的评测分成三层，成本递增、频率递减：
 
@@ -105,7 +106,7 @@ flowchart LR
     class X risk
 ```
 
-## 机制拆解
+## 从样本到发布门
 
 ### 一、Golden set：输入 + 断言 + 标签
 
@@ -251,7 +252,7 @@ def gate(current: dict, baseline: dict) -> list[str]:
 
 基线存成 JSON 文件，跟着代码走。更新基线必须是显式动作、有人批准——「跑一次就覆盖基线」会让门禁形同虚设。
 
-## 常见错误
+## 评测为什么会失真
 
 **只看总分。** 见第一节。
 
@@ -263,14 +264,14 @@ def gate(current: dict, baseline: dict) -> list[str]:
 
 **把评测跑得很慢。** 需要 key、要半小时、要人盯的评测，只会在发版前跑一次。断言层必须一秒内跑完，这是它能进 CI 的前提。
 
-## 取舍
+## 样本、成本和可信度
 
 - **断言的严格程度。** `must_contain "14 天"` 会把「两周内」判错。太严会误报，太松会漏报。经验是先严，把误报的案例单独看一眼，确认是断言写窄了再放宽。
 - **judge 的成本。** 每条案例一次模型调用，几百条案例就是几百次调用。所以 **judge 不进每次提交的 CI**，按天或按发版跑；断言进 CI。
 - **通过率目标。** 通过率是产品决策，不需要 100%。对抗切片要求 100%，faq 切片 95% 可能就够。阈值按切片设，不设一个全局值。
 - **基线怎么更新。** 有意的改进会让分数上升，此时要更新基线；但更新动作要显式、有人批准。
 
-## 工程落地
+## 把门禁接进发布流程
 
 - **失败案例要能一键变成新用例。** 线上出了 bad case，从 trace 里直接生成一条 golden case，是评测集能长大的关键。
 - **flaky 案例要单独处理。** 模型随机性导致的不稳定案例，要么多跑几次取通过率，要么把断言放宽（「必须点名 A」→「必须点名候选之一」）。**评测集里 flaky 的案例不处理，整个门禁就会被当成噪声忽略。**
@@ -278,7 +279,7 @@ def gate(current: dict, baseline: dict) -> list[str]:
 - **评测报告要能看到具体失败案例**，不只是数字。人看到「哪一条挂了、输出是什么」才能判断该改代码还是改断言。
 - **怎么测门禁自己。** 这一课的产物是门禁，而门禁坏掉的形态是静默放行，所以它也要有测试。往 golden set 里塞两条一定失败的案例，断言门禁真的红了；再把 judge 换成一个「全判 pass」的假实现，断言算出来的 kappa 是 0.00 而不是那个虚高的一致率。这两条挡的是「我们有评测」变成「我们有一个永远绿的评测」。
 
-## 框架映射
+## 框架能跑评测，门禁仍归你
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -287,17 +288,29 @@ def gate(current: dict, baseline: dict) -> list[str]:
 
 托管评测平台省事，但**评测集和阈值是你的核心资产**，要能导出、能进版本库。官方文档：[LangSmith](https://docs.smith.langchain.com/) · [OpenAI Evals](https://platform.openai.com/docs/guides/evals) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
-## 一线经验
+## 退出类 bad case 如何变成回归集
 
 语音机器人项目的经验：**最有价值的评测集不是一开始设计出来的，而是从「退出类 bad case」里长出来的。** 用户说「不聊了」机器人还在说，这类失败先被记成案例，再用真实模型加假数据库跑整个流程复现，复现出来的就进回归集。
 
 另一个教训是评测暴露了一个 flaky 的行为：某个选择阶段的点名结果不稳定。根因是模型随机性，代码那一侧查不出东西。处理方式见上面「工程落地」那条——不处理它，团队很快就会开始无视红色的门禁，那比没有门禁更糟。
 
-## 参考实现
+## 先跑绿灯，再让门禁变红
+
+参考项目的评测不需要真实模型就能跑断言、检索和工具轨迹：
+
+```bash
+cd ai-app-engineering-ref
+uv run python scripts/eval_run.py
+uv run pytest tests/project/m5/test_eval_gate.py -q
+```
+
+先看 Gate PASS，再打开 [`project/eval/thresholds.toml`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/eval/thresholds.toml) 和 [`m5/test_eval_gate.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m5/test_eval_gate.py)。测试里有一条故意失败的切片，改坏它时门禁必须红；这比只看一次总分更能说明门禁真的在工作。
+
+## 参考实现里的评测门
 
 评测套件在 [`eval/suites.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/eval/suites.py)，LLM 判分器和它的人机一致性校准在 [`judge.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/eval/judge.py)，回归门禁在 [`gate.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/eval/gate.py)，golden set、判分校准和阈值这些数据在 [`project/eval/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/eval)。「整体没退但某个切片退了」能不能被拦住，看 [`m5/test_eval_gate.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m5/test_eval_gate.py)。
 
-## 延伸阅读
+## 从评测门继续读
 
 - [Hamel Husain · Your AI Product Needs Evals](https://hamel.dev/blog/posts/evals/)（访问日期 2026-09-04）：三层评测的出处。重点读 Level 1 的「把功能拆成场景写断言」和 Level 2 的「用表格对齐 judge 和人」。
 - [Hamel Husain · Creating a LLM-as-a-Judge That Drives Business Results](https://hamel.dev/blog/posts/llm-judge/)（访问日期 2026-09-04）：为什么坚持二元 pass/fail，以及 critique 要写到「新员工能看懂」。

@@ -35,14 +35,14 @@ JSON 本身没问题，`json.loads` 一次通过。三个字段全是错的：`n
 
 <div class="lesson-meta" markdown="1">
 
-## 学习目标 { .lesson-meta__heading }
+## 调用链要保住什么 { .lesson-meta__heading }
 
 - 能说清一次调用的请求和响应里各有什么，以及课程的统一模型和某一家的线上格式差在哪
 - 能按「原生结构化输出 → schema 校验 → 修复重试」三层给一个抽取任务选方案，并说出哪些字段不能交给模型改
 - 能消费流式响应：文本增量边到边显示，结构化参数攒完整、校验过才交出去
 - 能把错误分成可重试和不可重试两类，并把每次调用的 usage 落库
 
-## 前置 { .lesson-meta__heading }
+## 调用课接在什么之后 { .lesson-meta__heading }
 
 - [00 起步](../setup/README.md)：三套线上格式并排看过一遍，知道字段名不同、做的是同一件事
 - [01 从模型到应用](../how-llms-work/README.md)：token、抽样、上下文窗口是预算
@@ -294,7 +294,7 @@ def record(self, label, usage, provider) -> None:
 
 **记原始 token 数，别只记算好的钱。** 单价会调、缓存折扣各家不同、推理 token 单独计价。拍成一个数字之后就再也拆不回来，事后想按新单价重算都没得算。这几类 token 怎么变成账单，第 01 课的成本链讲过；这些记录怎么长成按租户按天的成本视图，第 19、20 课。
 
-## 常见错误 { .section--risk }
+## 格式和流式输出会怎样坏 { .section--risk }
 
 **校验失败没有明确的去向。** 它是预期内的一类结果，该有一个明确的分支：这个字段可以让模型改，那个字段直接拒绝。删掉 `except` 让程序死在第一次不行，反过来一律回喂让模型改也不行——第三节那张表里的字段，改出来的合法值可能是假的。
 
@@ -328,7 +328,7 @@ def record(self, label, usage, provider) -> None:
 - **重试和幂等要一起设计。** 一次带副作用的调用超时重试，可能产生两次副作用。第 05 课讲幂等键。
 - **怎么测。** 三层方案各测一层。校验层拿一组故意坏的 JSON（缺字段、类型错、枚举越界、外面包了代码围栏），断言每一类都走到「修复重试」而不是抛异常。流式层拿一段录好的 SSE（Server-Sent Events，服务端在一条 HTTP 连接上持续推事件，第 18 课展开）事件流回放，断言文本增量边到边发出去、结构化参数攒完整校验过才交出去、`usage` 不在最后一个事件上时不崩。录好的事件流不需要供应商，跑得比真调用快两个数量级（第 19 课）。
 
-## 框架映射 { .section--reference }
+## 框架把结构化输出放在哪一层 { .section--reference }
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -344,11 +344,22 @@ def record(self, label, usage, provider) -> None:
 
 另一条是格式。早期靠在提示词里反复强调「只输出 JSON」，线上仍有百分之几的返回带解释文字或代码围栏，每次都是客服反馈后手动补规则。改成本课的做法之后——schema 和校验共用一个 Pydantic 模型，失败原文回喂重试一次——格式类错误基本消失，剩下的都是语义错误。这些才值得人看。
 
-## 参考实现 { .section--reference }
+## 在参考项目里回放一条 SSE
+
+不用供应商 key，先跑 M1 的线程和错误测试：
+
+```bash
+cd ai-app-engineering-ref
+uv run pytest tests/project/m1/test_threads.py tests/project/m1/test_errors.py -q
+```
+
+再打开 Playground 发送一句话，观察 `assistant_delta` 是一条条到达的，`run_finished` 才带最终 `usage`。错误测试覆盖首块之前的失败和结构化 HTTP 错误；它们对应 [`runtime/turn.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/turn.py) 与 [`api/errors.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/errors.py)。
+
+## 参考实现里的 SSE 回放 { .section--reference }
 
 供应商中立的消息与工具类型在 [`adapters/base.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/base.py)，最小的一次流式调用在 [`runtime/turn.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/turn.py)，错误契约在 [`api/errors.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/errors.py)。SSE 逐条到达、四类错误各自的状态码，用例在 [`m1/test_threads.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m1/test_threads.py) 和 [`test_errors.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m1/test_errors.py)，装配见 [M1 API 骨架](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md)。
 
-## 延伸阅读 { .section--reference }
+## 把调用格式接到供应商文档 { .section--reference }
 
 - [Anthropic · Messages API](https://platform.claude.com/docs/en/api/messages)（访问日期 2026-09-04）：一个供应商完整的请求体定义，注意角色、工具结果和参数都在同一层。
 - [Anthropic · Structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)（访问日期 2026-09-04）：服务端约束输出格式的做法和它的限制，读完就知道客户端校验为什么还是要留。

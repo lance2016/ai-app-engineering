@@ -84,14 +84,14 @@ sequenceDiagram
 
 缓存那一步的代价，是 host 手里的 schema 会和 server 手里的悄悄分叉：那条线只走了一次左半边，之后一直重复右半边。三件事凑在一起就出事——工具列表被缓存了、schema 归另一个进程的人改、协议错误和工具执行失败走两条不同的通道。这一课讲的就是这三件事。
 
-## 学习目标
+## 协议边界要说清什么
 
 - 能画出 MCP 的生命周期，并说清为什么 `tools/list` 必须发生在握手之后
 - 能分辨「协议错误」和「工具执行失败」两条通道，说出各自该怎么处理
 - 能把 MCP server 暴露的工具接进第 05 课的注册表与白名单
 - 能处理两种意外：server 进程死掉，和 server 悄悄升级
 
-## 前置
+## 协议课需要先懂什么
 
 - [05 Tool Calling](../tool-calling/README.md)：ToolSpec、白名单、错误结果。MCP 工具最终都要变成这些东西
 
@@ -283,7 +283,7 @@ def call(client, tool):
 
 **[MCP Inspector](https://github.com/modelcontextprotocol/inspector)** 是一个网页工具，能连上任何 server 手动发消息看响应。开头那个案例用它三十秒就能看出来：连上 0.2 版的 server，`tools/list` 一看，`q` 和 `limit` 就在那里。排查握手和 schema 问题，它比打日志快得多。
 
-## 常见错误
+## 连接和工具列表怎样过期
 
 **把 server 的工具列表原样给模型。** 协议层不替你做权限。删掉那个白名单过滤，server 提供什么模型就能调什么。
 
@@ -308,7 +308,7 @@ def call(client, tool):
 - **第三方 server 是供应链风险。** 它能读你传过去的一切参数，而且能在任何时候改自己的行为。接入前要看代码、钉版本、限制它能访问的资源。第 22 课展开。
 - **怎么测。** 写一个假 server 就能测四条：握手之前调 `tools/list`，断言被拒；把 server 的 stdout 关掉，断言 client 立刻拿到错误而不是永远阻塞；给它一个返回 `isError: true` 的工具和一个返回 JSON-RPC `error` 的方法，断言前者回喂给模型、后者不回喂；让假 server 在重连后换一份 schema，断言 host 用的是新的那份。最后一条就是开头那个案例的回归测试。四条都不需要真模型（第 19 课）。
 
-## 框架映射
+## 框架管连接，还是管工具
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -318,11 +318,22 @@ def call(client, tool):
 
 Claude Agent SDK 对 MCP 的支持最深，因为 Claude Code 本身就是 MCP host。但「缓存的工具列表什么时候该扔掉」三个框架都不替你决定。官方文档：[MCP 规范](https://modelcontextprotocol.io/specification/latest) · [LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
-## 参考实现
+## 让 toy server 断一次线
+
+参考项目自带一个 stdio toy server，不需要真实模型：
+
+```bash
+cd ai-app-engineering-ref
+uv run pytest tests/project/m3/test_mcp.py -q
+```
+
+测试会启动 [`toy_notes_server.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/mcp/toy_notes_server.py)，覆盖只读工具、带副作用的工具、JSON-RPC 错误和 server 重启。重点看 `test_server_that_died_is_restarted_transparently`：重连后必须重新 `initialize` 和 `tools/list`，不能沿用旧 schema。
+
+## 参考实现里的 toy server
 
 MCP client 在 [`mcp/client.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/mcp/client.py)，走 stdio 上的 JSON-RPC；把外部工具注册进本地注册表的是 [`runtime/mcp_source.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/mcp_source.py)；还有一个能真跑的玩具服务器 [`toy_notes_server.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/mcp/toy_notes_server.py)。服务器死了算瞬时错误、重连一次，这些用例在 [`m3/test_mcp.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m3/test_mcp.py)。
 
-## 延伸阅读
+## 从协议消息继续读
 
 - [MCP 规范 · 最新版](https://modelcontextprotocol.io/specification/latest)（访问日期 2026-09-04，当前修订版 2026-07-28）：先读 [Lifecycle](https://modelcontextprotocol.io/specification/latest/basic/lifecycle)，再读 [Tools](https://modelcontextprotocol.io/specification/latest/server/tools) 和 [Resources](https://modelcontextprotocol.io/specification/latest/server/resources)。本课的消息形状就是这三页的子集，`listChanged` 通知也在 Tools 那一页。
 - [JSON-RPC 2.0 规范 · Error object](https://www.jsonrpc.org/specification#error_object)（访问日期 2026-09-07）：`-32600` 到 `-32603` 各是什么意思。开头那个案例里 `-32602` 的语义是「参数无效」，也就是「调用方错了」，这正是它误导人的地方。

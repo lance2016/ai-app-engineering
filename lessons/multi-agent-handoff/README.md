@@ -1,5 +1,6 @@
 ---
 status: complete
+structure: narrative
 part: Part 2 Tool 与 Agent
 estimated_time: 约 2 小时
 ---
@@ -28,26 +29,26 @@ estimated_time: 约 2 小时
 这一行策略当初是写 handoff 那天顺手定的，之后没人再看过它。交接给多少历史，直接决定专家 Agent 还能不能干活；这一行得是想清楚之后定下来的。
 
 !!! note "构造的例子"
-    这段对话是为讲清交接策略编的。本课 [一线经验](#一线经验) 那一节才是作者自己的经历。
+    这段对话是为讲清交接策略编的。本课 [两个模型并行时谁说了算](#两个模型并行时谁说了算) 那一节才是作者自己的经历。
 
 </details>
 
-## 为什么需要
+## 一个 Agent 什么时候该把控制权交出去
 
 多个 Agent 直接互传上下文，会造成状态归属不明、权限扩大、失败无法回退。交接需要显式事件、最小视图和明确的控制权。
 
-## 学习目标
+## 交接前要回答的三个问题
 
 - 能实现 handoff：把「转交」做成工具调用，由运行时切换活跃 Agent，并按策略决定专家 Agent 看到多少历史
 - 能实现 racing：两个模型并行处理同一输入，按规则取舍，其中一个超时时有确定的兜底
 - 能说清多 Agent 系统里状态归谁、每个 Agent 看到什么、一个 Agent 失败时控制权怎么回来
 
-## 前置
+## 交接建立在哪两课上
 
 - [09 Workflow 还是 Agent](../workflow-vs-agent/README.md)：本课是 routing 和 orchestrator-workers 在多 Agent 上的延伸
 - [07 Agent State 与 Runtime](../agent-state-and-runtime/README.md)：多个 Agent 共用一个事件线程，靠 `agent` 标签区分
 
-## 怎么理解它
+## 交接、并行和回退是三种不同动作
 
 ```mermaid
 flowchart TB
@@ -76,7 +77,7 @@ OpenAI Agents SDK 把这叫 handoff，把「把另一个 Agent 当工具调用�
 
 **状态归运行时，Agent 拿视图。** 所有 Agent 的输出都进同一个线程，带 `agent` 标签。每个 Agent 调模型时拿到的是运行时算出来的视图。专家 Agent 抛异常，运行时记一条 `handoff_failed`，控制权回到 triage。
 
-## 机制拆解
+## 控制权怎么交，结果怎么收回来
 
 ### 一、Handoff：策略住在运行时的一个过滤器里
 
@@ -173,7 +174,7 @@ async def handle(thread: Thread) -> str:
 
 triage 的兜底回复要诚实：「我暂时联系不上账务系统，已经记录你的请求，一天内会有人跟进」。比假装处理好了强得多。
 
-## 常见错误
+## 多 Agent 最容易失控的几处
 
 **Agent 之间直接传消息。** 让 triage 的输出直接成为 billing 的输入，中间没有运行时。结果是没有人记录交接发生过，billing 失败时没有地方回退，历史策略也没法配置。
 
@@ -183,13 +184,13 @@ triage 的兜底回复要诚实：「我暂时联系不上账务系统，已经�
 
 **取消了草稿但它已经产生副作用。** 上面被取消的是一个纯文本草稿，取消是安全的。如果聊天模型也能调工具，取消它之前必须确认它没有已执行的调用。这是第 07 课「执行和记录之间不能崩」的另一个形态。
 
-## 取舍
+## 拆分换来什么，又增加什么
 
 - **拆成多个 Agent 还是一个大 Agent。** 拆的收益：每个 Agent 的上下文小、提示词专、能独立测试和替换。代价：交接策略、视图计算、失败回退都是新代码。经验是先用一个 Agent 加 routing，等某个分支的提示词长到互相打架了再拆。
 - **Handoff 还是 agents-as-tools。** 转移控制权适合「接下来的对话都归专家」（客服转接）；当工具调用适合「问一下专家再回来」（让翻译 Agent 翻一段）。前者专家直接面对用户，后者主 Agent 始终在场。**别混用**：一个专家既能被当工具调又能接管控制权，状态会很难讲清楚。
 - **Racing 的成本。** 并行意味着两次模型调用都要付钱，被取消的那次也常常已经计费。它换来的是延迟。只在延迟真的重要（语音、实时交互）时用，后台任务用第 09 课的串行 routing。
 
-## 工程落地
+## 把 handoff 变成可回放的事件
 
 - **交接要有超时和次数上限。** A 转给 B，B 又转回 A，这个环要能被检测出来并终止。
 - **每个 Agent 的权限是独立的。** billing 能查订单不能改配置，shipping 反过来。第 05 课的白名单按活跃 Agent 取，不是全局一份。
@@ -197,7 +198,7 @@ triage 的兜底回复要诚实：「我暂时联系不上账务系统，已经�
 - **失败回退的措辞要预先写好**，不要临时让模型编。「联系不上」和「处理失败」对用户是两种不同的意思。
 - **怎么测。** 三条断言，用剧本式的假模型。交接：让 A 转 B、B 转回 A，断言环被检测出来并终止。视图：对着专家 Agent 实际拿到的历史快照断言，它不该看到的字段一个都不在里面。racing：把一路换成永不返回的假实现，断言超时后另一路的结果被采用，而且被取消那一路没有产生副作用。
 
-## 框架映射
+## 三家框架各自负责哪一段
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -207,7 +208,7 @@ triage 的兜底回复要诚实：「我暂时联系不上账务系统，已经�
 
 OpenAI Agents SDK 把 handoff 做成了核心概念，它的 input filter 就是本课的历史策略。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。框架全景见 [reference/frameworks.md](../../reference/frameworks.md)。
 
-## 一线经验
+## 两个模型并行时谁说了算
 
 语音机器人项目就是 racing 那一节的来源。一个聊天模型负责自然回复，一个小的意图分类模型并行判断用户是不是在发指令（调音量、放音乐、退出）。三种裁决：只聊天用聊天回复；只指令取消聊天回复去执行；两者都有则执行指令同时用聊天回复。
 
@@ -218,11 +219,22 @@ OpenAI Agents SDK 把 handoff 做成了核心概念，它的 input filter 就是
 
 **每多一个模型，就多一处需要运行时守卫的地方。**
 
-## 参考实现
+## 项目边界：handoff 留在 framework-lab
 
-参考实现**没有做** handoff。不做的理由记在 [M3 的选型记录](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)：工具只有五个，一个 Agent 的上下文装得下，拆成两个只是把问题换成消息传递。想看拆开之后长什么样，[framework-lab](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/framework-lab/README.md) 把同一个审批需求在三个框架上各做了一遍。
+参考项目的 M3 刻意保持单 Agent：工具只有五个，一个上下文装得下，拆开只会增加消息传递和回退路径。想看 Framework Lab 里已经接入的实现怎样表达 handoff 和子 Agent，可以运行 conformance 测试：
 
-## 延伸阅读
+```bash
+cd ai-app-engineering-ref
+uv run pytest tests/project/framework_lab/test_conformance.py -q
+```
+
+这组测试把不支持的能力标成 skip，并把原因写进评分表；它说明的是框架边界，不是参考项目已经提供了一套多 Agent 运行时。
+
+## 参考实现里的 framework-lab
+
+参考实现**没有做** handoff。不做的理由记在 [M3 的选型记录](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)：工具只有五个，一个 Agent 的上下文装得下，拆成两个只是把问题换成消息传递。想看拆开之后长什么样，可以看 [framework-lab](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/framework-lab/README.md) 的共同规格、baseline 和 LangGraph 实现；OpenAI Agents SDK 与 Claude Agent SDK 的适配器还在待办中。
+
+## 从交接继续读多 Agent 设计
 
 - [ai-agents-for-beginners · 08 Multi-agent design patterns](https://github.com/microsoft/ai-agents-for-beginners/blob/main/08-multi-agent/README.md)（访问日期 2026-09-04）：什么场景值得多 Agent，group chat / hand-off / collaborative filtering 三种模式。
 - [OpenAI Agents SDK · Handoffs](https://openai.github.io/openai-agents-python/handoffs/)（访问日期 2026-09-05）：handoffs 和 agents-as-tools 的区分，input filter 就是本课的历史策略。

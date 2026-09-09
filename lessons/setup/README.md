@@ -1,5 +1,6 @@
 ---
 status: complete
+structure: narrative
 part: Part 0 起步
 estimated_time: 约 30 分钟
 ---
@@ -8,13 +9,13 @@ estimated_time: 约 30 分钟
 
 > 一次模型调用就是一次 HTTP POST。这一课先用八行代码跑通一次真实调用，再回头看清请求和响应里有什么，最后把三套主流接口摆在一起对照——它们字段名互不相同，做的是同一件事。
 
-## 为什么需要
+## 先把一次调用跑通，再谈抽象
 
 打开任何一家模型厂商的文档，第一页都是「几行代码调通」。照着抄能跑，但换一家就得重抄一遍，也说不清哪些差异是本质的、哪些只是命名——各家的字段名不一样，OpenAI 自己还有新旧两套。
 
 所以这一课分两步：先让一次调用真的跑起来，再把请求和响应的形状看清楚。后面所有课都站在这个底座上：消息是什么、工具结果算谁说的话、状态存在谁那里。
 
-## 学习目标
+## 跑通第一调用后要看懂什么
 
 - 能跑通一次真实的模型调用，并说出请求体里那几类字段各是干什么的
 - 能画出一次模型调用里应用、接口、模型各站在什么位置，各自负责什么
@@ -22,7 +23,7 @@ estimated_time: 约 30 分钟
 - 能说出 Chat Completions、Responses、Claude Messages 三套接口的关键差异，以及各自该在什么场景选
 - 能说清「模型适配器」这个抽象为什么值得从第一天就有
 
-## 怎么理解它
+## 一条请求里谁负责什么
 
 ### 一个 AI 应用最小的样子
 
@@ -70,7 +71,7 @@ flowchart LR
 
 看到 `## 机制拆解` 下面的代码，默认它跑不起来——它引用的类型和函数是为了让你看懂逻辑而虚构的。这是刻意的：把 import、日志、错误处理都塞进去，一段二十行能讲清的机制会变成两百行。
 
-## 机制拆解
+## 从 HTTP 请求到适配器
 
 这一课的代码是全课唯一的例外：**第一段能直接复制去跑**，后面几段接着第一段的 `client` 写，单独拿走会缺东西。国内直接可访问的是 DeepSeek，在 <https://platform.deepseek.com> 申请 key。
 
@@ -249,7 +250,7 @@ flowchart LR
 
 **它的第一个实现是一个按剧本回答的 fake。** 不需要 key，行为确定，可以写断言，还能让模型「按要求犯错」。代价是它不会思考——讲机制用 fake，看效果用真模型，这是贯穿全课的做法。怎么用它搭评测是第 19 课的事，这里只要知道适配器这层一旦有了，fake 就是免费的。
 
-## 常见错误
+## 第一次调用通常坏在哪里
 
 - **`RuntimeError: DEEPSEEK_API_KEY is not set`**：环境变量没设，或者设在了另一个终端窗口里。
 - **`openai.AuthenticationError`**：key 和 base URL 不是同一家的。DeepSeek 的 key 只能配 `https://api.deepseek.com`。
@@ -260,7 +261,7 @@ flowchart LR
 - **401 但 key 是从别处复制来的**：先用 `curl` 直接打接口确认 key 有效，再怀疑代码。写这一课时就踩过一次，环境变量里放着一个早已失效的 key。
 - **模型没调工具，直接回答了**：`description` 写得不够明确，或者模型判断不需要。这是正常现象，第 05 课讲怎么写工具描述。
 
-## 取舍
+## 什么时候值得加适配器
 
 **服务端存历史省带宽，代价是状态不在你手里。** Responses 的 `previous_response_id` 让你不用每轮重发全部历史，长对话省下的 token 很可观。但历史长什么样、裁掉了哪些，你看不见也改不了——而第 08 课整课都在讲「上下文该由运行时自己裁」。要精细控制上下文的系统，宁可自己存。
 
@@ -268,7 +269,7 @@ flowchart LR
 
 **用 fake 换确定性，失去真实行为。** 讲机制时这笔交易划算；判断「这个提示词效果好不好」时，fake 一点用都没有。
 
-## 框架映射
+## 框架把模型放在哪一层
 
 这一课的概念在框架里的位置：
 
@@ -280,11 +281,23 @@ flowchart LR
 
 官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-06）。
 
-## 参考实现
+## 不申请 key，先跑通项目里的 fake adapter
+
+参考项目把模型协议包在同一个 `ModelAdapter` 接口后面，默认的 fake adapter 不需要供应商 key。这样可以先观察健康检查、SSE 和事件线程，再回到本课前面的三家 API 对照。
+
+```bash
+cd ai-app-engineering-ref
+uv sync
+uv run uvicorn aiapp.api.app:create_app --factory --port 8000
+```
+
+打开 `http://localhost:8000/playground`，Token 填 `dev-token`，发送一句话。页面会收到 `user_message`、`run_started`、若干 `assistant_delta` 和 `run_finished`。真实实现见 [`adapters/base.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/base.py) 与 [`adapters/fake.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/fake.py)。
+
+## 参考实现里的 fake adapter
 
 这一课的 fake adapter 在参考实现里是 [`adapters/fake.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/fake.py)，[`base.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/base.py) 是全课共用的那个 `ModelAdapter` 协议。离线怎么跑，看 [M0 并发实验](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m0-concurrency/README.md)。
 
-## 延伸阅读
+## 从第一调用继续读模型接口
 
 - [OpenAI · Chat Completions API 参考](https://platform.openai.com/docs/api-reference/chat)（访问日期 2026-09-06）：事实标准的完整字段表。看清楚它，才看得懂「OpenAI 兼容」承诺了什么。
 - [OpenAI · Responses API 参考](https://platform.openai.com/docs/api-reference/responses)（访问日期 2026-09-06）：重点看 `previous_response_id` 和内置工具那两节，这是它和老接口真正的分界。

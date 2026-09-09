@@ -1,5 +1,6 @@
 ---
 status: complete
+structure: narrative
 part: Part 2 Tool 与 Agent
 estimated_time: 约 2 小时
 ---
@@ -34,7 +35,7 @@ After every file edit, run `ruff format` on the file you just changed.
 
 </details>
 
-## 为什么需要
+## 一个编码 Agent 先会撞哪面墙
 
 前面每一课单独看都成立，拼起来会冒出一批新问题。这些问题只在「Agent 真的能改变你的机器」时才暴露：
 
@@ -42,18 +43,18 @@ After every file edit, run `ruff format` on the file you just changed.
 
 这些都不是新机制，是已有机制的组合方式。编码 Agent 把这些组合全部撞过一遍，攒出一套现在被反复借鉴的设计。这一课拆的就是这套设计。
 
-## 学习目标
+## 先把哪些边界说清楚
 
 - 能说出一个 harness 由哪几层组成，并指出每一层对应前面哪一课的机制
 - 能解释编辑类工具为什么用「替换一段唯一文本」而不是整文件重写，以及匹配不唯一时该返回什么
 - 能判断一条规则该放进权限声明、hook 还是提示词，并说出理由
 
-## 前置
+## 这套 harness 接在哪些零件上
 
 - [05 Tool Calling](../tool-calling/README.md)、[06 Agent 循环与控制流](../agent-loop/README.md)、[07 Agent State 与 Runtime](../agent-state-and-runtime/README.md)：这一课是这三样的组合形态，不再重复它们的机制
 - [13 Skill 与能力生态分层](../skills-and-capability-layers/README.md)：Skill 和 MCP 在 harness 里各占哪一格
 
-## 怎么理解它
+## Harness 是运行时外壳
 
 ```mermaid
 flowchart TB
@@ -86,7 +87,7 @@ flowchart TB
 
 **上下文有寿命，运行时要管。** 长会话必然撞窗口，三种办法：压缩（有损，最容易丢的是「还没做完的事」）、把内容挪到文件系统按需再读（第 08 课的 just-in-time）、派一个子 Agent 去干脏活，它的上下文和主循环隔离，只把结论带回来。**三种都会丢信息，区别在于丢的是哪一部分、以及你知不知道丢了。**
 
-## 机制拆解
+## 工具、权限和钩子如何串起来
 
 下面三段代码只为说明机制，省略了 import、并发控制和日志，不能直接运行。
 
@@ -167,7 +168,7 @@ async def call_tool(tool, args, mode, hooks):
 
 `hooks.pre` 能改参数，所以「给这条命令自动加 `--dry-run`」「把相对路径规范化」这类规则也落在这里。`hooks.post` 里那行格式化**每次都会执行**，写在系统提示词里则是大概会执行——这就是原则 11 最直白的一个例子。
 
-## 常见错误
+## 最容易失守的几处
 
 **给一个万能的 shell 工具就完事。** 它确实什么都能干，代价是权限分级、审计和错误回喂同时失效：你只知道模型跑了一条命令，不知道它在读还是在删。**工具的边界就是你能施加控制的边界。**
 
@@ -177,14 +178,14 @@ async def call_tool(tool, args, mode, hooks):
 
 **压缩时把「还没做完的事」压没了。** 摘要是模型写的，它倾向保留「聊过什么」，丢掉「第三步还没做」。这份没做完的清单要走第 08 课的 `protected`：运行时认定它重要，每轮原样带进窗口，不交给摘要模型转述。它和「走到第几步」是两码事——后者从事件线程推导得出（第 07 课），不用也不该单独存一份。清单怎么接进循环、怎么验收，见第 10 课。
 
-## 取舍
+## 工具边界和审批成本
 
 - **工具少而通用，还是多而专用。** 四个动词好学、好审计，但模型要多绕几步；十几个专用工具一步到位，代价是每个都要写描述、测试和权限声明，而且工具定义每一轮都在占上下文（第 08 课）。先做四个，等 trace 里反复出现同一组合，再把它固化成一个工具。
 - **审批频率。** 每一步都问，用户三分钟后就开始无脑点同意，确认门等于没有（第 24 课讲的是同一件事）。只在不可逆动作上问，可撤销的动作靠「做了 + 能看 diff + 能撤」兜住。
 - **沙箱强度。** 关掉网络、限死工作目录最安全，但很多真实任务要装依赖、查文档。折中是分级：默认只读加工作目录可写，需要网络时显式开一个会话级开关，并且把这次开关记进事件。
 - **派子 Agent 还是主循环自己做。** 子 Agent 隔离上下文，主循环只拿回结论，长任务里省得多；代价是它看不到主循环的全部背景，容易做偏，trace 上还多一层（第 10、19 课）。
 
-## 工程落地
+## 把守卫留在代码里
 
 - **每个动作落一条事件**：谁申请的、判定是 allow 还是 ask、谁批准的、改了哪些文件、diff 的哈希。出了事，这份记录是唯一能回答「它到底做了什么」的东西（原则 09）。
 - **权限配置分层**：项目级（放在仓库里，跟着代码走 review）、用户级、会话级。冲突时取最严的那一层，不是最近的那一层。
@@ -192,7 +193,7 @@ async def call_tool(tool, args, mode, hooks):
 - **子 Agent 的预算独立结算**：主循环的步数和 token 预算不能被一个跑飞的子 Agent 吃光（第 06 课）。
 - **怎么测。** 拿一组真实仓库任务做样本，但断言不要写在最终回答上，写在轨迹上：改了哪些文件、不该动的有没有动、不可逆动作发生了几次、有没有绕过审批、压缩之后那份没做完的清单还在不在。这些断言都是确定性的，一秒内跑完，能进 CI（第 19 课）。
 
-## 框架映射
+## 框架提供什么，沙箱谁来管
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -204,11 +205,22 @@ async def call_tool(tool, args, mode, hooks):
 
 三家都不管的是沙箱：进程隔离、文件系统边界、网络开关，全部是你自己的事。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-06）。
 
-## 参考实现
+## 在参考项目里观察守卫和轨迹
+
+参考项目把这课的骨架拆在 `registry`、`runner`、`loop` 和 `skills` 四个运行时模块里。先跑确定性的守卫测试，再看模型选择工具的离线准确率：
+
+```bash
+cd ai-app-engineering-ref
+uv run pytest tests/project/m3/test_runner.py tests/project/m3/test_tool_accuracy.py -q
+```
+
+失败结果会作为工具结果回到循环，轨迹里还能看到 allow、ask、deny 和重试次数。`test_tool_accuracy.py` 默认使用 fake adapter；设置真实 provider 时，它才会把同一组工具选择样本交给供应商模型，不能把一次真实模型运行当成稳定的回归结果。
+
+## 参考实现里的 Harness 骨架
 
 这一课讲的骨架就是整个 [`runtime/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/src/aiapp/runtime) 包：注册表、runner、循环、预算、上下文、Skill 加载各一个文件，彼此只通过协议说话。喂给它的演示工具在 [`tools/demo.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/tools/demo.py)，两个只读、一个有副作用、一个专门注入瞬时故障。整套验收在 [`tests/project/m3`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/tests/project/m3)，装配见 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)。
 
-## 延伸阅读
+## 把 Harness 放回更大的工具生态
 
 - [SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering](https://arxiv.org/abs/2405.15793)（访问日期 2026-09-06）：读摘要和讲工具界面设计的那一节。「工具是给模型的界面」这个说法的出处。
 - [Claude Code · Hooks 参考](https://docs.claude.com/en/docs/claude-code/hooks)（访问日期 2026-09-06）：一套成熟的拦截点设计，事件类型和它们能改什么，值得照着抄。

@@ -1,5 +1,6 @@
 ---
 status: complete
+structure: narrative
 part: Part 2 Tool 与 Agent
 estimated_time: 约 2 小时
 ---
@@ -27,26 +28,26 @@ estimated_time: 约 2 小时
 这条链上没有任何一步报错：摘要跑成功了，窗口没超，模型基于它看到的全部信息作答，推理也没毛病。换一个更强的摘要模型能把漏掉的概率压低，但压不到零，而且你无法知道这一次它漏没漏。
 
 !!! note "构造的例子"
-    这段对话和这份摘要是为讲清机制编的。本课 [一线经验](#一线经验) 那一节才是作者自己的经历。
+    这段对话和这份摘要是为讲清机制编的。本课 [前缀缓存曾经一直失效](#前缀缓存曾经一直失效) 那一节才是作者自己的经历。
 
 </details>
 
-## 为什么需要
+## 长对话从哪里开始变贵
 
 上下文不是一个无限大的字符串。历史、工具结果和检索内容会互相挤占预算，最终让模型丢掉真正重要的约束。每一轮的组装过程都应该是可解释的。
 
-## 学习目标
+## 上下文策略要回答什么
 
 - 能写一个 ContextBuilder，把系统指令、参考资料、摘要、历史、工具结果按固定顺序组装进 token 预算内
 - 能实现压缩（compaction）：老对话摘要化、完整日志保留、关键事实不交给摘要
 - 能把一个巨大的工具结果整形成「概览 + 引用 + 按需取更多」，并说明为什么稳定前缀能省钱
 
-## 前置
+## 上下文输入从哪里来
 
 - [07 Agent State 与 Runtime](../agent-state-and-runtime/README.md)：事件线程是本课的输入。`to_messages()` 是最简单的上下文组装，本课把它做成可配置的
 - [03 Prompt Engineering](../prompt-engineering/README.md)：单次调用里指令怎么写
 
-## 怎么理解它
+## 一轮请求到底装了什么
 
 ```mermaid
 flowchart LR
@@ -98,7 +99,7 @@ flowchart LR
     class W,B,C runtime
 ```
 
-## 机制拆解
+## 预算、裁剪和受保护内容
 
 ### 一、ContextBuilder：先放固定区段，再用剩余预算填历史
 
@@ -227,7 +228,7 @@ def build_window(turn, history) -> list[Message]:
 
 十轮对话，稳定布局从第二轮起每轮命中，易变布局零命中。模型行为完全一样，成本差一大截。
 
-## 常见错误
+## 上下文最容易在哪里坏
 
 **摘要当事实。** 见上面的 `protected`。这类问题 ai-agents-for-beginners 叫 context poisoning 和 context distraction。
 
@@ -239,13 +240,13 @@ def build_window(turn, history) -> list[Message]:
 
 **时间戳放在系统提示词开头。** 很多人为了让模型知道现在几点，把时间写进系统提示词第一行。时间放在最后一条消息里效果一样，钱省一大半。
 
-## 取舍
+## 保留什么、丢掉什么
 
 - **压缩的激进程度。** 压得狠，窗口小、便宜、模型专注，但丢细节的风险大——而且丢的往往是「当时看起来不重要、后来才发现关键」的信息。先做保守压缩，用评测确认没有回归，再逐步加大。
 - **预检索 vs 运行时探索。** 把资料提前检索好塞进窗口，快但可能过期或不相关；让 Agent 用工具按需查，准但慢。变化快的内容适合按需，稳定的内容（法条、合同）适合预检索。多数系统是混合的。
 - **自定义格式 vs 标准消息格式。** factor 03 提到可以不用 system/user/assistant 的标准格式，把整段历史打包成一条消息以节省 token 和注意力。收益是真的，代价是失去供应商对标准格式的优化（比如对工具调用的特殊处理）。先用标准格式，测出瓶颈再改。
 
-## 工程落地
+## 把上下文策略落到运行时
 
 - **每次组装都留一份报告**：每个区段占了多少 token、丢了几条历史、工具结果压缩比多少。这份报告跟着 trace 走，是排查「模型为什么忘了刚才说的话」的唯一线索。
 - **裁剪按整轮，不按条。** 只裁掉半轮（留下 assistant 的工具调用、丢掉对应的 tool result）会让模型看到不完整的对话，行为很怪。
@@ -253,7 +254,7 @@ def build_window(turn, history) -> list[Message]:
 - **提示缓存要主动用**。供应商支持显式缓存断点时（比如 Anthropic 的 `cache_control`），把断点打在系统提示词和工具定义之后。注意有的供应商规定改动思考相关参数会让缓存前缀整体失效，开关思考不是免费的，用之前查它的文档。
 - **怎么测。** 留一组固定的长对话样本，每次改组装策略都跑一遍，比对最终发给模型的消息列表和各区段的 token 占比。上下文的回归特别隐蔽：某个区段被裁没了，模型不报错，只是变笨。
 
-## 框架映射
+## 框架替你管了哪一段
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -263,17 +264,28 @@ def build_window(turn, history) -> list[Message]:
 
 Claude Agent SDK 的自动压缩最省事，代价是压缩策略不在你手里——正好是 factor 03 警告的那件事。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
-## 一线经验
+## 前缀缓存曾经一直失效
 
 语音机器人的设备端每轮都会上报一段环境状态（时间、位置、正在播放什么）。早期把它放在系统提示词的开头，结果前缀缓存几乎从不命中。挪到最后一条用户消息里之后，同样的对话成本降了一大截，模型行为没有任何变化。
 
 另一个教训：长对话的历史裁剪一度只按条数。用户说过的一条关键约束被裁掉后，模型反复违反它。后来的做法就是上面的 `protected`——确定重要的约束由运行时单独维护，不依赖它恰好还在窗口里。
 
-## 参考实现
+## 看一次裁剪和工具结果整形
+
+参考项目的测试会故意把上下文预算压到很小：
+
+```bash
+cd ai-app-engineering-ref
+uv run pytest tests/project/m3/test_loop.py::test_context_drops_oldest_turns_and_shapes_big_tool_results -q
+```
+
+这个用例不比较模型最后说了什么，而是检查发给模型的消息和 `assistant_message.context`：旧轮次被裁掉，大工具结果只保留头尾，线程事件里仍然留完整内容。实现见 [`runtime/context.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/context.py)。
+
+## 参考实现里的 ContextBuilder
 
 [`runtime/context.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/context.py) 的 `ContextBuilder` 就是这一课：可缓存的稳定前缀放最前，历史按整轮从最早开始裁到预算内，超长的工具结果只给模型看头尾、线程里留全文，每次组装完记一份各段 token 的报告。装配见 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)。
 
-## 延伸阅读
+## 从上下文预算继续读
 
 - [12-factor-agents · factor 03 Own your context window](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-03-own-your-context-window.md)（访问日期 2026-09-04）：「在任何时刻，你给模型的输入都是『到现在发生了什么，下一步是什么』」。自定义上下文格式的例子在这里。
 - [Anthropic · Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)（访问日期 2026-09-04）：attention budget、just-in-time 加载、compaction 三个概念的出处，本课的骨架。

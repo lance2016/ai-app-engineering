@@ -24,14 +24,14 @@ estimated_time: 约 2 小时
 
 界面状态不是装饰。少一个状态，用户会用重复输入来补偿，而第 05 课的幂等键挡不住这种重复：在运行时看来那是两次不同的用户意图，`call.id` 不同，业务确认也不同。**界面这一层的缺陷，会变成执行层的正确性问题。**
 
-## 学习目标
+## 产品状态要如何验收
 
 - 能用人工基线和 ROI 判断一个功能该不该上 AI，并说出三种「不该用」的信号
 - 能把流式回答建模成显式的 UI 状态机，说清每个状态用户能做什么、看到什么
 - 能按可逆性给动作分级，正确选择确认、撤销窗口或直接执行
 - 能设计带原因码和切片的反馈闭环
 
-## 前置
+## 交互设计从哪些运行时事实开始
 
 - [05 Tool Calling](../tool-calling/README.md)：确认门。本课的「撤销窗口」是它的另一半
 - [07 Agent State 与 Runtime](../agent-state-and-runtime/README.md)：事件流。本课 UI 状态机消费的就是那份事件
@@ -253,7 +253,7 @@ citations: list[str]     # ["refund-policy#0", "shipping#2"]
 
 界面上每条引用是可点的，点开显示那个 chunk 的原文和它在文档里的位置。用户要能验证，不只是被告知有来源。
 
-## 常见错误
+## 用户在哪一步会失去信任
 
 **漏掉一个状态。** 就是开头那个案例。判断方法是拿转移表逐个状态问「用户此刻看到什么」，答不上来的那个状态就是漏的。最常漏的是工具执行中，因为它在代码里确实什么都没发生。
 
@@ -280,7 +280,7 @@ citations: list[str]     # ["refund-policy#0", "shipping#2"]
 - **A/B 的粒度是场景，不是全局。** 新提示词在 faq 上更好、在 refund 上更差是常态。按切片看，不按总体看。
 - **怎么测。** 状态机写成一张转移表，测试就在表上跑，不用碰界面：断言每个状态都有出边（没有死状态）、断言 `TOOL_RUNNING` 存在且从 `WAITING` 和 `STREAMING` 都能到（开头那个案例的回归测试）、断言任何通向不可逆动作的路径上一定经过确认状态。三条都是确定性的，能进 CI（第 19 课）。
 
-## 框架映射
+## 框架能画状态，体验仍归产品
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -290,16 +290,28 @@ citations: list[str]     # ["refund-policy#0", "shipping#2"]
 
 框架给的是事件，状态机是你自己的。事件类型到 UI 状态的映射表，是这一层唯一需要认真设计的东西。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
-## 延伸阅读
+## 在 Playground 里走完一条状态链
+
+参考项目的 Playground 直接消费 `/v1` 的事件流，可以按这条顺序观察界面状态：
+
+```bash
+cd ai-app-engineering-ref
+AIAPP_DEMO_SCENARIO=tool-approval \
+  uv run uvicorn aiapp.api.app:create_app --factory --port 8000
+```
+
+打开 `http://localhost:8000/playground`，发送“请删除 returns 草稿”。页面会依次经历等待、流式输出、等待确认、工具执行和完成；点击批准后再看事件列表，`human_input_requested` 和 `run_finished` 应该都能找到。这个页面调用的就是 [`api/static/playground.html`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/static/playground.html) 中的真实 `/v1` 接口。
+
+## 参考实现里的 Playground
+
+能点的那个界面是 [`api/routes/playground.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/routes/playground.py)：纯 HTML 加 JavaScript，没有构建步骤，调的是客户端会调的同一套 `/v1` 接口，所以批准工具、灌文档、看记忆都不绕过鉴权。起完服务开 `http://localhost:8000/playground` 就能试。反馈闭环的设计记在 [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md)（还是草稿）。
+
+## 从状态机继续读交互设计
 
 - [Google PAIR · People + AI Guidebook](https://pair.withgoogle.com/guidebook)（访问日期 2026-09-04）：按用户需求、心智模型、解释与信任、反馈与控制、错误与优雅失败组织，每章有可直接用的设计模式。
 - [Microsoft HAX Toolkit](https://www.microsoft.com/en-us/haxtoolkit/)（访问日期 2026-09-04）：18 条人机交互指南加设计模式库。「make clear what the system can do」和「support efficient correction」两条对应本课的状态机和撤销；开头那个案例对应的是「make clear why the system did what it did」的前一半，系统正在做什么。
 - [generative-ai-for-beginners · 12 Designing UX for AI Applications](https://github.com/microsoft/generative-ai-for-beginners/blob/main/12-designing-ux-for-ai-applications/README.md)（访问日期 2026-09-04）：可用性、可靠性、可访问性、愉悦四个维度，加信任与透明、协作与反馈两节。
 - [ai-agents-for-beginners · 06 Building Trustworthy AI Agents](https://github.com/microsoft/ai-agents-for-beginners/blob/main/06-building-trustworthy-agents/README.md)（访问日期 2026-09-04）：系统提示框架、五类威胁与缓解、人工介入。
-
-## 参考实现
-
-能点的那个界面是 [`api/routes/playground.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/routes/playground.py)：纯 HTML 加 JavaScript，没有构建步骤，调的是客户端会调的同一套 `/v1` 接口，所以批准工具、灌文档、看记忆都不绕过鉴权。起完服务开 `http://localhost:8000/playground` 就能试。反馈闭环的设计记在 [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md)（还是草稿）。
 
 ---
 

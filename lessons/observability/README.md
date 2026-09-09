@@ -47,14 +47,14 @@ estimated_time: 约 2 小时
 
 这一课要造的东西，就是让「它答错了」这种工单能在五分钟内定位到链路上的哪一层。
 
-## 学习目标
+## 排障时先看哪张图
 
 - 能把 print 换成带关联 id 的结构化日志，并说清为什么一行一个 JSON 才能聚合
 - 能实现一个最小 tracer，并说出 `record_exception` 和 `set_status` 为什么必须一起调
 - 能用 OpenTelemetry GenAI 语义约定的属性名标注模型调用和工具调用
 - 能从四种故障的 trace 里指出各自的信号
 
-## 前置
+## 可观测性要读哪些前置
 
 - [07 Agent State 与 Runtime](../agent-state-and-runtime/README.md)：被观测的对象
 - [19 评测](../evaluation/README.md)：评测集里的失败案例从 trace 里挑
@@ -293,7 +293,7 @@ def build_payload() -> dict:
 
 这段代码的价值是拆掉 SDK 的神秘感：OTLP 就是一个 JSON，属性名是唯一的契约。真实项目用 `opentelemetry-sdk` 加 `opentelemetry-exporter-otlp`，属性名一个都不用改。
 
-## 常见错误
+## 观测为什么会一片绿
 
 前面四棵树讲的是被观测系统怎么坏。这一节讲观测层自己怎么坏。
 
@@ -307,7 +307,7 @@ def build_payload() -> dict:
 
 **用统一采样率。** 出问题的那条 trace 正好没被采到是常态。错误的 trace 全采，正常的按比例采。
 
-## 记多少，记多久
+## 记录多少，保留多久
 
 - **自制 tracer 还是 SDK。** 五十行自制版足够教学和小项目，没有依赖、行为完全可见。缺点是没有采样、批量导出、上下文跨 HTTP 传播这些成熟功能。生产用 SDK，但先用自制版理解它在做什么。
 - **记多少内容。** `gen_ai.input.messages` 和 `gen_ai.output.messages` 可以把完整对话放进 span，工单 #4471 那种问题靠它五分钟就能定位。代价是隐私、成本和后端存储。常见做法是默认只记 token 数和长度，按采样率或按用户开关记全文。
@@ -320,7 +320,27 @@ def build_payload() -> dict:
 - **自定义属性要有命名前缀和清单。** 上面用的 `aiapp.*` 那几个（`stop_reason`、`empty_output`、`tool.result_bytes`、`args_sha`）是这个系统的私有词汇，散着加会变成没人认识的字段。和标准属性一样，它们也该有一份文档。
 - **怎么测。** 拿一组能确定性触发四种故障的假实现（会超时的工具、返回空串的模型、返回巨大结果的工具、会绕圈的提示），跑一遍，断言 trace 上的信号真的出现了：状态是不是 ERROR、`stop_reason` 对不对、根 span 的 `cost_usd` 有没有算上。观测代码不写测试，坏掉的时候没人会发现——它坏掉的形态就是「一片绿」。
 
-## 框架映射
+## 在参考项目里跑两次故障
+
+先运行一个会失败的请求：
+
+```bash
+uv run python scripts/chaos.py --inject model_timeout
+```
+
+输出里会同时出现 `chat ... [ERROR]` 和 `invoke_agent aiapp [ERROR]`。前者说明模型调用在哪一层失败，后者说明这次 Agent 运行最后以什么原因结束。再运行：
+
+```bash
+uv run python scripts/chaos.py --inject tool_error --spans
+```
+
+这里工具会重试三次，最终 `execute_tool` span 是错误，但 Agent 仍然可以把结构化错误结果交给模型并正常结束。事件和 span 的装配分别在 [`runtime/loop.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/loop.py) 和 [`ops/telemetry.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/telemetry.py)。
+
+模型首块超时在 Playground 中会显示为红色结构化错误，并且线程状态变成 `failed`：
+
+![模型首块超时的结构化错误](../../reference/images/project-model-timeout.jpg)
+
+## 框架能产出 trace，语义仍归你
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -330,17 +350,17 @@ def build_payload() -> dict:
 
 三个框架的内置 tracing 都能用，但属性名不一定符合标准约定，换后端时要重新映射。上面四棵树里那些 `aiapp.*` 属性，三个框架都不会替你打。官方文档：[OpenTelemetry GenAI 约定](https://github.com/open-telemetry/semantic-conventions-genai) · [LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)（核对日期 2026-09-05）。
 
-## 延伸阅读
+## 参考实现里的 trace 与 chaos
+
+OpenTelemetry 接线在 [`ops/telemetry.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/telemetry.py)，结构化日志在 [`logging.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/logging.py)，异常同时记录并把 span 标成 ERROR 的那段也在 telemetry 里。用例在 [`m5/test_telemetry_and_api.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m5/test_telemetry_and_api.py)；[M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md) 里的故障演练脚本能真的跑出上面那四棵树。
+
+## 从 trace 继续读生产工具
 
 - [OpenTelemetry GenAI semantic conventions](https://github.com/open-telemetry/semantic-conventions-genai)（访问日期 2026-09-04）：`docs/gen-ai/gen-ai-spans.md` 是模型调用 span 的规范，`gen-ai-agent-spans.md` 是 `invoke_agent`、`execute_tool` 的规范。属性名的权威来源。
 - [OpenTelemetry 属性注册表 · gen_ai](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/registry/attributes/gen-ai.md)（访问日期 2026-09-04）：查哪些名字已废弃，以及把评测结果挂到 trace 上的 `gen_ai.evaluation.*`。
 - [Arize Phoenix](https://github.com/Arize-ai/phoenix)（访问日期 2026-09-04）：`pip install arize-phoenix` 后 `phoenix serve` 就能接收 OTLP，把上面四棵树发进去看一眼，比读规范快。
 - [Langfuse](https://github.com/langfuse/langfuse)（访问日期 2026-09-04）：自托管用 docker compose，同样接 OTLP。
 - [ai-agents-for-beginners · 10 AI Agents in Production](https://github.com/microsoft/ai-agents-for-beginners/blob/main/10-ai-agents-production/README.md)（访问日期 2026-09-04）：trace 和 span 的概念介绍，以及要跟踪的指标清单。
-
-## 参考实现
-
-OpenTelemetry 接线在 [`ops/telemetry.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/telemetry.py)，结构化日志在 [`logging.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/logging.py)，异常同时记录并把 span 标成 ERROR 的那段也在 telemetry 里。用例在 [`m5/test_telemetry_and_api.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m5/test_telemetry_and_api.py)；[M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md) 里的故障演练脚本能真的跑出上面那四棵树。
 
 ---
 

@@ -36,14 +36,14 @@ estimated_time: 约 1.5 小时
 
 <div class="lesson-meta" markdown="1">
 
-## 学习目标 { .lesson-meta__heading }
+## 向量检索的三个判断 { .lesson-meta__heading }
 
 - 能为一个场景选 embedding 模型和维度，说出托管与自部署的取舍，以及换向量空间的迁移成本
 - 能实现精确 top-k 检索，并说出用什么办法判断该不该换成近似索引
 - 能说明切块大小如何改变检索结果，以及哪类查询用关键词检索比向量检索更合适
 - 能写出 pgvector 建表、建索引和带过滤条件查询的 SQL
 
-## 前置 { .lesson-meta__heading }
+## 需要补哪一点向量基础 { .lesson-meta__heading }
 
 - 这一课不解释向量为什么能比较、余弦为什么先归一化、embedding 层和文本 embedding 模型差在哪。要补就翻 [F02 Embedding 与向量空间](../../prerequisites/llm-foundations/02-embeddings/README.md)，不用先读完再回来
 
@@ -225,7 +225,7 @@ LIMIT 5;
 
 没有哪一行是「更好」的，参数也必须在自己的数据上调。向量库怎么选、参数怎么调，超出这一课的范围。
 
-## 常见错误 { .section--risk }
+## 典型检索为什么会错 { .section--risk }
 
 **查询和文档不在同一个向量空间。** 换了模型、换了版本、维度不一样、非对称模型少加了那个 `query: ` 前缀——任何一条都会让相似度变成噪音。最难发现的是最后一条：代码跑得通，分数也有高有低，只是名次没意义。
 
@@ -254,7 +254,7 @@ LIMIT 5;
 - **这些结论下一次用到是在第 15 课**，中间隔了八课。到那时如果记不清切块和召回的关系，回来看一眼这一课第一个例子和第三节就够，不用重读整课。
 - **怎么测。** 准备一组「查询 → 应该召回哪几条」的样本，量 Recall@k：前 k 条里捞回了几条该捞的。改切块、换向量空间、调索引参数，都跑这一组，比较才有意义。样本里要包含带过滤条件的查询，那是线上真实的形态。没有这个数字，一切检索优化都是感觉。第 15 课会在同一组样本上再加答案质量的评测。
 
-## 框架映射 { .section--reference }
+## 框架在哪一层插入 { .section--reference }
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -271,11 +271,22 @@ LIMIT 5;
 
 后来给每条向量加了一个标识向量空间的字段（先是模型加版本，后来把维度和前缀方式也拼了进去），查询时只在同一个空间内比较，迁移期间跑一个后台任务慢慢重算。这个字段成本几乎为零，省下的是一次很难定位的故障。
 
-## 参考实现 { .section--reference }
+## 在参考项目里验证向量空间隔离
+
+参考项目没有把真实 embedding 服务硬塞进测试，而是用确定性的哈希向量跑同一份知识库契约。这样可以单独验证索引行为：
+
+```bash
+cd ai-app-engineering-ref
+uv run pytest tests/project/m4/test_knowledge_store_contract.py -q
+```
+
+重点看 `test_vectors_from_another_model_are_never_compared` 和 `test_new_version_replaces_old_chunks_and_reuses_unchanged_vectors`。前一个故意把两条文档放进不同的 embedding space，后一个升级文档版本并检查旧块不会继续出现在检索结果里；换成真实 embedding 供应商时，这两条仍然是必须保留的契约。
+
+## 参考实现里的向量边界 { .section--reference }
 
 embedding 走 adapter：[`adapters/embeddings.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/embeddings.py)，离线那个是纯哈希的确定性实现。建表和两条检索路径在 [`knowledge/postgres_store.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/postgres_store.py)，pgvector 走向量，tsvector 走文本。「换了模型忘了重建」那个事故的代码级防线是 [`m4/test_knowledge_store_contract.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m4/test_knowledge_store_contract.py) 里「不同模型的向量永不比较」那条，全貌见 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md)。
 
-## 延伸阅读 { .section--reference }
+## 把向量检索接到数据管道 { .section--reference }
 
 - [generative-ai-for-beginners · 08 Building Search Applications](https://github.com/microsoft/generative-ai-for-beginners/tree/main/08-building-search-applications)（访问日期 2026-09-04）：余弦相似度的图解，加一个用 YouTube 字幕做的检索示例。
 - [pgvector README](https://github.com/pgvector/pgvector)（访问日期 2026-09-04）：距离操作符、HNSW 和 IVFFlat 的参数、维度限制都在这一页。

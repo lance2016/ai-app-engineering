@@ -1,5 +1,6 @@
 ---
 status: complete
+structure: narrative
 part: Part 2 Tool 与 Agent
 estimated_time: 约 1.5 小时
 ---
@@ -27,27 +28,27 @@ estimated_time: 约 1.5 小时
 费钱和跑偏是同一个原因：**能力说明和能力本身被当成了一件事。** 工具定义必须常驻，模型要靠它决定调什么；说明书不必，它只在模型确实要用那个能力的时候才有价值。
 
 !!! note "构造的例子"
-    这几个 token 数是按「一份 Skill 两三百行」估的，不是某次真实请求的账单。本课 [一线经验](#一线经验) 那一节才是作者自己的经历。
+    这几个 token 数是按「一份 Skill 两三百行」估的，不是某次真实请求的账单。本课 [剧本描述曾经导致误触发](#剧本描述曾经导致误触发) 那一节才是作者自己的经历。
 
 </details>
 
-## 为什么需要
+## 能力一多，为什么不能全塞进提示词
 
 能力说明、工具实现和宿主插件混在一起，会让上下文膨胀，也会把第三方内容直接当成可信指令。渐进加载和来源校验是可维护性的边界。
 
-## 学习目标
+## 能力接入要守住哪些边界
 
 - 能用一张表说清 Tool、MCP、Skill、Plugin、A2A 各自回答什么问题
 - 能实现 Skill 的三级渐进式加载，并解释为什么只有元数据常驻上下文
 - 能对一个第三方 Skill 做安装前校验和内容哈希固定，说出它属于供应链风险的理由
 
-## 前置
+## 能力分层建立在哪些协议上
 
 - [05 Tool Calling](../tool-calling/README.md)：注册表。Skill 的 `allowed-tools` 要和它对账
 - [08 Agent 的 Context Engineering](../context-engineering-for-agents/README.md)：按需加载的机制，本课是它在「能力说明」上的具体应用
 - [12 MCP](../mcp/README.md)：接入协议。Skill 常常是「怎么用一组 MCP 工具」的说明书
 
-## 怎么理解它
+## 目录、正文和执行权分三层
 
 | 层 | 回答的问题 | 长什么样 | 谁消费它 |
 |---|---|---|---|
@@ -71,7 +72,7 @@ flowchart LR
 
 **Skill 是你没写的代码，拿着你的工具在跑。** 它能指挥模型调用有副作用的工具，它的 `references/` 可以被替换，它的 `scripts/` 是真正会执行的程序。所以安装一个第三方 Skill 和安装一个依赖包是同一级别的事。
 
-## 机制拆解
+## 从发现能力，到按需加载
 
 ### 一、一个 Skill 长什么样
 
@@ -192,7 +193,7 @@ def load_pinned(skill_dir, pins: dict[str, str]) -> str:
 
 只哈希 `SKILL.md` 是不够的。改一行 `references/policy.md`——把「酒精：不可报销」改成「酒精：可报销至 500」——模型就会拿着错误的政策去审单，而 `SKILL.md` 一个字没动。
 
-## 常见错误
+## 能力分层最容易失守的几处
 
 **把 Skill 正文全放进 system prompt。** 见级别 1 那节的 token 账。
 
@@ -202,13 +203,13 @@ def load_pinned(skill_dir, pins: dict[str, str]) -> str:
 
 **只哈希 SKILL.md。** 见第五节。
 
-## 取舍
+## 上下文省下了什么，运行时多了什么
 
 - **Skill 说明 vs 硬编码流程。** 把步骤写进 Skill 让模型执行，灵活但不确定；写成第 09 课的 Workflow 代码，确定但改一步要发版。合规要求高的步骤走代码，需要理解自然语言的判断走 Skill。
 - **allowed-tools 是约束还是提示。** 规范里它主要是声明。当对账清单用最省事：Skill 要求的工具注册表里没有就告警。更严格的做法是运行时在该 Skill 激活期间把白名单收窄到 `allowed-tools`，代价是 Skill 之间切换时白名单也要切。
 - **哈希固定 vs 自动更新。** 固定住的 Skill 不会被悄悄改，也不会拿到修复。和依赖锁文件一样：固定，然后有意识地升级并重新审。
 
-## 工程落地
+## 把 Skill 当成受控资源
 
 - **记录 Skill 的触发情况**：哪个 Skill 被加载了、当时用户在问什么、加载后模型有没有真的用它。误触发率和漏触发率都是靠这个数据调 `description` 的。
 - **加载失败要有明确的降级**。Skill 文件损坏、哈希不匹配时，是拒绝服务还是不加载继续？多数场景选后者，但要在响应里标明「本次未使用某某规则」。
@@ -216,7 +217,7 @@ def load_pinned(skill_dir, pins: dict[str, str]) -> str:
 - **第三方 Skill 要隔离审查**：先在沙箱里跑，看它请求了哪些路径、调用了哪些工具，再决定要不要上生产。
 - **怎么测。** 渐进加载测的是「有没有真的省下上下文」：数一遍加载前后系统提示的 token 数，差值应该是一句话的量级，不是一整份剧本。另外两条：断言哈希不匹配时按配置降级而不是崩；拿一个 description 写成功能介绍的 Skill 和一个写成触发条件的，在同一组对话样本上比误触发率——这个数字是调 description 的唯一依据。
 
-## 框架映射
+## 框架有能力目录，还是只有工具注册
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -225,17 +226,29 @@ def load_pinned(skill_dir, pins: dict[str, str]) -> str:
 
 Skill 目前主要是 Anthropic 生态的概念，但三级加载的思路和框架无关——任何有几十个能力说明的系统都需要它。官方文档：[Agent Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) · [LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)（核对日期 2026-09-05）。
 
-## 一线经验
+## 剧本描述曾经导致误触发
 
 语音机器人项目里有类似的一层：每种玩法有一份「剧本」，包含触发条件、流程、离场判断。运行时先只给模型所有玩法的名字和一句话描述，模型选定后再加载完整剧本。
 
 踩的坑和本课说的一模一样：描述最初写成了功能介绍，导致模型在闲聊时也去加载玩法。后来把描述改写成「用户表现出 X 意图时」的判断条件，误触发率才降下来。
 
-## 参考实现
+## 让 Skill 按需加载，并拦住越权路径
+
+参考项目的 `expense-report` Skill 有目录、正文和引用三层，测试用一个脚本把两条路径都跑出来：
+
+```bash
+cd ai-app-engineering-ref
+uv run pytest tests/project/m3/test_loop.py::test_skill_is_loaded_on_demand_and_traced \
+  tests/project/m3/test_loop.py::test_unknown_skill_and_path_escape_are_error_results -q
+```
+
+第一条检查 Skill 只有被模型选中后才加载正文，第二条检查不存在的 Skill 和 `../../pyproject.toml` 都会变成错误结果。实现见 [`runtime/skills.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/skills.py) 和 [`skills/expense-report/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/skills/expense-report)。
+
+## 参考实现里的 Skill 加载
 
 三级加载在 [`runtime/skills.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/skills.py)：目录进 system prompt，正文和引用各是一个只读工具。示例 Skill 是 [`skills/expense-report/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/skills/expense-report)，安装前校验 frontmatter、slug、描述长度和 allowed-tools 的代码在同一个文件里。装配见 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)。
 
-## 延伸阅读
+## 从 Skill 继续读能力生态
 
 - [Anthropic · Agent Skills 概览](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)（访问日期 2026-09-04）：SKILL.md 格式、frontmatter 字段、渐进式披露的官方说明。
 - [Anthropic Engineering · Equipping agents for the real world with Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)（访问日期 2026-09-04）：为什么要分三级加载，以及 PDF Skill 怎样把大段参考资料拆到附属文件里。

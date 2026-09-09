@@ -1,5 +1,6 @@
 ---
 status: complete
+structure: narrative
 part: Part 2 Tool 与 Agent
 estimated_time: 约 2 小时
 ---
@@ -26,26 +27,26 @@ estimated_time: 约 2 小时
 这个流程的步骤是**写代码之前就知道**的。交给模型，等于每次运行都重新赌一次它会不会照做；而 `extract(); validate(); write()` 三行代码每次都照做，还更便宜、更快、能单元测试。
 
 !!! note "构造的例子"
-    这两次运行的步数和调用序列是编的。本课 [一线经验](#一线经验) 那一节才是作者自己的经历。
+    这两次运行的步数和调用序列是编的。本课 [一句话同时是聊天和指令](#一句话同时是聊天和指令) 那一节才是作者自己的经历。
 
 </details>
 
-## 为什么需要
+## 什么时候不该把任务交给自治 Agent
 
 把所有需求都交给自治 Agent，会把可预测的业务流程变成难测的黑箱。先识别能固定的控制流，再为真正需要探索的分支保留自由度。
 
-## 学习目标
+## 模式选择要回答什么
 
 - 能各写一个 prompt chaining、routing、parallelization、orchestrator-workers、evaluator-optimizer 的最小实现
 - 能说出这五种模式各自的适用条件
 - 能对一个具体需求做判断：用确定性代码、用 workflow、还是用自治 Agent，理由是什么
 - 能解释 planner / executor 和 evaluator-optimizer 为什么算 workflow 而不是 Agent
 
-## 前置
+## 模式选择前先分清什么
 
 - [06 Agent 循环与控制流](../agent-loop/README.md)：第 06 课讲的是「运行时怎么执行一个 loop」，本课讲「面对需求时该不该用 loop」
 
-## 怎么理解它
+## 五种模式其实是在分配不确定性
 
 Anthropic [把 agentic system 分成两类](https://www.anthropic.com/engineering/building-effective-agents)：**workflow** 是模型和工具按预先写好的代码路径编排；**agent** 是模型自己决定过程和工具用法。两者之间不是好坏，是可预测性和灵活性的交换。
 
@@ -96,7 +97,7 @@ flowchart TD
     class A model
 ```
 
-## 机制拆解
+## 固定步骤、路由和迭代各自解决什么
 
 五种模式，五段代码。读的时候注意**「模型做的事」和「代码做的事」的分界**：门、类别校验、聚合、计划上限、轮数上限，全是代码。这就是 workflow 比 Agent 可预测的原因。
 
@@ -214,7 +215,7 @@ async def refine(generator, evaluator, task) -> tuple[str, bool]:
 
 `verdict` 是结构化的（`score` + `feedback`），所以「要不要继续」是运行时判断的，不是模型说了算。
 
-## 常见错误
+## 选错模式之后会怎样
 
 **用 Agent 解决 chaining 就能解决的问题。** 一个「翻译、校对、排版」的任务被做成了自治 Agent，模型有时跳过校对，有时排版两次。它的步骤是固定的，应该是一条链。
 
@@ -224,20 +225,20 @@ async def refine(generator, evaluator, task) -> tuple[str, bool]:
 
 **Evaluator 永远不满意。** 见上面第五节。
 
-## 取舍
+## 可预测性、延迟和灵活性
 
 - **可预测性 vs 灵活性。** workflow 的路径可以画出来、测出来、在出问题时定位到某一步。Agent 的路径每次不同，只能靠 trace 事后看。对合规要求高、失败代价大的场景，这一条就足够决定用 workflow。
 - **延迟 vs 准确率。** chaining 把一次调用拆成三次，延迟翻三倍，但每次调用的任务更简单、更准。parallelization 反过来用并发换时间。选哪个看用户等得起多久。
 - **框架 vs 直接调 API。** Anthropic 的建议是先直接用 API，很多模式几十行代码就够；用框架就要理解它底层做了什么。上面五种模式，每种的核心逻辑都在二十行以内——这是「够不够」的一个参照。框架全景见 [reference/frameworks.md](../../reference/frameworks.md)。
 
-## 工程落地
+## 把模式选择写进验收
 
 - **每种模式的失败形态不同，监控也不同。** chaining 看每道门的拒绝率，routing 看各车道的分布和兜底率，orchestrator 看计划被拒的比例，evaluator-optimizer 看平均轮数。
 - **模式可以嵌套，但要有边界。** routing 的某一条车道里跑一个 chaining 是合理的；chaining 的某一步里跑一个自治 Agent 就要谨慎——外层的确定性会被内层的不确定性吃掉。
 - **选型要留记录。** 「为什么这里用 workflow 不用 Agent」应该写进设计文档。三个月后有人想「优化」成自治 Agent 时，这份记录是唯一的防线。
 - **怎么测。** 五种模式各配一条断言，全部用剧本式的假适配器，不需要真模型：chaining 断言中间那道门真的拦住了不合格的中间产物；routing 断言分类结果不在枚举里时走了兜底；parallelization 断言一路失败不影响另一路的结果；orchestrator-workers 断言计划超过上限被拒；evaluator-optimizer 断言轮数上限生效。这五条是判断「换了模型之后这套 workflow 还成立吗」的最小依据（第 19 课）。
 
-## 框架映射
+## 框架擅长哪一种编排
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -247,7 +248,7 @@ async def refine(generator, evaluator, task) -> tuple[str, bool]:
 
 三个里只有 LangGraph 为 workflow 本身做了建模。如果你的系统大部分是确定性流程、只有少数节点交给模型，它的图模型很贴。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
-## 一线经验
+## 一句话同时是聊天和指令
 
 语音机器人项目里，用户的一句话可能同时是聊天和指令：「放点爵士乐，然后跟我讲讲 Miles Davis」。最初用一个 Agent 循环处理，模型经常只做其中一半。
 
@@ -255,11 +256,24 @@ async def refine(generator, evaluator, task) -> tuple[str, bool]:
 
 这个 routing 的并行版本是第 11 课的 racing。
 
-## 参考实现
+## 用参考项目看清边界
+
+参考项目没有另写一套五模式演示，而是把当前产品选择落在 M3 的确定性链和受控循环里。运行下面两条测试，观察「循环必须停」和「工具结果回到下一轮」这两个边界：
+
+```bash
+cd ai-app-engineering-ref
+uv run pytest \
+  tests/project/m3/test_loop.py::test_step_limit_stops_an_endless_model \
+  tests/project/m3/test_loop.py::test_token_budget_stops_a_verbose_model -q
+```
+
+这两条用例不是五种模式的完整实现；它们说明项目把模型放在运行时边界内，步数和 token 由代码裁决。要比较框架层的 workflow、handoff 和并行能力，再看参考项目的 [`framework-lab`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/framework-lab) 评分表。
+
+## 参考实现里的 workflow loop
 
 这一课没有单独的代码落点，它的产物是一份选型记录：[M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md) 里「按第 09 课的分类，M3 是什么」那一段，写清了当前这套工具集为什么用确定性链加受控循环，以及什么条件下该换。
 
-## 延伸阅读
+## 从模式选择继续读 Agent 设计
 
 - [Anthropic · Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)（访问日期 2026-09-04）：本课五种模式的出处。附录里「Agent 的两个实践领域」和「给工具写好文档」两节也值得读。
 - [12-factor-agents · factor 10 Small, focused agents](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-10-small-focused-agents.md)（访问日期 2026-09-04）：为什么用确定性代码把多个小 Agent 串起来，比一个大 Agent 可靠。

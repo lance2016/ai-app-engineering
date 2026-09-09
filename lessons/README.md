@@ -9,6 +9,8 @@ part: 总览
 
 首页管的是选路线和接着读，这一页管的是**知识体系**：一个 AI 应用由哪些部分构成、这些部分按什么顺序学、每个 Part 学完该具备什么能力。
 
+想边读边跑，先看[参考项目路线](../reference/project-playbook.md)：它把每个 Part 接到一个可本地启动的服务、一个可观察的事件流和一组可以复现的失败演练。
+
 下面有三张地图，回答三个不同的问题：这个系统由什么构成、按什么顺序学、以及这些机制装进一个真实服务之后长什么样。
 
 ## 地图一：一个 AI 应用由哪些组件构成
@@ -169,6 +171,8 @@ flowchart TB
 | Part 3 | 会检索、引用能对上原文、记得住用户偏好 | [M4](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md) | `uv run pytest tests/project/m4 -q` |
 | Part 4 | 有回归门禁、trace、限流、fallback 和成本账 | [M5](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md) | `uv run pytest tests/project/m5 -q` |
 | Part 5 | 多租户平台的设计与 ADR，还是草稿 | [M6](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md) | 暂无 |
+
+主线之外还有一个[Framework Lab](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/framework-lab)：它把同一份审批规格交给普通 Python 和 LangGraph 各跑一遍，方便对照状态、checkpoint、人工介入和调试成本。OpenAI Agents SDK 与 Claude Agent SDK 的适配器仍在待办，不能把评分表里的空格当成已实现能力。
 
 **里程碑的顺序和课程顺序对不上，这是有意的。** 课按理解顺序排，代码按装配顺序排。第 01 课讲成本模型，可成本账要等服务能记账才写得出来，所以它落在 M5；第 04 课讲 embedding，要等 M4 有了检索管线才用得上。想按代码顺序读，顺着 M0 到 M6 走；想按课程顺序读，每课末尾的「参考实现」直接指到对应的文件。
 

@@ -1,5 +1,6 @@
 ---
 status: complete
+structure: narrative
 part: Part 2 Tool 与 Agent
 estimated_time: 约 2 小时
 ---
@@ -28,27 +29,27 @@ estimated_time: 约 2 小时
 麻烦的是这不只在「等人」的时候发生。一次重新部署、一次 Pod 驱逐、一次 OOM，效果和上面这条时间线完全一样。
 
 !!! note "构造的例子"
-    这段时间线是为讲清机制编的。本课 [一线经验](#一线经验) 那一节才是作者自己的经历。
+    这段时间线是为讲清机制编的。本课 [状态对象和事件历史曾经打架](#状态对象和事件历史曾经打架) 那一节才是作者自己的经历。
 
 </details>
 
-## 为什么需要
+## 一次重启为什么会丢状态
 
 把状态留在局部变量里，进程退出、用户晚点回复、网络重试，都会让任务丢失或重复。事件、checkpoint 和恢复协议要先于框架抽象想清楚。
 
-## 学习目标
+## 恢复问题的验收标准
 
 - 能把 Agent 的状态建模为一个 append-only 的事件线程，并从它推导出模型消息、运行状态和待处理的工具调用
 - 能实现跨进程的暂停与恢复：把「问用户」做成工具调用，checkpoint 到存储，另一个进程加载后继续
 - 能说清 checkpoint 保证的是「本地事件不重复」，以及为什么「外部副作用不重复」要另外靠幂等键、状态查询或对账
 - 能说出 double texting 的三种策略，并解释为什么「没有策略」等于「行为未定义」
 
-## 前置
+## 恢复问题需要哪些前置
 
 - [06 Agent 循环与控制流](../agent-loop/README.md)：循环结构、停止条件、「跳出循环等人」的伏笔
 - [05 Tool Calling](../tool-calling/README.md)：幂等键。恢复时不重跑已执行的工具，靠的是同一个思路
 
-## 怎么理解它
+## 事件线程是唯一事实
 
 ```mermaid
 flowchart LR
@@ -94,7 +95,7 @@ stateDiagram-v2
     running --> failed: budget / provider error
 ```
 
-## 机制拆解
+## 从事件恢复到副作用
 
 ### 一、事件是事实，其余全是推导
 
@@ -274,7 +275,7 @@ async def handle_second_message(thread, current: asyncio.Task, text: str):
 
 不选任何一种策略，第二条消息会在第一次运行还在写线程时被追加进去，两个循环交错写同一个列表。代码里没有任何一行决定过这时候该怎么办，所以这个行为是未定义的。
 
-## 常见错误
+## 状态最容易在哪里分叉
 
 **把「工具不会重跑」当成 checkpoint 的承诺。** 它承诺的只是「结果落盘的调用不再执行」。`execute()` 和 `save()` 之间那一瞬间崩掉，外部动作已经发生，线程里没有记录，恢复时照样会再跑一次。运行时做不到「执行和记录」原子化，所以这件事要靠幂等键、`tool_started` 加状态查询、或者对账来管，见第三节。
 
@@ -286,7 +287,7 @@ async def handle_second_message(thread, current: asyncio.Task, text: str):
 
 **double texting 没有策略。** 见上。
 
-## 取舍
+## 状态存多少、何时落盘
 
 - **这一整套值不值得上。** 一次分类、一次翻译、一次摘要——同步调完就返回、没有副作用、几秒内结束的活，事件线程是纯负担，直接调完返回。判据是问一句：这件事跑到一半掉了，重跑一遍的代价是什么？可以忽略就别上。这一课的东西是为「会等人、会崩、会重启、要审计」的任务准备的，那时候它省下的是排查时间。
 - **每步存盘 vs 只在暂停时存盘。** 每步存盘让任意点崩溃都能恢复，代价是每一步多一次写。对话类 Agent 步数少，每步存没问题；长任务可以按阶段存，但要接受阶段内崩溃会重做。
@@ -295,7 +296,7 @@ async def handle_second_message(thread, current: asyncio.Task, text: str):
 - **线程里放多少东西。** factor 05 建议尽量把执行状态都放进线程，但 session id、密钥、大文件这类东西不该进模型上下文。`to_messages()` 是过滤器：线程里可以有运行时专用事件，模型看不到。第 08 课会在这个过滤器上做更多事。
 - **模型列的清单归哪一类。** 模型输出的「接下来要做这五件事」和工具结果一样，是发生过的事实，追加进线程就行。「其中哪几件做完了」则要从后续事件推导，别单独存一份跟着它同步——上面那条「执行状态另存一份」说的就是这个。清单要活过压缩是另一件事，归第 08 课的 `protected` 管。整套机制在第 10 课。
 
-## 工程落地
+## 把事件线程接进服务
 
 - **JSON 文件换成数据库表**时，`run()` 一行都不用改——这正是把存储抽象成 `save()` / `load()` 两个方法的收益。
 - **并发写要有乐观锁**。`(conversation_id, seq)` 上加唯一约束，`append(event, expected_seq=n)` 冲突就失败重读。两个写者只有一个能赢，这比事后对账便宜得多。
@@ -304,7 +305,7 @@ async def handle_second_message(thread, current: asyncio.Task, text: str):
 - **事件表只增不改**，这让审计和回放天然成立。要改就追加一条修正事件。
 - **怎么测。** 用一个记调用次数的假工具，跑一段跑到一半的事件线程，断言四件事：从 checkpoint 加载后结果已落盘的工具没有跑第二遍、`to_messages()` 的输出和崩溃前逐字相同、两个写者并发 `append(expected_seq=n)` 只有一个成功、以及一条只有 `tool_started` 没有 `tool_result` 的线程在恢复时先走 `probe` 而后决定要不要重做（`probe` 返回 unknown 时线程停在 `needs_reconciliation`）。四条都不需要模型，一秒内跑完，能进 CI（第 19 课）。
 
-## 框架映射
+## 框架的 checkpoint 到底保证什么
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -315,7 +316,7 @@ async def handle_second_message(thread, current: asyncio.Task, text: str):
 
 LangGraph 在这一层做得最完整，但恢复的粒度要看清：**checkpoint 存的是节点边界，不是语句**。resume 时那个节点从头重跑，`interrupt()` 之前的语句会再执行一遍——它自己的文档给的建议就是把 `interrupt()` 放在节点最前面，或者让前面的动作幂等。节点里有多个 `interrupt()` 时，resume 的值按它们在节点里的出现顺序匹配。这一层的问题和本课第三节是同一个：框架能保证自己的状态不错乱，保证不了你在节点里调的那个外部接口只发生一次。官方文档：[LangGraph · Interrupts](https://docs.langchain.com/oss/python/langgraph/interrupts) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-09）。
 
-## 一线经验
+## 状态对象和事件历史曾经打架
 
 语音机器人项目早期把「当前在哪个子 Agent」「是否在等用户确认」这类执行状态存在一个单独的状态对象里，和对话历史分开。一次部分失败之后两边不一致，机器人反复问同一个问题。
 
@@ -323,11 +324,29 @@ LangGraph 在这一层做得最完整，但恢复的粒度要看清：**checkpoi
 
 另一个和 double texting 直接相关的场景：语音输入天然会出现用户在机器人说话时插话。那里用的是 interrupt 策略，但保留了被打断之前已经完成的工具结果——和上面 interrupt 分支的做法一样。
 
-## 参考实现
+## 看一次暂停、恢复和崩溃重试
+
+`tool-approval` 场景最适合观察暂停和恢复：
+
+```bash
+AIAPP_DEMO_SCENARIO=tool-approval \
+  uv run uvicorn aiapp.api.app:create_app --factory --port 8000
+```
+
+线程会在 `human_input_requested` 后变成 `paused`。批准请求走 `/v1/threads/{id}/human-input`，恢复时直接使用事件线程，不需要重新猜一次用户意图。打开线程详情，重点看 `run_started`、`human_input`、`tool_result` 的顺序；对应装配代码在 [`api/routes/threads.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/routes/threads.py)，存储协议在 [`storage/base.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/storage/base.py)。
+
+再运行下面的两个检查：前一个演示模型首块尚未到达时的失败，后一个模拟进程在工具执行后、写入结果前退出，确认重试不会再次产生副作用。
+
+```bash
+uv run python scripts/chaos.py --inject model_timeout
+uv run pytest tests/project/m3/test_runner.py::test_crash_between_execute_and_record_never_re_executes -q
+```
+
+## 参考实现里的事件线程
 
 事件线程的存储协议在 [`storage/base.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/storage/base.py)，PostgreSQL 实现在 [`postgres.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/storage/postgres.py)，幂等键和「一个线程同时只有一个运行」的锁在 [`redis_kv.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/storage/redis_kv.py)。内存版和数据库版共用同一组契约测试（[`m2/test_thread_store_contract.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m2/test_thread_store_contract.py)、[`test_kv_contract.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m2/test_kv_contract.py)），每步存盘的取舍记在 [M2 数据与状态](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m2-state-and-storage/README.md)。
 
-## 延伸阅读
+## 把事件线程接到暂停与恢复
 
 - [12-factor-agents · factor 05 Unify execution state and business state](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-05-unify-execution-state.md)（访问日期 2026-09-04）：本课那张事件线程图的出处，列了七个好处。
 - [12-factor-agents · factor 06 Launch/Pause/Resume](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-06-launch-pause-resume.md) 与 [factor 07 Contact humans with tools](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-07-contact-humans-with-tools.md)（访问日期 2026-09-04）：注意 factor 06 那条备注——很多编排器允许暂停，但不允许在「选好工具」和「执行工具」之间暂停。

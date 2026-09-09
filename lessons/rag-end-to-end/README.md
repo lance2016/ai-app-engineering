@@ -1,5 +1,6 @@
 ---
 status: complete
+structure: narrative
 part: Part 3 知识与记忆
 estimated_time: 约 2 小时
 ---
@@ -34,22 +35,22 @@ estimated_time: 约 2 小时
 
 </details>
 
-## 为什么需要
+## 用户看到的只有一句“答错了”
 
 用户只看到「答错了」，但原因可能是解析、切块、召回、重排、生成或引用任一步。把链路拆成可测的阶段，才能做有证据的优化。
 
-## 学习目标
+## 检索链要能定位什么
 
 - 能画出七步流水线，并为每一步说出一种典型失败和检测它的方法
 - 能说清 BM25、向量检索、RRF 融合、引用校验各自解决什么问题
 - 能用一个 golden set 算 Recall@k，改一个参数后判断哪一步变好、哪一步变坏
 
-## 前置
+## 检索链建立在哪些基础上
 
 - [04 Embedding 与向量检索基础](../embeddings-and-vector-search/README.md)：隔了九课，三条结论这一课直接要用——归一化之后余弦就是点积；切块大小决定召回粒度，改切块等于改召回；换 embedding 模型必须重建全部向量。忘了先回去翻一遍那一课的「怎么理解它」
 - [05 Tool Calling](../tool-calling/README.md)：引用校验的思路和「模型输出是建议」一脉相承
 
-## 怎么理解它
+## 把一次回答拆成七步
 
 ```mermaid
 flowchart LR
@@ -107,7 +108,7 @@ flowchart LR
     class F1,F2 risk
 ```
 
-## 机制拆解
+## 从文档进入，到引用出去
 
 ### 一、切块要看语义边界，不只看长度
 
@@ -263,7 +264,7 @@ def recall_at_k(retriever, golden, chunks, ks=(1, 3, 5)) -> dict[int, float]:
 
 **这张表是这一课最重要的产出。没有它，任何一次调参都是猜。**
 
-## 常见错误
+## 每一步会怎样坏
 
 **用弱向量得出「hybrid 更好」的结论。** 上表里 hybrid 的 R@1 比纯 BM25 还低——因为玩具向量把 how、is 这些词也算进相似度，噪音拖累了融合。这不是 RRF 的问题，是融合一个弱检索器的必然结果。换成真实 embedding 模型后结论通常反转，但**你必须重新测**，不能沿用别人的结论。
 
@@ -275,7 +276,7 @@ def recall_at_k(retriever, golden, chunks, ks=(1, 3, 5)) -> dict[int, float]:
 
 **golden set 里只有能答的问题。** 真实系统必须有几个「来源里没有答案」的用例，看模型是不是老实说不知道。只测能答的问题，等于没测幻觉。
 
-## 取舍
+## 召回、成本和可解释性
 
 - **块大小。** 小块检索精确、上下文少；大块上下文全、分数平。经验起点是 300～800 字符加一段重叠，然后用 Recall@k 在自己的语料上调出来。
 - **图表和表格：转成文本，还是保留原图。** 转文本便宜、可检索、能给到块级引用，但复杂表格和图示会丢信息；保留原图交给视觉模型信息最全，代价是每次都要重看一遍图（贵且慢），引用只能到页。常见做法是两者都留：文本进索引负责召回，命中之后需要时再把原图一起给模型。
@@ -283,14 +284,14 @@ def recall_at_k(retriever, golden, chunks, ks=(1, 3, 5)) -> dict[int, float]:
 - **重排的代价。** cross-encoder 把候选数从几十压到几个，质量提升明显，但每个候选都要过一次模型。候选取多少是延迟和召回的直接权衡，通常 20～50。
 - **pgvector 还是专用向量库。** pgvector 让一个库同时放业务数据和向量，少一个组件，权限过滤可以用 SQL 的 `WHERE`。到千万级向量、或者需要复杂过滤加近邻组合时，再评估专用库。
 
-## 工程落地
+## 把检索链变成可验收的流水线
 - **每次检索都要留证据**：查了什么、召回了哪些块、融合前后的名次、最终给模型看的是哪几块。回答错了，这份证据决定你去修哪一步。
 - **引用校验的结果要落库**，不只是拦截。引用失败率的趋势是模型质量的一个先行指标。
 - **权限必须进索引**。检索时用 `WHERE tenant_id = ?` 过滤，不要检索完再在应用层筛——后者会让 top-k 被无权访问的文档占满。
 - **Recall@k 进 CI 门禁。** 设一个阈值（比如 R@5 ≥ 0.85），跌破就不合并。切块参数、embedding 模型、检索权重都是会被人「顺手优化」的东西。
 - **怎么测：检索和生成分开量。** 检索层看 Recall@k（该召回的召回了几成）和 Hit@k（前 k 条里至少有一条对的吗），这两个数字回答的不是同一个问题，别混用：单文档问答 Hit@5 很好看，多文档汇总就得看 Recall@5。生成层看引用是否真的支撑了那句话。哪一层掉了先修哪一层。
 
-## 框架映射
+## 框架提供检索，还是只提供接缝
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -300,11 +301,24 @@ def recall_at_k(retriever, golden, chunks, ks=(1, 3, 5)) -> dict[int, float]:
 
 托管的 file search 省事，但你看不到切块策略和检索参数，也算不了自己的 Recall@k。数据是核心资产时，这一层建议自己掌控。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
-## 参考实现
+## 跑一条带引用的问答
+
+参考项目的 Playground 右侧有知识库面板。先启动确定性检索场景：
+
+```bash
+AIAPP_DEMO_SCENARIO=rag-citation \
+  uv run uvicorn aiapp.api.app:create_app --factory --port 8000
+```
+
+在知识库面板填入文档 ID `refund-policy`、版本 `1`，正文写一条退款规则，再点击“导入”和“检索”。这样返回的块才会和演示回答里的 `[refund-policy@v1#0]` 对上。回到左侧线程发送同一个问题，模型会请求 `search_knowledge`，运行结束后事件流会追加 `citations_checked`。这个事件由 [`api/routes/threads.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/routes/threads.py) 从本轮工具结果重建来源，再调用 [`knowledge/citations.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/citations.py) 校验。
+
+要复现坏引用，运行 [引用测试](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m4/test_citations.py) 中的 `test_made_up_and_unsupported_citations_are_flagged`。测试故意让回答引用未检索到的编号；回答仍然可以生成，但验收事件会明确标记它没有证据。这是“能回答”和“回答有来源”的区别。
+
+## 参考实现里的引用校验
 
 切分与增量入库在 [`knowledge/ingest.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/ingest.py)，混合检索在 [`hybrid.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/hybrid.py)，重排与拼装在 [`retriever.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/retriever.py)，引用校验在 [`citations.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/citations.py)——模型写的引用是待核实的声明，指不到本次检索到的块就打回。用例在 [`m4/test_citations.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m4/test_citations.py)，全貌见 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md)。
 
-## 延伸阅读
+## 从引用校验继续读 RAG
 
 - [Lewis 等 · Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401)（访问日期 2026-09-04）：RAG 一词的出处。读摘要和图 1 就够，理解「检索器和生成器是两个可以分别评测的组件」。
 - [Okapi BM25](https://en.wikipedia.org/wiki/Okapi_BM25)（访问日期 2026-09-04）：公式和 `k1`、`b` 两个参数的含义。上面那段代码就是这一页的直译。

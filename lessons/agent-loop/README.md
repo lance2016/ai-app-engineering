@@ -24,13 +24,13 @@ estimated_time: 约 1.5 小时
 
 停不停这件事，模型判断得了，执行不了。这一课的全部内容就是把它拆成两半：给模型一个表达「我想停」的结构化出口，然后把「停」这个动作握在自己手里。下面那张图里，模型只做一个判断，其余每一步都是代码。
 
-## 学习目标
+## 循环停下来的条件
 
 - 能说清循环里每一步是模型的责任还是运行时的责任
 - 能设计步数、token、时间三种预算，并让循环停止时报告是哪一种耗尽了
 - 能给工具失败分类，并为每一类指定一种确定性的恢复动作
 
-## 前置
+## 循环建立在哪个工具契约上
 
 - [05 Tool Calling](../tool-calling/README.md)：工具契约和四个守卫，本课的循环建立在它们之上
 
@@ -86,7 +86,7 @@ flowchart LR
 ## 循环、预算、失败路由
 
 三段代码是一层层加上去的：先让循环能跑起来，再让它一定停得下来，最后决定停不下来的时候怎么办。
-只为说明机制，省略了适配器、日志和类型定义，不能直接运行。标题写的是[参考实现](#参考实现)里对应的模块，方便对照着读。
+只为说明机制，省略了适配器、日志和类型定义，不能直接运行。标题写的是[代码落点](#代码落点)里对应的模块，方便对照着读。
 
 ### 一、循环本身很短
 
@@ -179,7 +179,7 @@ else:
 
 签名用「工具名 + 规范化参数」。只看工具名会误判：一个正常的「读三个文件」任务会被当成死循环。
 
-## 常见错误
+## 循环会怎样失控
 
 **`while True` 加一个「模型总会停」的假设。** 真实模型不会故意不停，但会因为工具结果里的某句话进入循环——比如工具返回「请重试」。没有 `max_steps`，这个进程会一直跑到 API 额度耗尽。
 
@@ -206,7 +206,7 @@ else:
 - **跑偏检测的窗口要可配**，不同任务类型的合理重复度差很多。
 - **怎么测。** 每次运行记下停止原因和走了几步，按版本统计分布。改提示词或换模型之后，「平均步数从 3 涨到 7」「预算耗尽的比例从 2% 涨到 15%」这类退化只有这两个数字看得见——最终回答往往还是对的。「用户说不聊了它还在聊」这类回归的断言也在这里：给一段用户明确要结束的对话，断言 `stop_reason` 是 `USER_ENDED` 而不是 `STEP_LIMIT`。
 
-## 框架映射
+## 框架替你管什么
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
@@ -217,11 +217,23 @@ else:
 
 三个框架都不替你做失败分类和预算记账，这部分永远是你自己的代码。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
-## 参考实现
+## 让循环在三种预算下停下来
+
+参考项目把步数、token 和时间预算都写成运行时条件。先跑一个会耗尽预算的故障：
+
+```bash
+cd ai-app-engineering-ref
+uv run python scripts/chaos.py --inject budget
+uv run pytest tests/project/m3/test_loop.py::test_step_limit_stops_an_endless_model tests/project/m3/test_loop.py::test_token_budget_stops_a_verbose_model -q
+```
+
+看输出里的 `stop_reason`，再对照 [`runtime/loop.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/loop.py) 和 [`runtime/budget.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/budget.py)。最终回答可能看起来正常，停止原因和预算快照才说明循环是不是按设计结束。
+
+## 代码落点
 
 循环是 [`runtime/loop.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/loop.py) 的 `run_agent()`，步数、token 和时间三种预算在 [`budget.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/budget.py)，失败怎么分类和路由在 [`errors.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/errors.py)。停止条件和跑偏检测的用例在 [`m3/test_loop.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m3/test_loop.py)，装配见 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)。
 
-## 延伸阅读
+## 从循环继续往控制流读
 
 - [12-factor-agents · factor 08 Own your control flow](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-08-own-your-control-flow.md)（访问日期 2026-09-04）：三种控制流形态的代码示例，「跳出循环等人」就出自这里。
 - [12-factor-agents · factor 10 Small, focused agents](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-10-small-focused-agents.md)（访问日期 2026-09-04）：为什么一个 Agent 管 3～10 步，以及「模型变强了这条还成立吗」的回答。
