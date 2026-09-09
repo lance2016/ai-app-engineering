@@ -39,7 +39,8 @@ estimated_time: 约 2 小时
 ## 学习目标
 
 - 能把 Agent 的状态建模为一个 append-only 的事件线程，并从它推导出模型消息、运行状态和待处理的工具调用
-- 能实现跨进程的暂停与恢复：把「问用户」做成工具调用，checkpoint 到存储，另一个进程加载后继续，且已执行的工具不重跑
+- 能实现跨进程的暂停与恢复：把「问用户」做成工具调用，checkpoint 到存储，另一个进程加载后继续
+- 能说清 checkpoint 保证的是「本地事件不重复」，以及为什么「外部副作用不重复」要另外靠幂等键、状态查询或对账
 - 能说出 double texting 的三种策略，并解释为什么「没有策略」等于「行为未定义」
 
 ## 前置
@@ -70,7 +71,9 @@ flowchart LR
 
 ### 暂停发生在选好工具和执行之间
 
-模型已经说了要做什么，运行时还没做。在这个点上存盘，恢复时先看待处理的调用：有结果的跳过，没结果的执行。所以进程在任何一步崩掉都能接上，而且不会把已经做过的事再做一遍。
+模型已经说了要做什么，运行时还没做。在这个点上存盘，恢复时先看待处理的调用：有结果的跳过，没结果的执行。所以进程在任何一步崩掉都能接上。
+
+**「有结果的跳过」这句话里藏着一个前提：结果已经落盘。** 崩在「外部动作已经做完、结果还没写进线程」那一瞬间，这次调用在恢复时看起来和从没执行过一样。这个窗口消不掉，只能管住，见机制拆解第三节。
 
 ### 恢复就是「加载，然后继续 fold」
 
@@ -170,9 +173,53 @@ else:
 await run(thread, model)      # 同一个函数
 ```
 
-第 ① 步那个循环是整段的核心：它让「恢复」不需要任何特殊逻辑。已经有结果的调用不在 `pending_tool_calls()` 里，自然不会重跑。
+第 ① 步那个循环是整段的核心：它让「恢复」不需要任何特殊逻辑。结果已经落盘的调用不在 `pending_tool_calls()` 里，不会被再执行一次。
 
-### 三、事件流就是同一份事件
+### 三、checkpoint 保证的是本地，外部副作用要另外管
+
+第 ① 步只能保证一件事：**同一个 `call.id`，结果落盘之后不会再执行一次**。它管的是线程里的记录。外部世界那一侧，运行时给不出同样的承诺。
+
+窗口在这里：
+
+```text
+execute(call) ──外部动作已经发生──▶ append("tool_result") ──▶ save()
+                     ↑ 崩在这里：钱已经出去了，线程里一条记录都没有
+```
+
+恢复时这次调用还在 `pending_tool_calls()` 里，看起来和从没执行过一样，于是又跑一遍。把顺序倒过来（先记后执行）会换成另一种坏法：记了却没执行，恢复时这次调用被当成已完成跳过，一个该发生的动作静默消失。漏做比重做难查得多，所以通行的选择是宁可重做，再想办法让重做无害。
+
+第一步是承认存在第三种状态——这次调用**做没做，本地不知道**：
+
+```python
+for call in thread.pending_tool_calls():
+    if thread.started(call.id):                    # 上次崩在执行途中
+        state = probe(call, key=idem_key(call))    # 拿键去外部系统查这笔成没成
+        if state.done:
+            thread.append("tool_result", tool_call_id=call.id, content=state.result)
+            thread.save(CHECKPOINT)
+            continue                               # 查到了，补一条记录就行
+        if state.unknown:
+            thread.append("needs_reconciliation",  # 查不出来：停下，别赌
+                          tool_call_id=call.id, key=idem_key(call))
+            thread.save(CHECKPOINT)
+            return
+    thread.append("tool_started", tool_call_id=call.id, key=idem_key(call))
+    thread.save(CHECKPOINT)                        # 先落一条「我要做了」
+    thread.append("tool_result", tool_call_id=call.id, content=execute(call))
+    thread.save(CHECKPOINT)
+```
+
+三条路，按代价从低到高：
+
+- **外部幂等键（第 05 课）。** 重跑带同一个键，外部系统自己去重。最省事，前提是对方支持这个键。
+- **`tool_started` 事件。** 多一次写，换来「上次崩在这一步」这个信息。它和 outbox 是同一个思路：先在自己这边留下意图，再动外部。窗口没消失，只是坏法从「做了没记」变成「记了没做」，而后者查得出来。
+- **状态查询加对账。** `probe` 拿幂等键或业务 id 去问外部系统。查不出来的（对方没有查询接口、或者查询也超时）落一条 `needs_reconciliation`，交给定时对账任务和人，别在恢复路径上赌一次。
+
+有一个特例可以省掉整层：副作用就在自己的数据库里。那时把业务写入和事件 append 放进同一个事务，两件事一起成功或一起失败，窗口根本不存在。跨进程、跨系统的副作用才需要上面三条。
+
+**什么时候别上这一层。** 只读工具（查天气、检索、读文件）重跑只多花一点钱；幂等的写（把状态设成 X、覆盖一个 key）重跑也无害。这一层是为不可逆、又不幂等的动作准备的：付款、发消息、下单、删除。给所有工具都套三段式，多一倍的写入换不到任何东西。
+
+### 四、事件流就是同一份事件
 
 ```python
 async def run_streaming(thread, model) -> AsyncIterator[Event]:
@@ -199,7 +246,7 @@ def as_sse(event) -> str:
     return f"event: {event.type}\ndata: {json.dumps(event.data, ensure_ascii=False)}\n"
 ```
 
-### 四、double texting 的三种策略
+### 五、double texting 的三种策略
 
 用户在第一次运行还没结束时又发了一条。三种做法：
 
@@ -229,9 +276,9 @@ async def handle_second_message(thread, current: asyncio.Task, text: str):
 
 ## 常见错误
 
-**先执行工具，再记事件。** 上面的顺序是 `execute()` → `append("tool_result")` → `save()`。如果崩在 `execute()` 之后、`save()` 之前，恢复时这个工具会再跑一次。
+**把「工具不会重跑」当成 checkpoint 的承诺。** 它承诺的只是「结果落盘的调用不再执行」。`execute()` 和 `save()` 之间那一瞬间崩掉，外部动作已经发生，线程里没有记录，恢复时照样会再跑一次。运行时做不到「执行和记录」原子化，所以这件事要靠幂等键、`tool_started` 加状态查询、或者对账来管，见第三节。
 
-运行时做不到「执行和记录」原子化——这正是第 05 课幂等键存在的理由：既然无法避免重跑，就让重跑无害。
+**把「做没做不知道」当成「没做」。** 这是上一条的具体形态：`probe` 查不出结果时直接重跑，一笔付款就可能出两次。未知是第三种状态，它的正确去处是人工对账队列。
 
 **恢复时重放所有事件的副作用。** 有人把「恢复」实现成「从头把每条事件再执行一遍」。**事件是记录，不是指令。** 恢复只是把列表加载进内存，然后从待处理的调用继续。
 
@@ -243,6 +290,7 @@ async def handle_second_message(thread, current: asyncio.Task, text: str):
 
 - **每步存盘 vs 只在暂停时存盘。** 每步存盘让任意点崩溃都能恢复，代价是每一步多一次写。对话类 Agent 步数少，每步存没问题；长任务可以按阶段存，但要接受阶段内崩溃会重做。
 - **interrupt vs enqueue。** interrupt 响应快，用户改主意时立刻生效，但已经花掉的模型调用作废；enqueue 不浪费，但用户要等第一轮跑完。聊天场景通常 interrupt，后台任务通常 enqueue。reject 最简单，适合「一次只能有一个操作在进行」的场景，比如支付。
+- **三段式写入要不要给所有工具都上。** `tool_started` + `probe` 让崩溃窗口可查，代价是每次工具调用多一次写、多一次外部查询，还多一个恢复分支要维护。按工具分：不可逆且不幂等的（付款、发消息、下单、删除）上，只读和幂等的不上。全上等于给查天气也交一份保险费。
 - **线程里放多少东西。** factor 05 建议尽量把执行状态都放进线程，但 session id、密钥、大文件这类东西不该进模型上下文。`to_messages()` 是过滤器：线程里可以有运行时专用事件，模型看不到。第 08 课会在这个过滤器上做更多事。
 - **模型列的清单归哪一类。** 模型输出的「接下来要做这五件事」和工具结果一样，是发生过的事实，追加进线程就行。「其中哪几件做完了」则要从后续事件推导，别单独存一份跟着它同步——上面那条「执行状态另存一份」说的就是这个。清单要活过压缩是另一件事，归第 08 课的 `protected` 管。整套机制在第 10 课。
 
@@ -253,7 +301,7 @@ async def handle_second_message(thread, current: asyncio.Task, text: str):
 - **`status` 字段可以有，但只能是缓存**。事实来源永远是事件列表。加这个字段是为了让「列出所有 paused 的会话」不用扫全表。
 - **人工介入有两种，不要混。** 「问用户一个问题」的答案本身就是工具结果；「批准一个副作用」批准之后工具还要真的跑。两者的恢复路径不同，事件字段也该不同。
 - **事件表只增不改**，这让审计和回放天然成立。要改就追加一条修正事件。
-- **怎么测。** 用一个记调用次数的假工具，跑一段跑到一半的事件线程，断言三件事：从 checkpoint 加载后已执行的工具没有跑第二遍、`to_messages()` 的输出和崩溃前逐字相同、两个写者并发 `append(expected_seq=n)` 只有一个成功。三条都不需要模型，一秒内跑完，能进 CI（第 19 课）。
+- **怎么测。** 用一个记调用次数的假工具，跑一段跑到一半的事件线程，断言四件事：从 checkpoint 加载后结果已落盘的工具没有跑第二遍、`to_messages()` 的输出和崩溃前逐字相同、两个写者并发 `append(expected_seq=n)` 只有一个成功、以及一条只有 `tool_started` 没有 `tool_result` 的线程在恢复时先走 `probe` 而后决定要不要重做（`probe` 返回 unknown 时线程停在 `needs_reconciliation`）。四条都不需要模型，一秒内跑完，能进 CI（第 19 课）。
 
 ## 框架映射
 
@@ -261,10 +309,10 @@ async def handle_second_message(thread, current: asyncio.Task, text: str):
 |---|---|---|---|
 | 状态持久化 | `checkpointer`（SQLite / Postgres） | `RunState` 序列化 + `Session` 存历史 | `session_id` + resume |
 | 暂停 | 节点里 `interrupt()` | `needs_approval` 或 `StopAtTools` | `can_use_tool` 回调返回 deny |
-| 恢复 | 传 `None` 从上次 checkpoint 继续 | `RunState.from_string()` | `resume=session_id` |
+| 恢复 | 从 `interrupt()` 处接上要传 `Command(resume=值)`；只是接着跑完未完成的 checkpoint 才传 `None` | `RunState.from_string()` | `resume=session_id` |
 | 事件流 | `astream_events` | `Runner.run_streamed` | 消息流 |
 
-LangGraph 在这一层做得最完整，但要注意一个坑：节点内 `interrupt()` 之前的副作用，在 resume 时会重跑——因为 checkpoint 的粒度是节点，不是语句。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
+LangGraph 在这一层做得最完整，但恢复的粒度要看清：**checkpoint 存的是节点边界，不是语句**。resume 时那个节点从头重跑，`interrupt()` 之前的语句会再执行一遍——它自己的文档给的建议就是把 `interrupt()` 放在节点最前面，或者让前面的动作幂等。节点里有多个 `interrupt()` 时，resume 的值按它们在节点里的出现顺序匹配。这一层的问题和本课第三节是同一个：框架能保证自己的状态不错乱，保证不了你在节点里调的那个外部接口只发生一次。官方文档：[LangGraph · Interrupts](https://docs.langchain.com/oss/python/langgraph/interrupts) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-09）。
 
 ## 一线经验
 

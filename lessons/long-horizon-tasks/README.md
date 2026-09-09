@@ -47,6 +47,7 @@ estimated_time: 约 1.5 小时
 - 能把一份清单接进第 06 课的循环：作为工具写入、作为受保护内容每轮回注、作为事件落进线程
 - 能给清单项写出可执行的验收条件，让「完成」由代码判定
 - 能列出触发重规划的信号，并解释重规划本身为什么要有上限
+- 能说清哪些东西模型可以改（计划）、哪些不能悄悄改（原始目标和验收标准），并用代码守住
 
 ## 前置
 
@@ -84,7 +85,7 @@ flowchart LR
 
 ## 机制拆解
 
-下面四段代码只为说明机制，省略了适配器、并发控制和类型定义，不能直接运行。
+下面六段代码只为说明机制，省略了适配器、并发控制和类型定义，不能直接运行。
 
 ### 一、清单是一个工具，循环一行没改
 
@@ -106,7 +107,7 @@ def update_todos(thread, items: list[TodoItem]) -> str:
 
 它就是一个普通工具，走第 05 课那套契约，没有任何特殊地位。模型调它，运行时记一条事件，仅此而已。
 
-**全量提交，不做增量合并。** 模型每次给完整清单，运行时整份替换。增量接口要处理「改哪一项」的歧义，而模型给错 id 是常事；全量提交把这个问题消掉了，代价是每次多几十个 token。
+**全量提交，不做增量合并。** 模型每次给完整清单，运行时整份替换。增量接口要处理「改哪一项」的歧义，而模型给错 id 是常事；全量提交把这个问题消掉了，代价是每次多几十个 token，以及模型能在一次替换里悄悄砍掉几项——第四节那三条断言就是为这个代价配的。
 
 **返回值那一行是这个工具的另一半价值。** 工具结果会进下一轮的上下文，所以「下一项是什么」每轮都被复述一次。少了这句回执，清单就只是一份被写进去、再没人提起的记录。
 
@@ -130,49 +131,107 @@ def build_context(thread, budget) -> list[Message]:
 
 第 06 课对 `FINISHED` 的定义是「模型不再要工具」。长任务里这一条不够用：开头那个案例的模型，就是不再要工具了。
 
+**这里有三件事必须分开：命令跑起来了、验收条件成立了、这一项算做完了。** 混成一件的写法是 `if proc.code == 0: completed`，它有两个漏洞：命令根本没跑起来（打错了、依赖缺了、超时被杀）也可能不是 0 以外的码；而 `grep -rn "print(" src/ | wc -l` 这种统计命令的退出码**永远是 0**——管道的退出码取最后一个命令，`wc` 总能成功。拿它当验收，等于什么都没验。
+
 ```python
+CHECK_UNUSABLE = {127, 126, 124}   # 命令不存在、不可执行、超时被杀
+
 @dataclass
 class TodoItem:
     id: str
     content: str
     status: Literal["pending", "in_progress", "completed"]
     check: str | None = None      # 一条能跑的命令
+    expect: str | None = None     # 期望的输出；留空表示只看退出码
 
 def settle(item: TodoItem, run) -> tuple[str, str]:
+    """返回 unverified / pending / completed 三者之一，外加一句原因。"""
     if item.check is None:
-        return item.status, "no check"           # 没有验收条件，只能信模型
+        return "unverified", "no check"                    # 代码判不了，只能信模型
     proc = run(item.check)
-    if proc.code == 0:
+    if proc.code in CHECK_UNUSABLE:
+        return "unverified", f"check unusable: exit {proc.code}"   # 验收本身没跑起来
+    if item.expect is not None:                            # 看输出的验收
+        got = proc.stdout.strip()
+        if got != item.expect:
+            return "pending", f"expected {item.expect}, got {got[:80]}"
         return "completed", "ok"
-    return "pending", proc.stderr[:200]          # 退回 pending，原因回喂给模型
+    if proc.code != 0:                                     # 看退出码的验收
+        return "pending", proc.stderr[:200]
+    return "completed", "ok"
 ```
 
-`check` 要写成能跑的东西：`grep -rn "print(" src/ | wc -l` 的输出为 0，或者 `pytest tests/test_logging.py -q` 的退出码为 0。开头那个案例只要有第一条，第 32 轮的「完成」就会被挡下来。
+两种 `check` 各有各的用法。**数量类的验收要比对输出**：`check="grep -rn 'print(' src/ | wc -l"` 配 `expect="0"`，判的是「剩下 0 处」，不是「命令跑完了」。**测试类的验收才看退出码**：`pytest tests/test_logging.py -q` 挂了就是非 0，这时退出码本身就是结论。开头那个案例只要有第一条，第 32 轮的「完成」会被挡下来，因为剩余数是 9 不是 0。
+
+`unverified` 不能当成 `completed` 的同义词。它的意思是「这一项的状态未知」：可能真做完了，也可能验收命令自己坏了。汇报时它要单独一栏，别混进完成数——一份 20 项里 12 项 unverified 的清单，和「完成 12 项」是两回事。
 
 允许 `check` 为空，但要统计这类项的占比。一份全是空 `check` 的清单，勾选仍然是模型的自我报告，只是排版好看了些。
 
-### 四、什么时候该改计划
+### 四、计划可以改，目标和验收标准不能
+
+第一节那个工具是全量提交：模型每次给一整份清单，运行时整份替换。这个接口选择带来一个后果——**模型也能把 23 项提成 14 项，或者把某一项的 `check` 换成一条一定成立的命令**。这不需要它存坏心。压缩之后它记得的目标本来就是缩小版的，缩小版目标推出来的清单，在它看来完全自洽。
+
+所以要分清三样东西：
+
+| | 谁能改 | 存在哪里 |
+|---|---|---|
+| 原始目标 | 只有人 | 线程的第一条事件，只读 |
+| 计划（清单） | 模型，随时 | 每条 `todos_updated` 就是一个版本 |
+| 验收标准（`check` / `expect`） | 人；模型改要显形 | 跟着清单项走，但改动要单独记一条事件 |
+
+计划本来就该能改，需求会变、前提会被推翻。不能悄悄变的是另两样。运行时在接受新清单之前对一遍：
+
+```python
+def accept_plan(old: list[TodoItem], new: list[TodoItem]) -> list[str]:
+    """清单是模型给的，不变量得由代码守。返回空列表才收下这一版。"""
+    problems = []
+    if len(new) < len(old):
+        problems.append(f"项数从 {len(old)} 减到 {len(new)}")
+    done = {i.id for i in old if i.status == "completed"}
+    if done - {i.id for i in new if i.status == "completed"}:
+        problems.append("已完成的项被改回未完成")
+    by_id = {i.id: i for i in new}
+    for o in old:
+        n = by_id.get(o.id)
+        if n and o.check and (n.check, n.expect) != (o.check, o.expect):
+            problems.append(f"{o.id} 的验收条件被改写")
+    return problems
+```
+
+三条断言各挡一种缩水：项数变少是漏活，已完成变回未完成是账目对不上，验收条件被改写是把尺子换短。**挡下来之后先摆给人看**，把这一版清单和原始目标并排放着，别直接拒掉。需求真变了，人改原始目标，改完的清单才算新基线——这样「目标缩了」总有一条人签过字的记录，不会藏在第 17 版清单里。
+
+对着原始目标核数量，是最便宜的一条。开头那个案例的原始目标里有「23 处」和「9 个文件」，任何一版清单里这两个数不对，就该有人看一眼。
+
+### 五、什么时候该改计划
 
 ```python
 MAX_REPLANS = 2
+Replan = Literal["check_failed_twice", "behind_schedule",
+                 "premise_broken", "handoff_to_human"]
 
-def replan_reason(thread, budget, replans: int) -> str | None:
-    if replans >= MAX_REPLANS:
-        return None                                    # 改够了，转人工
+def replan_reason(thread, budget, replans: int) -> Replan | None:
+    """None 表示不用改计划。handoff_to_human 表示该改但改够了，交给人。"""
+    signal: Replan | None = None
     if thread.last_check_failed_twice():
-        return "check_failed_twice"                    # 同一项验收连挂两次
-    if budget.spent_ratio() > 0.5 and thread.completed_ratio() < 0.3:
-        return "behind_schedule"                       # 钱花一半，活没做三成
-    if thread.premise_contradicted():
-        return "premise_broken"                        # 工具结果推翻了列清单时的前提
-    return None
+        signal = "check_failed_twice"                  # 同一项验收连挂两次
+    elif budget.spent_ratio() > 0.5 and thread.completed_ratio() < 0.3:
+        signal = "behind_schedule"                     # 钱花一半，活没做三成
+    elif thread.premise_contradicted():
+        signal = "premise_broken"                      # 工具结果推翻了列清单时的前提
+    if signal is None:
+        return None
+    if replans >= MAX_REPLANS:
+        return "handoff_to_human"                      # 该改，但不许自己再改了
+    return signal
 ```
+
+**「不需要改计划」和「该改但不许再改」必须是两个返回值。** 都返回 `None` 的写法会让调用方把「改够了」当成「一切正常」，于是循环继续跑，跑到预算耗尽才停——停止原因还会写成「预算用完」，把实际原因盖掉。`handoff_to_human` 走第 07 课那条暂停路径：存盘、退出、等人。
 
 这几个信号都来自运行时已经有的东西：验收结果来自上一节，预算账来自第 06 课，事件线程来自第 07 课。重规划不需要新的基础设施，只需要有人去看这些信号。
 
-**重规划要有上限**，理由和步数上限一样：模型可以反复推翻自己的计划，每一次都显得有道理。到了上限就停下来交给人，走第 07 课那条暂停路径。
+**重规划要有上限**，理由和步数上限一样：模型可以反复推翻自己的计划，每一次都显得有道理。
 
-改计划这件事本身不需要新事件，`todos_updated` 就够了。计划的演变史留在线程里，第 20 课那棵 trace 树上能看出它在第几步改了主意。
+改计划这件事本身不需要新事件，`todos_updated` 就够了——每一条就是计划的一个版本。计划的演变史留在线程里，第 20 课那棵 trace 树上能看出它在第几步改了主意，以及那一版是不是缩了水。
 
 ## 常见错误
 
@@ -184,7 +243,11 @@ def replan_reason(thread, budget, replans: int) -> str | None:
 
 **清单另存一份可变状态。** 数据库里的清单和线程里的事件不同步，是第 07 课那个老问题换了个马甲。清单的变更是事件，当前状态从事件读。
 
-**重规划没有上限。** 见上面第四节。三次改计划之后还没收敛的任务，多半一开始就该拆。
+**模型改计划的时候顺手把标准改松了。** 23 项变 14 项、`check` 换成一条永远成立的命令。它自己不觉得在偷工，因为它记得的目标已经是缩小版。见第四节那三条断言。
+
+**「改够了」和「不用改」共用一个返回值。** 调用方分不出来，于是当成正常继续跑。见第五节。
+
+**重规划没有上限。** 见上面第五节。三次改计划之后还没收敛的任务，多半一开始就该拆。
 
 ## 取舍
 
@@ -199,7 +262,7 @@ def replan_reason(thread, budget, replans: int) -> str | None:
 - **压缩之后先看清单还在不在。** 这条断言比什么都便宜：压缩一次，断言最新清单在窗口里逐字未变。
 - **重规划次数是个体检指标。** 一个任务改三次计划，通常说明清单一开始就列错了，或者这件事本来就该拆。
 - **`check` 覆盖率要盯。** 空 `check` 的项占比越高，「完成」这个信号就越接近模型的自我报告。
-- **怎么测。** 用剧本式的假模型，不需要真模型：给一段跑到一半的线程，压缩一次，断言最新清单在窗口里逐字未变；给一个 `check` 注定失败的项，断言它退回 pending 且失败原因回喂给了模型；给一段「预算过半、完成不到三成」的线程，断言 `replan_reason` 返回 `behind_schedule`；把 `MAX_REPLANS` 设成 1，断言第二次触发时任务转人工。四条都是确定性的，一秒内跑完，能进 CI（第 19 课）。
+- **怎么测。** 用剧本式的假模型，不需要真模型：给一段跑到一半的线程，压缩一次，断言最新清单在窗口里逐字未变；给一个 `check` 注定失败的项，断言它退回 pending 且失败原因回喂给了模型；给一段「预算过半、完成不到三成」的线程，断言 `replan_reason` 返回 `behind_schedule`；把 `MAX_REPLANS` 设成 1，断言第二次触发时返回 `handoff_to_human`，不是 `None`；给一个退出码为 0 但输出不为 `expect` 的 `check`，断言这一项没有变成 completed；把一版 23 项的清单换成 14 项，断言 `accept_plan` 报出项数缩水。六条都是确定性的，一秒内跑完，能进 CI（第 19 课）。
 
 ## 框架映射
 
