@@ -117,7 +117,7 @@ def gate_outline(outline: str) -> None:
         raise ValueError(f"outline has {len(sections)} section(s); need at least 3")
 ```
 
-门的作用是**不让坏的中间结果流到下游**。没有门的链条会一路把错误放大，最后一步的输出看起来很流畅，但基于一个一节的大纲。
+门的作用是**不让坏的中间结果流到下游**。没有门的链条会一路把错误放大，最后一步的输出看起来很流畅，可它依据的大纲只有一节。
 
 延迟变成三倍，换来的是每次调用的任务更简单、更准。
 
