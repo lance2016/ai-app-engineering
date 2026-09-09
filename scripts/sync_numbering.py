@@ -189,6 +189,38 @@ def sync_nav(num: dict[str, str]) -> list[str]:
     return notes
 
 
+def sync_prose_links(num: dict[str, str]) -> list[str]:
+    """`[第 15 课 Memory](../lessons/memory/README.md)` wherever it appears.
+
+    check_links.py checks the `[15 ...](...)` shape; this one starts with 第,
+    so its pattern never saw it, and the prerequisite pages were still naming
+    the numbering from before the 2026-09-06 renumber.
+    """
+    notes = []
+    pattern = re.compile(r"\[第 ?(\d{1,2}) 课([^\]]*)\]\(([^)]*?([a-z0-9-]+)/README\.md)\)")
+    for path in sorted(ROOT.rglob("*.md")):
+        if any(part in {".git", ".venv", "site", "templates", "node_modules"}
+               for part in path.relative_to(ROOT).parts):
+            continue
+        text = path.read_text(encoding="utf-8")
+        hits = []
+
+        def fix(m: re.Match) -> str:
+            shown, tail, target, slug = m.groups()
+            want = num.get(slug)
+            if want is None or f"{int(shown):02d}" == want:
+                return m.group(0)
+            hits.append(f"{path.relative_to(ROOT)}: [第 {shown} 课] -> {slug}, which is {want}")
+            return f"[第 {want} 课{tail}]({target})"
+
+        out = pattern.sub(fix, text)
+        if hits:
+            notes += hits
+            if not ARGS.check:
+                path.write_text(out, encoding="utf-8")
+    return notes
+
+
 def check_counts(n: int) -> list[str]:
     """Sentences that say how many lessons there are, when they no longer do."""
     notes = []
@@ -213,6 +245,7 @@ def main() -> int:
 
     num = {slug: f"{i:02d}" for i, slug in enumerate(seq)}
     problems += sync_front_page(num)
+    problems += sync_prose_links(num)
     problems += sync_overview(num)
     problems += sync_footers(seq, num)
     problems += sync_h1(num)

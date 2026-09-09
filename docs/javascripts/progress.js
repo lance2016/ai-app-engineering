@@ -133,13 +133,47 @@
 
   /* --- front page: progress ------------------------------------------------ */
 
-  // The first lesson at or after position `from` that is not marked done.
-  // Null back means everything from there on is marked.
-  function nextUndone(from, order, done) {
-    for (var i = from; i < order.length; i++) {
-      if (done.indexOf(order[i]) === -1) return order[i];
+  // Where to resume, and whether the course is actually finished.
+  //
+  // Finished is a count: every lesson listed is marked. It is deliberately
+  // not "nothing left after the lesson last opened" -- a reader who opens the
+  // last lesson and marks it has 26 lessons still unmarked, and an earlier
+  // version told them they were done.
+  //
+  // Pure on purpose: scripts/test_progress.js exercises this without a DOM.
+  function planProgress(order, done, anchor) {
+    var marked = {};
+    done.forEach(function (id) { marked[id] = true; });
+
+    var doneCount = 0;
+    for (var i = 0; i < order.length; i++) if (marked[order[i]]) doneCount++;
+    var allDone = order.length > 0 && doneCount === order.length;
+
+    function firstUndone(from) {
+      for (var j = from; j < order.length; j++) {
+        if (!marked[order[j]]) return order[j];
+      }
+      return null;
     }
-    return null;
+
+    var resume = null;
+    if (!allDone) {
+      if (anchor && marked[anchor]) {
+        // Carry on past it, and wrap around if the tail is all marked: the
+        // gap is then somewhere earlier in the course.
+        resume = firstUndone(order.indexOf(anchor) + 1) || firstUndone(0);
+      } else if (anchor) {
+        resume = anchor;                    // still in it
+      } else if (doneCount) {
+        resume = firstUndone(0);            // marks but no visit on record
+      }
+      // No anchor and nothing marked: a new reader, who gets 从 00 开始学.
+    }
+    return { resume: resume, allDone: allDone, doneCount: doneCount, total: order.length };
+  }
+
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = { planProgress: planProgress };
   }
 
   // One-time carry-over from the numbered keys (aiae.*.v2 / v1), which the
@@ -204,25 +238,22 @@
     // first unmarked lesson instead.
     var visit = lastVisit();
     var anchor = visit && links[visit.id] ? visit.id : null;
-    var resume;
-    if (anchor) {
-      resume = done.indexOf(anchor) === -1
-        ? anchor
-        : nextUndone(order.indexOf(anchor) + 1, order, done);
-    } else {
-      resume = done.length ? nextUndone(0, order, done) : null;
-    }
+    var plan = planProgress(order, done, anchor);
+    var resume = plan.resume;
 
     var cont = document.querySelector("[data-prog-next]");
-    if (cont && (resume || anchor)) {
+    if (cont && (resume || plan.allDone)) {
       if (resume) {
         cont.href = links[resume].getAttribute("href");
         // The contents entry already reads "08 Context Engineering", which is
         // a better label than the lesson's full h1.
         cont.textContent = "接着读 " + links[resume].textContent.trim() + " →";
       } else {
-        cont.href = links[anchor].getAttribute("href");
-        cont.textContent = order.length + " 课全部标记完成 ✓";
+        // Every lesson marked. Link back to the one last open, or the last
+        // lesson for a reader whose visit record predates this.
+        var back = anchor || order[order.length - 1];
+        cont.href = links[back].getAttribute("href");
+        cont.textContent = plan.total + " 课全部标记完成 ✓";
       }
       cont.hidden = false;
       // Two primary buttons would compete; starting over steps back once
@@ -247,10 +278,10 @@
     });
 
     var count = root.querySelector("[data-prog-done]");
-    if (count) count.textContent = String(done.length);
+    if (count) count.textContent = String(plan.doneCount);
 
     var total = root.querySelector("[data-prog-total]");
-    if (total) total.textContent = "/ " + order.length + " 课已掌握";
+    if (total) total.textContent = "/ " + plan.total + " 课已掌握";
 
     var ruler = root.querySelector("[data-prog-ruler]");
     if (ruler) {
@@ -339,7 +370,9 @@
     mountPicker();
   }
 
-  if (window.document$ && typeof window.document$.subscribe === "function") {
+  if (typeof window === "undefined") {
+    /* Node, loading this for the pure-function test: nothing to mount. */
+  } else if (window.document$ && typeof window.document$.subscribe === "function") {
     window.document$.subscribe(boot);
   } else {
     document.addEventListener("DOMContentLoaded", boot);

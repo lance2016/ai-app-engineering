@@ -27,7 +27,22 @@ jobs:
           python-version: "3.12"
           enable-cache: true
       - name: Install
-        run: uv sync --group docs
+        run: uv sync --all-groups
+      # The same content checks ci.yml runs. Without them this workflow could
+      # publish a site that ci.yml is failing on: both trigger on push to main
+      # and neither waits for the other.
+      - name: Lesson numbers match the nav
+        run: uv run python scripts/sync_numbering.py --check
+      - name: Relative links resolve
+        run: uv run python scripts/check_links.py
+      - name: Complete units meet the template
+        run: uv run python scripts/check_lesson_template.py
+      - name: Lesson numbers in prose are not stale
+        run: uv run python scripts/check_lesson_refs.py
+      - name: Rationed sentence patterns did not go up
+        run: uv run python scripts/check_writing.py
+      - name: Progress helper behaves
+        run: node scripts/test_progress.js
       - name: Build
         run: uv run mkdocs build --strict
       - uses: actions/upload-pages-artifact@v3

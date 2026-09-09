@@ -18,6 +18,8 @@ part: 总览
 下面是一个生产级 AI 应用的全貌，每个组件后面标着它属于哪个 Part、哪几课。27 课在搭的就是这一张图，
 学完一个 Part，这张图上就多亮一块。
 
+**四层各是一种运行方式，别混着看**：01 和 02 是一次请求同步走完的链；03 也在这条链上，检索和记忆读取都发生在用户等待期间；04 跑在请求之外，定时或按事件触发；05 横切前四层。
+
 <div class="sysfig" markdown="1">
 
 <div class="sys" markdown="1">
@@ -40,20 +42,28 @@ part: 总览
 </div>
 </div>
 
-<div class="sys__band sys__band--async" markdown="1">
-<p class="sys__bandname">03<span>知识与记忆</span></p>
+<div class="sys__band" markdown="1">
+<p class="sys__bandname">03<span>知识读取</span></p>
 <div class="sys__nodes" markdown="span">
-[RAG<span>P3 · 15</span>](./rag-end-to-end/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Memory<span>P3 · 16</span>](./memory/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Data Pipeline<span>P3 · 17</span>](./data-engineering/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[Vector Index<span>P1 · 04</span>](./embeddings-and-vector-search/README.md){ .sysnode .sysnode--async }
+[检索<span>P3 · 15</span>](./rag-end-to-end/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[记忆读取<span>P3 · 16</span>](./memory/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[向量检索<span>P1 · 04</span>](./embeddings-and-vector-search/README.md){ .sysnode }
 </div>
-<p class="sys__bandnote">虚线：被运行时按需调用，或者离线跑。它们不在主请求链上，但决定了回答的上限。</p>
+<p class="sys__bandnote">实线：运行时在一次请求里同步调用它们，等到结果才继续。这几跳的延迟直接加在用户的等待时间上。</p>
+</div>
+
+<div class="sys__band sys__band--async" markdown="1">
+<p class="sys__bandname">04<span>离线管线</span></p>
+<div class="sys__nodes" markdown="span">
+[文档入库<span>P3 · 17</span>](./data-engineering/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[记忆提取<span>P3 · 16</span>](./memory/README.md){ .sysnode .sysnode--async }<span class="sys__dot" aria-hidden="true"></span>[索引重建<span>P1 · 04</span>](./embeddings-and-vector-search/README.md){ .sysnode .sysnode--async }
+</div>
+<p class="sys__bandnote">虚线：定时或按事件触发，跑在请求之外。同一课在这里出现第二次——第 16 课的记忆「读」在上一层，「提取和整理」在这一层；第 04 课的检索在上一层，建索引在这一层。上面那一层能查到什么，由这一层决定。</p>
 </div>
 
 <div class="sys__band sys__band--base" markdown="1">
-<p class="sys__bandname">04<span>平台底座</span></p>
+<p class="sys__bandname">05<span>横切能力</span></p>
 <div class="sys__nodes" markdown="span">
 [Evaluation<span>P4 · 19</span>](./evaluation/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Trace 与可观测<span>P4 · 20</span>](./observability/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Security<span>P4 · 22</span>](./security-governance/README.md){ .sysnode }<span class="sys__dot" aria-hidden="true"></span>[Infrastructure<span>P4 · 23</span>](./model-adaptation-finetuning-inference/README.md){ .sysnode }
 </div>
-<p class="sys__bandnote">横切：每一层都要用到。缺了它，上面三层出了问题你只能看到最后那句错误回答。</p>
+<p class="sys__bandnote">横切：上面四层都要用到，它自己不属于任何一层。缺了它，上面出了问题你只能看到最后那句错误回答。</p>
 </div>
 
 </div>

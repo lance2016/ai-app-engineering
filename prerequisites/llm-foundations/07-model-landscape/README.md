@@ -59,7 +59,7 @@ flowchart LR
 
 - 模型选型矩阵与能力探针 → [第 01 课](../../../lessons/how-llms-work/README.md)
 - 模型可替换的 adapter → [原则 12](../../../principles/12-models-are-swappable-adapters.md)
-- 托管还是自建 → [第 22 课](../../../lessons/model-adaptation-finetuning-inference/README.md)
+- 托管还是自建 → [第 23 课](../../../lessons/model-adaptation-finetuning-inference/README.md)
 
 ## 延伸阅读
 

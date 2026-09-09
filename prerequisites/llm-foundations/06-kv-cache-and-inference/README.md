@@ -49,8 +49,8 @@ flowchart LR
 ## 它在 AI 应用里用在哪
 
 - TTFT 与输入长度、prompt caching → [第 08 课 Context Engineering](../../../lessons/context-engineering-for-agents/README.md)
-- 自部署 vs 托管、量化选型 → [第 22 课](../../../lessons/model-adaptation-finetuning-inference/README.md)
-- 延迟预算 → [第 20 课](../../../lessons/reliability-cost-llmops/README.md)
+- 自部署 vs 托管、量化选型 → [第 23 课](../../../lessons/model-adaptation-finetuning-inference/README.md)
+- 延迟预算 → [第 21 课](../../../lessons/reliability-cost-llmops/README.md)
 
 ## 延伸阅读
 
