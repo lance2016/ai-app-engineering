@@ -12,7 +12,7 @@ estimated_time: 约 1.5 小时
 > 这一课只讲工程：怎么选模型和维度、什么时候该从精确检索换成近似索引、切块怎样改变召回、pgvector 怎么建表建索引，以及向量检索什么时候不好使。为第 15 课 RAG 和第 16 课 Memory 打底。
 
 <details class="case" markdown="1">
-<summary>例子：查「重置密码」，同义的那条漏了，只共享词的那条排第一</summary>
+<summary>例子：查「重置密码」，同义的那条漏了，词一样的那条反而排第一</summary>
 
 查询 `how do I reset my password`，库里四个候选，按余弦相似度排下来是这样：
 
@@ -67,7 +67,7 @@ flowchart LR
 
 [F02](../../prerequisites/llm-foundations/02-embeddings/README.md) 讲了向量为什么能比较，也讲了归一化之后余弦就是点积（pgvector 的 `<=>` 算的是余弦距离，等于 1 减余弦相似度；存归一化后的向量可以用内积代替，省一次开方）。这里补四个工程事实。
 
-### query 和 document 要同一个空间
+### query 和 document 要落进同一个空间
 
 多数模型的要求是：同模型、同版本、同维度、同归一化方式。但「同一个模型」不等于「同一段代码」——有一类模型做的是非对称检索，编码查询和编码文档的输入不一样：有的要求查询加一个前缀（`query: `），有的要传 `task_type` 或 `input_type` 参数，有的干脆是两个 encoder。这类模型上要是两边都按文档的方式编码，相似度会明显变差，而且不报错。
 
@@ -105,7 +105,7 @@ encode_document(text)  ─┘
 
 ## 从词袋到 pgvector { .section--practice }
 
-### 一、七行词袋，短板就在里面
+### 一、先写七行词袋，看它坏在哪
 
 ```python
 DIM = 64
@@ -121,7 +121,7 @@ def embed(text: str, dim: int = DIM) -> list[float]:
 ```
 
 <details class="case" markdown="1">
-<summary>例子：查「重置密码」，「忘记登录凭据」一个词都没共享，得分是零</summary>
+<summary>例子：查「重置密码」，「忘记登录凭据」一个词都不沾，得分就是零</summary>
 
 查 `how do I reset my password`，候选 `I forgot my login credentials` 和它一个词都不共享，每个词哈希到别的桶去了，点积为零——同义在词袋里没有任何表示。
 
