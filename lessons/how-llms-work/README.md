@@ -71,7 +71,7 @@ POST /v1/chat/completions → 400
 
 模型卡告诉你它「支持」什么，不告诉你它在你的任务上会怎么错。数字母、做算术、说出训练截止之后的事、按精确长度输出，这些是所有模型都不稳的地方，只是程度不同。这一课给的探针是 smoke test：一个提示配一个确定性检查，几分钟跑完，用来排雷。它不能当评测集用，为什么不能见探针那一节。
 
-### 成本的大头是每轮重发的输入
+### 成本大头：重发的历史
 
 窗口装不下只是重发历史的一种后果，另一种是钱：一段对话的账单大头不是回答，是每一轮都要重发的系统提示、工具定义、检索结果和历史。完整重发历史时，原始上下文量随轮数近似平方增长（[F04](../../prerequisites/llm-foundations/04-context-window-and-sampling/README.md) 讲过为什么）。但原始上下文量不等于账单，账要按这条链一层层落下来：
 
@@ -155,7 +155,7 @@ Candidate(name="hosted-cn-large", context_window=128_000,
           residency="cn", latency_class="medium")
 ```
 
-### 二、成本按「一段对话」算，不按「一次调用」算
+### 二、成本按对话算，不按调用算
 
 ```python
 def cost_per_conversation(c, req) -> float:
