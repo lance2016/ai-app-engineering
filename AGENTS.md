@@ -86,7 +86,7 @@ class D model
 
 ```markdown
 <details class="case" markdown="1">
-<summary>例子：客服机器人在第 48 轮收到 400，聊得短的用户从来没事</summary>
+<summary>例子：客服机器人聊到第 48 轮，接口开始报 400；对话短的用户一次都没碰上</summary>
 
 （报文、数字、算式、表格）
 
