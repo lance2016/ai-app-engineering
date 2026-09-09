@@ -256,7 +256,8 @@
 
 .home .picker {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* auto-fit rather than a fixed 3: the number of starting points changes. */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
   margin-top: 1.6rem;
 }

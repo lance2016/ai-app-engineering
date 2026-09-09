@@ -6,19 +6,20 @@ estimated_time: 约 30 分钟
 
 # 00 起步：怎么读这门课，怎么接第一个模型
 
-> 一次模型调用就是一次 HTTP POST。市面上有三套主流的请求格式，字段名互不相同，做的却是同一件事。这一课把它们摆在一起看清楚，再跑通第一次真实调用。
+> 一次模型调用就是一次 HTTP POST。这一课先用八行代码跑通一次真实调用，再回头看清请求和响应里有什么，最后把三套主流接口摆在一起对照——它们字段名互不相同，做的是同一件事。
 
 ## 为什么需要
 
-打开任何一家模型厂商的文档，第一页都是「几行代码调通」。问题在于各家的几行代码长得都不一样，而且 OpenAI 自己就有两套：老的 Chat Completions 和新的 Responses。你照着抄能跑，但换一家就得重抄一遍，也说不清哪些差异是本质的、哪些只是命名。
+打开任何一家模型厂商的文档，第一页都是「几行代码调通」。照着抄能跑，但换一家就得重抄一遍，也说不清哪些差异是本质的、哪些只是命名——各家的字段名不一样，OpenAI 自己还有新旧两套。
 
-先看清这三套接口的形状，后面所有课才有共同的底座：消息是什么、工具结果算谁说的话、状态存在谁那里。
+所以这一课分两步：先让一次调用真的跑起来，再把请求和响应的形状看清楚。后面所有课都站在这个底座上：消息是什么、工具结果算谁说的话、状态存在谁那里。
 
 ## 学习目标
 
+- 能跑通一次真实的模型调用，并说出请求体里那几类字段各是干什么的
 - 能画出一次模型调用里应用、接口、模型各站在什么位置，各自负责什么
-- 能说出 Chat Completions、Responses、Claude Messages 三套接口的关键差异，以及各自该在什么场景选
 - 知道课文里的代码是示意还是可运行，不会去找一个不存在的仓库目录
+- 能说出 Chat Completions、Responses、Claude Messages 三套接口的关键差异，以及各自该在什么场景选
 - 能说清「模型适配器」这个抽象为什么值得从第一天就有
 
 ## 怎么理解它
@@ -51,13 +52,58 @@ flowchart LR
 | 保证输出格式对 | 应用，收到就校验 | 02 |
 | 知道你的业务数据 | 应用，检索出来放进请求里 | 04 · 14 |
 
+表里那个「工具」先按字面理解：**你写好的一个函数，把它的名字、用途和参数格式告诉模型，模型就能在回答里说「我要调它，参数是这些」**。去执行的始终是你的代码。第 05 课整课讲这件事，本课第三节先看一眼它长什么样。
+
 还有一条不在表里，但比表里任何一行都重要：**同样的输入，模型两次的回答可以不一样。** 它是一个概率性的外部部件，不是一个函数。你熟悉的那套「写好断言、跑通就对了」在这里不成立，所以这门课后面才有整整一课讲评测（第 19 课）。
 
 **这一课只需要建立到这里。** 工具、循环、状态、上下文都会在后面一层层加进来，现在先把最左边那一格——应用怎么跟模型说上话——跑通。
 
-### 一次调用就是一次 POST
+### 课文里的代码是哪一种
 
-不管用哪家 SDK，底下都是同一件事：把一段 JSON 发到一个 URL，收回一段 JSON。SDK 只负责拼请求体、带上 key、把响应转成对象。
+一门课里的代码有三种。这门课只有前两种：
+
+| 形态 | 用途 | 本课程 |
+|---|---|---|
+| 示意代码 | 说明一个机制，省略掉所有噪音 | 每课的「机制拆解」小节都是这个 |
+| 可复制的最小例子 | 你想亲手验证时，复制到自己的环境里跑 | 只在少数几课出现，明确标注 |
+| 项目代码 | 一个真实服务的完整实现 | **不在这里**，见[参考实现仓库](https://github.com/lance2016/ai-app-engineering-ref) |
+
+看到 `## 机制拆解` 下面的代码，默认它跑不起来——它引用的类型和函数是为了让你看懂逻辑而虚构的。这是刻意的：把 import、日志、错误处理都塞进去，一段二十行能讲清的机制会变成两百行。
+
+## 机制拆解
+
+这一课的代码是全课唯一的例外：**第一段能直接复制去跑**，后面几段接着第一段的 `client` 写，单独拿走会缺东西。国内直接可访问的是 DeepSeek，在 <https://platform.deepseek.com> 申请 key。
+
+```bash
+pip install openai
+export DEEPSEEK_API_KEY=sk-...
+```
+
+### 一、先把话说通
+
+八行代码，确认 key、网络和模型名都对：
+
+```python
+import os
+from openai import OpenAI
+
+client = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"],
+                base_url="https://api.deepseek.com")
+
+resp = client.chat.completions.create(
+    model="deepseek-v4-flash",                                   # ← 模型名会过期，以官方文档为准
+    messages=[{"role": "user", "content": "一句话说说深圳的天气"}],
+)
+print(resp.choices[0].message.content)
+```
+
+打印出一句话，这一课的动手部分就完成了。**注意 `messages` 是一个列表**：模型不记得任何东西，你每次都要把完整历史发过去，多轮对话就是往这个列表里追加。第 08 课整课都在讲这个列表该怎么裁。
+
+换供应商只改两行：通义千问是 `base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"` 加 `model="qwen-plus"`，OpenAI 去掉 `base_url` 即可。它们走的都是 Chat Completions 协议。
+
+### 二、这次调用里到底发了什么
+
+刚才那八行里，`client.chat.completions.create(...)` 底下就是一次 HTTP POST。不管用哪家 SDK，底下都是同一件事：把一段 JSON 发到一个 URL，收回一段 JSON。SDK 只负责拼请求体、带上 key、把响应转成对象。
 
 请求体的主干是四类东西：对话内容（历史消息）、可用的工具（一组 JSON Schema）、抽样参数（temperature、输出上限）、模型名。响应的主干是两类：模型说的话，或者模型想调的工具。
 
@@ -65,7 +111,41 @@ flowchart LR
 
 分歧全在字段名和嵌套结构上。
 
-### 三套接口，一件事
+### 三、预告：模型想调一个工具的时候
+
+这一段不用背，看形状就行——它是第 05 课的内容，放在这里只是让你知道「模型请求调用工具」长什么样：
+
+```python
+WEATHER = {
+    "type": "function",
+    "function": {
+        "name": "get_weather",
+        "description": "Current weather for a city.",
+        "parameters": {"type": "object",
+                       "properties": {"city": {"type": "string"}},
+                       "required": ["city"]},
+    },
+}
+
+messages = [{"role": "user", "content": "深圳现在天气怎么样？"}]
+reply = client.chat.completions.create(
+    model="deepseek-v4-flash", messages=messages, tools=[WEATHER]
+).choices[0].message
+
+if reply.tool_calls:                      # ← 模型没有执行任何东西，它只是请求
+    call = reply.tool_calls[0]
+    result = '{"temp_c": 31, "condition": "sunny"}'   # 你的代码去查，这里写死
+    messages += [reply,
+                 {"role": "tool", "tool_call_id": call.id, "content": result}]
+    print(client.chat.completions.create(
+        model="deepseek-v4-flash", messages=messages).choices[0].message.content)
+```
+
+要留意的只有一件事：**`tool_calls` 出现的时候，外部世界什么都没发生。** 模型返回的是一段「我想调 get_weather，参数是这个」的 JSON，查天气、校验参数、决定要不要真的执行，全是你的代码的事。这条判断是第 05 课的全部前提。
+
+真实系统里这里是个循环——模型可能连着调好几轮工具才给出答案，所以要有步数上限和停止条件。那是第 06 课，这里先不展开。
+
+### 四、三套接口，一件事
 
 同一个请求——「用简洁的语气回答深圳天气」——三套接口的写法：
 
@@ -135,99 +215,7 @@ Responses 的兼容层也在铺开：vLLM 已经提供 `/v1/responses`，DeepSee
 
 选哪套，看一个问题：**你要不要跨供应商。** 要，就用 Chat Completions，它的兼容层最宽也最一致；只用 OpenAI 并且想要服务端状态或内置工具，用 Responses；用 Claude 就是 Messages，没有第二个选项。这门课后面的示意代码统一用 Chat Completions 的形状，因为它最通用。
 
-### 所以适配器要在第一天就有
-
-```mermaid
-flowchart LR
-    L[应用代码] --> A[ModelAdapter.complete]
-    A --> F[FakeAdapter<br/>按剧本回答]
-    A --> R[真实供应商<br/>DeepSeek / 通义 / OpenAI / Claude]
-```
-
-`ModelAdapter` 就一个方法：给它一串消息和可选的工具列表，返回一个响应。响应里要么是文本，要么是一组工具调用请求。上面那张表里的差异，全部关在这一层里面消化。
-
-这不是过度设计。第 12 条工程原则就是「模型是可替换的适配器」：模型换代的速度远快于业务代码，任何直接调供应商 SDK 的地方，将来都是一次改动。
-
-**它的第一个实现是一个按剧本回答的 fake。** 不需要 key，行为确定，可以写断言，还能让模型「按要求犯错」。代价是它不会思考——讲机制用 fake，看效果用真模型，这是贯穿全课的做法。怎么用它搭评测是第 19 课的事，这里只要知道适配器这层一旦有了，fake 就是免费的。
-
-### 课文里的代码是哪一种
-
-一门课里的代码有三种。这门课只有前两种：
-
-| 形态 | 用途 | 本课程 |
-|---|---|---|
-| 示意代码 | 说明一个机制，省略掉所有噪音 | 每课的「机制拆解」小节都是这个 |
-| 可复制的最小例子 | 你想亲手验证时，复制到自己的环境里跑 | 只在少数几课出现，明确标注 |
-| 项目代码 | 一个真实服务的完整实现 | **不在这里**，见[参考实现仓库](https://github.com/lance2016/ai-app-engineering-ref) |
-
-看到 `## 机制拆解` 下面的代码，默认它跑不起来——它引用的类型和函数是为了让你看懂逻辑而虚构的。这是刻意的：把 import、日志、错误处理都塞进去，一段二十行能讲清的机制会变成两百行。
-
-## 机制拆解
-
-这一课的代码是个例外：**下面第一段能直接复制去跑**，后两段是预告，接着第一段的 `client` 写，单独拿走会缺东西。国内直接可访问的是 DeepSeek，在 <https://platform.deepseek.com> 申请 key。
-
-```bash
-pip install openai
-export DEEPSEEK_API_KEY=sk-...
-```
-
-### 一、先把话说通
-
-八行，确认 key、网络和模型名都对：
-
-```python
-import os
-from openai import OpenAI
-
-client = OpenAI(api_key=os.environ["DEEPSEEK_API_KEY"],
-                base_url="https://api.deepseek.com")
-
-resp = client.chat.completions.create(
-    model="deepseek-v4-flash",                                   # ← 模型名会过期，以官方文档为准
-    messages=[{"role": "user", "content": "一句话说说深圳的天气"}],
-)
-print(resp.choices[0].message.content)
-```
-
-打印出一句话，这一课的动手部分就完成了。**注意 `messages` 是一个列表**：模型不记得任何东西，你每次都要把完整历史发过去，多轮对话就是往这个列表里追加。第 08 课整课都在讲这个列表该怎么裁。
-
-换供应商只改两行：通义千问是 `base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"` 加 `model="qwen-plus"`，OpenAI 去掉 `base_url` 即可。它们走的都是 Chat Completions 协议。
-
-### 二、预告：模型想调一个工具的时候
-
-这一段不用背，看形状就行——它是第 05 课的内容，放在这里只是让你知道「模型请求调用工具」长什么样：
-
-```python
-WEATHER = {
-    "type": "function",
-    "function": {
-        "name": "get_weather",
-        "description": "Current weather for a city.",
-        "parameters": {"type": "object",
-                       "properties": {"city": {"type": "string"}},
-                       "required": ["city"]},
-    },
-}
-
-messages = [{"role": "user", "content": "深圳现在天气怎么样？"}]
-reply = client.chat.completions.create(
-    model="deepseek-v4-flash", messages=messages, tools=[WEATHER]
-).choices[0].message
-
-if reply.tool_calls:                      # ← 模型没有执行任何东西，它只是请求
-    call = reply.tool_calls[0]
-    result = '{"temp_c": 31, "condition": "sunny"}'   # 你的代码去查，这里写死
-    messages += [reply,
-                 {"role": "tool", "tool_call_id": call.id, "content": result}]
-    print(client.chat.completions.create(
-        model="deepseek-v4-flash", messages=messages).choices[0].message.content)
-```
-
-要留意的只有一件事：**`tool_calls` 出现的时候，外部世界什么都没发生。** 模型返回的是一段「我想调 get_weather，参数是这个」的 JSON，查天气、校验参数、决定要不要真的执行，全是你的代码的事。这条判断是第 05 课的全部前提。
-
-真实系统里这里是个循环——模型可能连着调好几轮工具才给出答案，所以要有步数上限和停止条件。那是第 06 课，这里先不展开。
-
-### 三、同一件事在 Claude 上的写法
+### 五、同一件事在 Claude 上的写法
 
 机制一样，形状不一样。只看工具结果怎么回传：
 
@@ -243,6 +231,21 @@ messages.append({"role": "user", "content": [{                     # ← 工具�
 判断有没有工具调用也换了地方：OpenAI 看 `reply.tool_calls` 是不是空，Claude 看 `resp.stop_reason == "tool_use"`。
 
 把这两段并排读一遍，适配器要抹平的到底是什么就具体了：不是「协议不同」这种空话，是六七个字段名和一个角色归属的判断。
+
+### 六、所以适配器要在第一天就有
+
+```mermaid
+flowchart LR
+    L[应用代码] --> A[ModelAdapter.complete]
+    A --> F[FakeAdapter<br/>按剧本回答]
+    A --> R[真实供应商<br/>DeepSeek / 通义 / OpenAI / Claude]
+```
+
+`ModelAdapter` 就一个方法：给它一串消息和可选的工具列表，返回一个响应。响应里要么是文本，要么是一组工具调用请求。上面那张表里的差异，全部关在这一层里面消化。
+
+这不是过度设计。第 12 条工程原则就是「模型是可替换的适配器」：模型换代的速度远快于业务代码，任何直接调供应商 SDK 的地方，将来都是一次改动。
+
+**它的第一个实现是一个按剧本回答的 fake。** 不需要 key，行为确定，可以写断言，还能让模型「按要求犯错」。代价是它不会思考——讲机制用 fake，看效果用真模型，这是贯穿全课的做法。怎么用它搭评测是第 19 课的事，这里只要知道适配器这层一旦有了，fake 就是免费的。
 
 ## 常见错误
 

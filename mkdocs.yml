@@ -197,5 +197,6 @@ nav:
   - 参考手册:
       - 框架一览: reference/frameworks.md
       - 术语表: reference/glossary.md
+      - 面试地图: reference/interview-map.md
       - 技术选型: reference/stack.md
       - 外部资料: reference/resources.md

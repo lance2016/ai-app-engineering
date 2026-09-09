@@ -112,6 +112,29 @@ flowchart TB
 
 两张地图对不齐是正常的：**能力域按系统结构分，Part 按学习依赖分。** 比如检索能力横跨 04 和 15，中间隔了十课，因为要先懂工具和运行时才谈得上把检索装进 Agent。
 
+## 一条更短的路线：先做出能问答的知识库
+
+不是每个人都要从头走完 27 课。目标只是「把一批文档变成一个能问答的接口」时，八课就够：
+
+**[00](./setup/README.md) → [01](./how-llms-work/README.md) → [02](./model-api-structured-output-streaming/README.md) → [03](./prompt-engineering/README.md) → [04](./embeddings-and-vector-search/README.md) → [15](./rag-end-to-end/README.md) → [17](./data-engineering/README.md) → [19](./evaluation/README.md)**
+
+| 这一段 | 它给你什么 |
+|---|---|
+| [00](./setup/README.md) · [01](./how-llms-work/README.md) · [02](./model-api-structured-output-streaming/README.md) · [03](./prompt-engineering/README.md) | 调通模型、算清 token 的账、拿到可解析的输出、把提示词管起来 |
+| [04](./embeddings-and-vector-search/README.md) | 文档怎么变成向量，什么时候该建近似索引 |
+| [15](./rag-end-to-end/README.md) | **RAG 端到端**，这条路线的主课：七步流水线、混合检索、引用校验 |
+| [17](./data-engineering/README.md) | **数据工程**。文档会变：增量入库、删除、换模型后重建索引 |
+| [19](./evaluation/README.md) | **评测**，凭什么说检索变好了：Recall@k 和带切片的评测集 |
+
+**跳过的是整个 Part 2**——工具、循环、状态、上下文管理。代价要说清楚：这样做出来的是一个「检索 + 生成」的问答接口，模型不会自己决定调哪个工具、走几步、什么时候停。需要那些能力时，回到 [05 Tool Calling](./tool-calling/README.md) 顺着往下读。
+
+两处接缝要提前知道，都不影响这条路线走通：
+
+- [15](./rag-end-to-end/README.md) 的前置里点了 [05](./tool-calling/README.md)，指的是「模型输出只是建议、引用要由代码校验」这一个判断。15 自己会把它讲清，不必先读完 05。
+- [19](./evaluation/README.md) 的前置里点了 [07](./agent-state-and-runtime/README.md)，那是「轨迹评测」那一节要用的事件线程。走这条路线先读 19 的 golden set、judge 校准和回归门禁三节，轨迹那节等读过 07 再回来。
+
+**两条路线各有各的用处。** 完整主线适合系统学习：一次把「一个 AI 应用由哪些部分构成」建全，以后线上出任何一层的问题都知道该看哪里。这条短路线适合先交付一个东西，缺的部分按需回补。
+
 ## 地图三：那个服务是怎么长出来的
 
 前两张地图讲这门课**教什么**，这一张讲这些机制**装进一个真实服务之后长什么样**。
@@ -581,7 +604,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 ## 整套课程的出师标准
 
-读完 27 课，衡量标准不是记住了多少个主题，而是这两件事能不能做。
+读完 27 课，衡量标准不是记住了多少个主题，而是这两件事能不能做。想拿一组具体问题自查，用[面试地图](../reference/interview-map.md)：十个主题各给一句开场问题和两三层追问，答不上第二层的地方就是还没学透的地方。
 
 **一、拿到一个需求，能独立走完这条链。**
 

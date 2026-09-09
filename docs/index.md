@@ -47,7 +47,7 @@ hide:
 
 ## 挑一条路线
 
-<p class="band__lede" markdown="span">三种起点，选最接近的那个，下面直接给入口。不确定自己缺不缺什么，先对一下[背景知识](prerequisites/README.md)。</p>
+<p class="band__lede" markdown="span">四种起点，选最接近的那个，下面直接给入口。不确定自己缺不缺什么，先对一下[背景知识](prerequisites/README.md)。</p>
 
 <div class="picker" data-picker>
 <button class="picker__opt" type="button" data-path="a" aria-pressed="false">
@@ -69,6 +69,13 @@ hide:
 <span class="picker__body">
 <span class="picker__name">生产进阶</span>
 <span class="picker__txt">手上有线上系统，要评测和可靠性</span>
+</span>
+</button>
+<button class="picker__opt" type="button" data-path="d" aria-pressed="false">
+<span class="picker__key">D</span>
+<span class="picker__body">
+<span class="picker__name">先做知识库问答</span>
+<span class="picker__txt">只想先跑通 RAG，暂时不碰 Agent</span>
 </span>
 </button>
 </div>
@@ -121,6 +128,23 @@ hide:
 <li markdown="span">**再补兜底。** [21 可靠性与成本](lessons/reliability-cost-llmops/README.md)讲限流、熔断、fallback 各挡哪一类失败；[22 安全与治理](lessons/security-governance/README.md)讲边界为什么必须由代码执行。</li>
 <li markdown="span">**回头补 [08 Context Engineering](lessons/context-engineering-for-agents/README.md)。** 线上「模型忘事」和成本尖峰，多数是这一层的问题。</li>
 <li markdown="span">**最后读 [26 系统设计与决策](lessons/system-design-decisions/README.md)**，把容量估算和 ADR 补齐；原则 [07](principles/07-locate-failures-by-layer.md) · [08](principles/08-no-eval-no-improvement.md) · [09](principles/09-trace-is-first-class.md) · [10](principles/10-cost-and-latency-are-design-constraints.md) 是这条路线的压缩版。</li>
+</ol>
+</details>
+</article>
+
+<article class="path" data-path="d" markdown="1">
+<p class="path__label">路线 D · 最小 RAG</p>
+<p class="path__who" markdown="span">目标很具体：把一批文档变成一个能问答的接口。这条路线只走八课，整个 Agent 那一段先跳过，学完手上是一个带引用、能测的知识库问答。</p>
+<p class="path__pick" markdown="span">推荐章节：[00 起步](lessons/setup/README.md) → [01 模型选型与成本](lessons/how-llms-work/README.md) · [02 结构化输出与流式](lessons/model-api-structured-output-streaming/README.md) · [03 Prompt Engineering](lessons/prompt-engineering/README.md) · [04 Embedding 与向量检索](lessons/embeddings-and-vector-search/README.md) → [15 RAG 端到端](lessons/rag-end-to-end/README.md) → [17 数据工程](lessons/data-engineering/README.md) → [19 评测](lessons/evaluation/README.md)</p>
+<p class="path__go" markdown="span">[开始读 00 起步](lessons/setup/README.md){ .md-button .md-button--primary }</p>
+<details class="path__more" markdown="1">
+<summary>这条路线怎么读</summary>
+<ol class="tl" markdown="1">
+<li markdown="span">**00 到 04 是地基。** 调通模型、拿到可解析的输出、把提示词管起来、把文档变成向量，四件事缺一件后面都走不动。</li>
+<li markdown="span">**[15 RAG 端到端](lessons/rag-end-to-end/README.md)是主课。** 七步流水线、BM25 加向量的混合检索、引用校验，一次讲完。这一课读慢一点。</li>
+<li markdown="span">**[17 数据工程](lessons/data-engineering/README.md)补的是「文档会变」。** 增量入库、删除、换模型后重建索引。demo 阶段可以晚一点读，上线前必须回来。</li>
+<li markdown="span">**[19 评测](lessons/evaluation/README.md)给你「凭什么说检索变好了」。** Recall@k 和一份带切片的评测集。没有它，调块大小只能靠感觉。它的「轨迹评测」那一节要用第 07 课的事件线程，走这条路线先跳过，读另外三节。</li>
+<li markdown="span">**跳过 Part 2 的代价要清楚。** 这条路线做出来的是检索加生成的问答，模型不会自己决定调哪个工具、走几步。需要那些能力时，回到 [05 Tool Calling](lessons/tool-calling/README.md) 顺着读。</li>
 </ol>
 </details>
 </article>
@@ -210,7 +234,7 @@ hide:
 
 </div>
 
-<p class="band__foot" markdown="span">每个 Part 的前置、能力域拆解和出师标准，还有这 27 课在搭的那个系统的全貌图，都在[课程总览](lessons/README.md)。[背景知识](prerequisites/README.md)里的 LLM 原理八篇是可选的，主线课需要时会点名引用。打开过哪一课会被记下来，下次回到这一页，顶部就有接着读的入口；每课底部另有一个「标记为已掌握」。</p>
+<p class="band__foot" markdown="span">每个 Part 的前置、能力域拆解和出师标准，还有这 27 课在搭的那个系统的全貌图，都在[课程总览](lessons/README.md)。[背景知识](prerequisites/README.md)里的 LLM 原理八篇是可选的，主线课需要时会点名引用。学完想自查，或者要准备面试，用[面试地图](reference/interview-map.md)那十组递进追问对一遍。打开过哪一课会被记下来，下次回到这一页，顶部就有接着读的入口；每课底部另有一个「标记为已掌握」。</p>
 
 </section>
 
