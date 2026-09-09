@@ -161,7 +161,7 @@ def settle(item: TodoItem, run) -> tuple[str, str]:
     return "completed", "ok"
 ```
 
-两种 `check` 各有各的用法。**数量类的验收要比对输出**：`check="grep -rn 'print(' src/ | wc -l"` 配 `expect="0"`，判的是「剩下 0 处」，不是「命令跑完了」。**测试类的验收才看退出码**：`pytest tests/test_logging.py -q` 挂了就是非 0，这时退出码本身就是结论。开头那个案例只要有第一条，第 32 轮的「完成」会被挡下来，因为剩余数是 9 不是 0。
+两种 `check` 各有各的用法。**数量类的验收要比对输出**：`check="grep -rn 'print(' src/ | wc -l"` 配 `expect="0"`，判的是「剩下 0 处」，不是「命令跑完了」。**测试类的验收才看退出码**：`pytest tests/test_logging.py -q` 挂了就是非 0，这时退出码本身就是结论。开头那个案例只要配上第一条，模型报告「完成」的那一轮就会被挡下来——剩余数还没到 0。
 
 `unverified` 不能当成 `completed` 的同义词。它的意思是「这一项的状态未知」：可能真做完了，也可能验收命令自己坏了。汇报时它要单独一栏，别混进完成数——一份 20 项里 12 项 unverified 的清单，和「完成 12 项」是两回事。
 
