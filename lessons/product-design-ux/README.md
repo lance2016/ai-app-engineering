@@ -14,11 +14,14 @@ estimated_time: 约 2 小时
 
 一个语音机器人项目的第一版没有「工具执行中」这个状态。
 
-语音场景没有屏幕，所以每个状态都得用声音表达：等待用一个短音效，需要确认时完整复述要做的事。而「正在执行」当时什么都没表达——用户说完指令，机器人沉默，工具在后台跑。
+纯语音场景没有屏幕，所以每个状态都得用声音表达：等待用一个短音效，需要确认时完整复述要做的事。而「正在执行」当时什么都没表达——用户说完指令，机器人沉默，工具在后台跑。
 
 用户的反应是把指令再说一遍。他以为机器人没听见。
 
-于是同一个动作被执行了两次。修法是给 `TOOL_RUNNING` 状态一个可感知的表达，一句「我看一下」，问题就消失了。
+于是同一个动作被执行了两次。修法是给 `TOOL_RUNNING` 状态一个可感知的表达，一句「我看一下」，这个重复路径就不再出现。
+
+!!! note "构造的例子"
+    这段经历和执行次数是为说明状态缺口编的，不是维护者项目的线上记录。真实项目要用自己的事件和日志替换它。
 
 </details>
 
@@ -26,7 +29,7 @@ estimated_time: 约 2 小时
 
 ## 产品状态要如何验收
 
-- 能用人工基线和 ROI 判断一个功能该不该上 AI，并说出三种「不该用」的信号
+- 能用人工基线和 ROI 判断一个功能是否值得上 AI，并说出三个需要先核对的信号
 - 能把流式回答建模成显式的 UI 状态机，说清每个状态用户能做什么、看到什么
 - 能按可逆性给动作分级，正确选择确认、撤销窗口或直接执行
 - 能设计带原因码和切片的反馈闭环
@@ -50,11 +53,11 @@ flowchart LR
 
 ### 先问要不要上 AI
 
-人工基线是「现在人怎么做、多久、错多少」。AI 方案只有在成本或质量上明显好于这条线、且失败后果可承受时才值得做。三个「不该用」的信号：
+人工基线是「现在人怎么做、多久、错多少」。先把 AI 方案要增加的价值写出来，再把失败后果和补救路径写出来。下面三种情况值得先停下来核对，单独一条都不是自动否决：
 
-1. 任务有唯一正确答案且已有确定性方案
-2. 错误不可逆且无法验证
-3. 用户需要的是速度而不是判断
+1. 已有确定性方案同时满足正确率、延迟和成本，AI 没有补上新的用户价值
+2. 错误不可逆，而且系统和用户都没有办法在执行前发现
+3. 人工基线已经能满足当前规模，接入模型只增加等待、维护或数据风险
 
 ### 流式回答是一个状态机
 
@@ -78,9 +81,13 @@ stateDiagram-v2
     confirming --> tooling: 用户批准
     confirming --> cancelled: 用户拒绝
     streaming --> done
+    waiting --> cancelled: 用户取消
+    streaming --> cancelled: 用户停止
+    tooling --> cancelled: 用户取消
     waiting --> failed: 超时
     tooling --> failed: 工具失败 / 预算耗尽
     failed --> waiting: 重试
+    cancelled --> waiting: 用户发起下一轮
     done --> [*]
     cancelled --> [*]
 ```
@@ -93,7 +100,7 @@ stateDiagram-v2
 
 ### 反馈要能定位问题
 
-一个总体的「点赞率 85%」什么都说明不了。
+一个总体的「点赞率 85%」很难说明问题。
 
 ## 从转移表到界面
 
@@ -108,26 +115,31 @@ class UIState(StrEnum):
     NEEDS_CONFIRMATION = "needs_confirmation"   # 副作用待批 -> 显示批准 / 拒绝
     DONE               = "done"
     FAILED             = "failed"
+    CANCELLED          = "cancelled"             # 用户主动停止
 
 TRANSITIONS: dict[UIState, set[UIState]] = {
     UIState.IDLE:      {UIState.WAITING},
     UIState.WAITING:   {UIState.STREAMING, UIState.TOOL_RUNNING,
-                        UIState.NEEDS_CONFIRMATION, UIState.DONE, UIState.FAILED},
+                        UIState.NEEDS_CONFIRMATION, UIState.DONE,
+                        UIState.FAILED, UIState.CANCELLED},
     UIState.STREAMING: {UIState.STREAMING,       # ← 自转移，这就是增量文本
                         UIState.TOOL_RUNNING, UIState.NEEDS_CONFIRMATION,
-                        UIState.DONE, UIState.FAILED},
+                        UIState.DONE, UIState.FAILED, UIState.CANCELLED},
     UIState.TOOL_RUNNING:       {UIState.STREAMING, UIState.NEEDS_CONFIRMATION,
-                                 UIState.DONE, UIState.FAILED},
+                                 UIState.DONE, UIState.FAILED, UIState.CANCELLED},
     UIState.NEEDS_CONFIRMATION: {UIState.TOOL_RUNNING, UIState.STREAMING,
-                                 UIState.DONE, UIState.FAILED},
+                                 UIState.DONE, UIState.FAILED, UIState.CANCELLED},
     UIState.DONE:   {UIState.WAITING},           # 只能由用户发起下一轮
     UIState.FAILED: {UIState.WAITING},
+    UIState.CANCELLED: {UIState.WAITING},
 }
 ```
 
 **先写表，再写渲染。** 「工具跑了十秒界面卡住」和「断线后文字全没了」这类问题会在转移表上暴露出来，而不是在用户投诉里。开头那个案例在这张表上是一眼能看见的：`TOOL_RUNNING` 这一行如果不存在，`WAITING` 就直接连到 `STREAMING`，中间那段时间没有任何状态负责。
 
 想加一个「用户打断」状态？先改表。
+
+`CANCELLED` 只表示这轮不再继续生成或等待用户操作，不表示已经发生的工具副作用被撤回。工具已经开始执行时，界面要显示「取消中」或执行结果，不能把取消按钮当成回滚。
 
 视图对象是一个 reducer 的产物，关键是 `text` 独立于 `state`：
 
@@ -151,10 +163,12 @@ class ReplyView:
 
 ```python
 head = {
+    UIState.IDLE:           "[ 空闲 ]",
     UIState.WAITING:      "[ 思考中...            (取消) ]",
     UIState.STREAMING:    "[ 回答中...            (停止) ]",
     UIState.TOOL_RUNNING: f"[ 正在使用 {self.tool_label}...  (取消) ]",
     UIState.NEEDS_CONFIRMATION: f"[ 确认执行 {self.pending_action}？ (批准) (拒绝) ]",
+    UIState.CANCELLED:      "[ 已取消，未执行 ] (重新开始)",
     UIState.FAILED:       f"[ 失败：{self.error} ] (重试) —— 以下是已生成的部分",
 }[self.state]
 return f"{head}\n  {self.text or '(还没有内容)'}"
@@ -193,9 +207,9 @@ async def perform(action: Action, approve_fn) -> Outcome:
     return Outcome(action, committed=True)
 ```
 
-**确认是稀缺资源。** 每个动作都弹确认，用户很快学会无脑点确定，确认就失效了。归档对话直接做加撤销窗口；支付必须确认。
+**确认是稀缺资源。** 每个动作都弹确认，用户很快学会无脑点确定，确认就失效了。归档对话可以直接做并提供撤销窗口；支付通常要在执行前确认。
 
-有外部副作用的动作（发邮件）**窗口结束前根本不该发出去**——这要求后端支持延迟提交，不是前端假装等一下。
+上面的 `perform` 只适合有原子撤销能力的内部状态。发邮件这类外部副作用不能先发再等撤销，应该由后端暂存并在窗口结束后提交；前端显示倒计时并不会改变副作用已经发生的事实。
 
 ### 三、反馈：信号 + 原因码 + 切片键
 
@@ -263,13 +277,13 @@ citations: list[str]     # ["refund-policy#0", "shipping#2"]
 
 **引用做成装饰。** 点不开、和正文没有对应关系的引用列表，只是在暗示有来源。用户要能自己验证那一句话。
 
-**只收点赞点踩。** 没有原因码，负反馈无法归因；没有切片键，看不出哪个场景在坏。上面那张表如果只有第一行，你会以为产品挺好。
+**只收点赞点踩。** 没有原因码，负反馈很难归因；没有切片键，很难看出哪个场景在坏。上面那张表如果只有第一行，你会以为产品挺好。
 
 ## 透明到什么程度，确认到什么密度
 
 - **透明还是简洁。** 显示模型正在用什么工具、引用来自哪里，会增加界面噪音。原则是默认折叠、可展开，关键动作前展开。
-- **撤销窗口的长度。** 太短用户来不及反应，太长动作迟迟不生效。多数界面用 5～10 秒。
-- **确认的密度和话术。** 语音场景的确认比屏幕场景多得多，因为物理动作（移动、播放）几乎都不可逆或代价高。但话术要短，否则用户会打断它——**用户打断确认本身又是一个需要处理的状态**，这一条在上面那张转移表里还没有。
+- **撤销窗口的长度。** 太短用户来不及反应，太长动作迟迟不生效。可以从 5～10 秒的候选范围开始做用户测试，再按动作的损失和用户反应调整。
+- **确认的密度和话术。** 语音缺少可视预览，金额、对象和地址等关键参数更需要回读；动作是否可逆仍按业务判断。话术要短，否则用户会打断它——**用户打断确认本身又是一个需要处理的状态**，这一条已经在转移表的 `CANCELLED` 出边里体现。
 - **转人工的时机。** 早转浪费人力，晚转用户已经生气。信号可以是连续两次负反馈、用户重复同一个问题、或者模型自己请求（第 07 课的 `request_human_input`）。把阈值做成配置，按场景调。
 
 ## 从转移表到能上线
@@ -288,7 +302,7 @@ citations: list[str]     # ["refund-policy#0", "shipping#2"]
 | 审批交互 | `interrupt` 的 payload 驱动 UI | `needs_approval` 的中断 | 权限回调 |
 | 状态机本身 | 自己写 | 自己写 | 自己写 |
 
-框架给的是事件，状态机是你自己的。事件类型到 UI 状态的映射表，是这一层唯一需要认真设计的东西。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
+框架给的是事件，状态机是你自己的。事件类型到 UI 状态的映射表，是这一层最需要认真设计的部分。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
 
 ## 在 Playground 里走完一条状态链
 

@@ -226,7 +226,7 @@ hide:
 
 <section class="part" markdown="1">
 <p class="part__head" markdown="span">[Part 5 产品与技术决策](lessons/README.md#part-5-产品与技术决策){ .part__link }</p>
-<p class="part__goal">能独立设计一个 AI 应用，写得出一份别人能审的技术决策。</p>
+<p class="part__goal">能把关键交互、语音链路和技术决定写成可复核的设计文档。</p>
 <ul class="part__list" markdown="1">
 <li markdown="span">[<span>24</span> 产品设计与交互](lessons/product-design-ux/README.md){ .lsn data-lesson="product-design-ux" }</li>
 <li markdown="span">[<span>25</span> 语音应用](lessons/voice-agents/README.md){ .lsn data-lesson="voice-agents" }</li>
