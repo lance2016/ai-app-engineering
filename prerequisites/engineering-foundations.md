@@ -106,7 +106,25 @@ HTTP 请求至少有方法、URL、headers 和可选 body；响应有状态码�
 | 超时与重试 | 超时只说明客户端没等到结果，不说明服务端没有完成；重试前要确认操作是否可重复 | 05、21 |
 | SSE | 服务端在一个 HTTP 响应里连续发送事件；断线恢复需要事件 id 或 checkpoint | 02、07、18 |
 
-一个最小请求链是：客户端发 `POST /v1/threads/{id}/runs`，服务端先校验 body 和权限，再返回 JSON 或 `text/event-stream`。模型输出的每个增量都只是一个事件，只有运行时写入事件存储后，客户端才有恢复依据。
+### 常见 Web 词汇：知道它解决哪一层问题
+
+这些词经常一起出现在项目文档里，但它们不在同一层。REST 是接口设计风格，HTTPS 是传输安全，Jinja2 是 HTML 模板工具；把它们都叫“后端框架”会混淆排查方向。
+
+| 词 | 先形成的直觉 | 参考实现中的位置 | 优先级 |
+|---|---|---|---|
+| REST / RESTful | 用资源和 HTTP 方法表达操作的一组设计约束；HTTP API 不一定都满足完整 REST 约束 | `/v1/threads`、`/v1/knowledge` 是资源路径，`human-input` 这类动作接口仍要看契约和幂等性 | 现在理解 |
+| HTTPS / TLS | HTTP 在 TLS 加密连接上传输；它保护传输过程并验证服务器身份，不负责判断用户有没有权限 | 本地参考项目用 HTTP 便于调试；公开部署时由入口层提供 HTTPS | 现在理解 |
+| Cookie、Session、Bearer token | Cookie 通常由浏览器自动带回；Session 是服务器保存的会话状态；Bearer token 是请求主动携带的凭证 | 参考实现从 `Authorization: Bearer ...` 解析租户，见 [`api/deps.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/deps.py) | 现在理解 |
+| CORS / Origin | 浏览器默认限制脚本跨来源读取响应；CORS 用响应头声明允许哪些来源，和服务端之间的调用无关 | Playground 和 API 由同一个 FastAPI 服务提供，不需要额外跨来源配置；拆成两个域名时再配置 | 遇到跨域再学 |
+| Jinja2 | 服务端先把变量填进 HTML 模板，再把生成后的页面发给浏览器；它和返回 JSON 的 API 是两条输出路径 | 参考实现的 Playground 是静态 [`playground.html`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/static/playground.html)，没有使用 Jinja2 | 知道名字 |
+| 反向代理 / 网关 | 站在应用前面接收域名和 HTTPS，再把请求转给应用；常放证书、压缩、限流和访问日志 | 参考实现本地直接运行 FastAPI；生产部署再看 M5 的[容器与部署说明](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md) | 遇到部署再学 |
+| SSE 和 WebSocket | SSE 是服务器到浏览器的单向事件流；WebSocket 是双方都能持续发送消息的连接 | 文本 Playground 使用 SSE；语音方案只在[协议说明](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/demos/voice-agents.md)里讨论 WebSocket | 现在理解差异 |
+
+官方资料访问日期均为 2026-09-10：[REST](https://developer.mozilla.org/en-US/docs/Glossary/REST)、[HTTPS](https://developer.mozilla.org/en-US/docs/Glossary/HTTPS)、[CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS)、[Jinja 模板](https://jinja.palletsprojects.com/en/stable/templates/)、[WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)。遇到一个词时先判断它属于接口、传输、浏览器还是部署层，再决定去哪里查。
+
+名词的放置也按这个标准：主线需要拿来做判断的，写在工程能力正文；项目没用但读 Web 文档常会遇到的，放在本节表格；只需要查一句定义的，放[术语索引](../reference/glossary.md)；具体依赖版本和安装方式，放[技术选型](../reference/stack.md)或参考项目的启动说明。这样不会把工程能力页变成一张没有重点的名词清单。
+
+一个最小请求链是：客户端先发 `POST /v1/threads` 建立线程，再发 `POST /v1/threads/{id}/messages` 发送消息。服务端校验 body 和权限后，以 JSON 或 `text/event-stream` 返回结果。模型输出的每个增量都只是一个事件，只有运行时写入事件存储后，客户端才有恢复依据。
 
 官方资料访问日期均为 2026-09-10：[MDN HTTP 概览](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview)、[HTTP 方法](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods)、[状态码](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status)、[Server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events)。读完方法和状态码，再看主线第 02 课的流式与错误处理。
 
