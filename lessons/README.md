@@ -163,6 +163,8 @@ flowchart TB
     M5 --> M6["M6 平台设计"]
 ```
 
+M0 是项目的并发热身，和课程 Part 0 不一一对应；本课提到的 fake adapter 在 M1 才接入 HTTP 服务。
+
 | 学完 | 服务这时候能做什么 | 里程碑 | 离线验收 |
 |---|---|---|---|
 | Part 0 | 五个并发对照实验，先认识超时、取消和阻塞 | [M0](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m0-concurrency/README.md) | `python project/m0-concurrency/code/01_sequential_vs_gather.py` |
