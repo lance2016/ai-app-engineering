@@ -8,7 +8,7 @@
 
 一门面向开发者的中文开源课程。讲清楚 LLM、Tool、Agent Runtime、RAG、Memory、评测、可观测性和安全在工程上到底是怎么回事——**为什么这样设计、什么时候会坏、坏了怎么办**。
 
-[![Lessons](https://img.shields.io/badge/lessons-24-0EA5E9)](./lessons/)
+[![Lessons](https://img.shields.io/badge/lessons-27-0EA5E9)](./lessons/)
 [![中文](https://img.shields.io/badge/language-中文-8B5CF6)](./README.md)
 [![License](https://img.shields.io/github/license/lance2016/ai-app-engineering)](./LICENSE)
 
