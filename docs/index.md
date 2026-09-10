@@ -16,7 +16,7 @@ hide:
 
 <p class="hero__subline" markdown="span">配套一个可本地启动的[参考项目](reference/project-playbook.md)：先看运行结果，再回到课程读机制。</p>
 
-写给已经会 Python 和后端的开发者。每课的重点是这个机制在生产里会怎么坏，以及拿什么证据说它修好了。
+主线写给已经会 Python 和后端、想系统做 AI 应用的开发者。完全没做过后端，先看[背景知识里的工程能力](prerequisites/engineering-foundations.md)；每课的重点是这个机制在生产里会怎么坏，以及拿什么证据说它修好了。
 
 <ul class="hero__meta">
 <li>27 课</li>

@@ -7,7 +7,45 @@ part: 背景知识
 
 > 这页先讲到能读懂主线和参考实现的最低程度，再给出继续学习的路线。它不替代 Python、Web 或数据库教程；读完一节，知道自己缺哪块，直接沿着这一节的官方资料往下补。
 >
-> 最短起步组合是：能在终端里进入目录和设置环境变量；能读懂 Python 的类型、异常和 `async`；知道 HTTP 请求由什么组成；能看懂一条 SQL；知道测试、日志和容器分别解决什么问题。其余内容在遇到对应课程时再补。
+> 最短起步组合是：能在终端里进入目录和设置环境变量；能读懂 Python 的变量、函数、类型、异常和 `async`；知道 HTTP 请求由什么组成；能看懂一条 SQL；知道测试、日志和容器分别解决什么问题。完全没接触过后端，先读下面的“零基础先认这些词”，不必一开始就理解后面的所有术语。
+
+## 完全没接触过后端，先认这些词
+
+主线课程面向会写一点 Python、准备做 AI 应用的开发者。如果“进程、端口、API、JSON”还没有清晰的画面，先看这一节。它只建立阅读后文所需的词汇，不要求现在就学会部署服务。
+
+| 词 | 最小概念 | 在这门课里的样子 |
+|---|---|---|
+| 程序和进程 | 程序是写在文件里的指令；进程是这些指令正在运行的一次实例 | 运行参考项目后，Python 服务就是一个进程 |
+| 函数和模块 | 函数接收输入并返回结果；模块是可以被别的文件导入的代码文件 | `runtime/loop.py` 里的函数负责推进一次循环 |
+| 终端和文件系统 | 终端用文字命令启动程序；目录组织文件，路径告诉程序去哪里找它们 | `uv run ...` 启动项目，`project/src/` 是源码目录 |
+| 数据和 JSON | Python 里的字符串、列表、字典是内存中的值；JSON 是在网络上传输这些值的一种文本格式 | API body 和模型响应通常是 JSON |
+| 依赖和虚拟环境 | 依赖是项目借用的第三方库；虚拟环境把项目用的版本和系统 Python 分开 | `pyproject.toml` 声明依赖，`uv.lock` 固定版本 |
+| 配置和环境变量 | 配置随运行环境变化；环境变量在启动时传给进程，密钥不写进源代码 | `.env.example` 说明需要哪些变量 |
+| 客户端和服务器 | 客户端发起请求；服务器监听请求并返回结果 | Playground 是客户端，FastAPI 是服务器 |
+| URL 和端口 | URL 指向资源；端口是主机上区分网络服务的编号，服务器进程监听它 | `localhost:8000` 表示本机的 8000 端口 |
+| API 和协议 | API 是一组约定：用什么方法、传什么字段、返回什么状态；协议规定消息怎样交换 | `POST /v1/threads/{id}/messages` 是一条接口约定 |
+| 内存和数据库 | 内存适合暂存当前运行的数据，进程退出后通常消失；数据库保存需要跨进程、跨重启保留的事实 | 事件线程最终写入 PostgreSQL |
+| 异常和状态码 | 异常是程序内部没有得到预期结果；状态码是服务器给客户端的结果分类 | Python 捕获异常后，API 返回 4xx 或 5xx |
+| 测试和日志 | 测试把预期写成可重复的检查；日志记录运行时发生了什么 | pytest 验证行为，trace 帮忙串起一次请求 |
+| Git 和提交 | Git 保存一组可比较、可回退的修改；提交是其中一个明确的版本点 | 课程改动和参考项目都应能回到某个提交 |
+
+把这些词串起来，一次请求大致是：
+
+```text
+浏览器或脚本
+  └─ HTTP 请求（URL、方法、headers、JSON body）
+      └─ API 进程（监听端口）
+          ├─ 业务函数
+          ├─ 模型或第三方 API
+          ├─ 数据库
+          └─ HTTP 响应（状态码、headers、JSON 或事件流）
+```
+
+这里的“进程”解释了服务为什么能持续接请求，“端口”解释了客户端为什么能找到它，“API”解释了双方怎样对齐字段；后文的 `async`、SSE、checkpoint 和 trace 都是在这条链上增加能力。不会某个词时，先回到[术语索引](../reference/glossary.md)查一句话定义。
+
+### 零基础的第一段学习路线
+
+先学变量、函数、条件、循环、异常、文件和模块，再学类型注解、`async` 和第三方库。哈佛的 [CS50P Python 入门课](https://cs50.harvard.edu/python/)按这个顺序组织，面向没有编程经验的人；需要查语法时，再看[Python 官方教程](https://docs.python.org/3/tutorial/)。两份资料访问日期均为 2026-09-10。
 
 ## 先建立一张图
 
@@ -159,6 +197,7 @@ fake 和 mock 的边界要分清：fake 是一个行为稳定、可以真正运�
 
 | 阶段 | 先掌握 | 推荐资料 |
 |---|---|---|
+| 0. 编程入门 | 变量、函数、条件、循环、异常、文件和模块 | [CS50P Python 入门课](https://cs50.harvard.edu/python/)、[Python Tutorial](https://docs.python.org/3/tutorial/) |
 | 1. Python 与终端 | 类型、异常、`async`、路径、环境变量、Git | [Python Tutorial](https://docs.python.org/3/tutorial/)、[Pro Git](https://git-scm.com/book/en/v2)、[Shell Tools](https://missing.csail.mit.edu/2020/course-shell/) |
 | 2. HTTP 服务 | 方法、状态码、JSON、schema、超时、SSE | [MDN HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview)、[FastAPI async](https://fastapi.tiangolo.com/async/)、[MDN SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) |
 | 3. 数据与并发 | SQL、索引、事务、迁移、Redis、取消 | [PostgreSQL Tutorial](https://www.postgresql.org/docs/current/tutorial.html)、[Alembic Tutorial](https://alembic.sqlalchemy.org/en/latest/tutorial.html)、[Redis 开发文档](https://redis.io/docs/latest/develop/)、[asyncio](https://docs.python.org/3/library/asyncio.html) |
@@ -171,6 +210,7 @@ fake 和 mock 的边界要分清：fake 是一个行为稳定、可以真正运�
 
 | 你的情况 | 建议 |
 |---|---|
+| 没写过程序，也不了解后端 | 先走“零基础的第一段学习路线”，掌握变量、函数、条件、循环和文件，再回到这页的 Python 与终端 |
 | Python 和后端基本熟悉，没做过 AI 应用 | 读第 00 课；遇到表格里的“用到再学”再回来补 |
 | 只缺 Python 基础 | 先看“Python”一节，再补类型、异常、`asyncio` 和 pytest |
 | 只缺服务和数据库基础 | 先看“HTTP”和“数据”两节，再读第 02、05、07 课 |
