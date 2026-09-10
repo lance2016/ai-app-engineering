@@ -103,6 +103,7 @@ HTTP 请求至少有方法、URL、headers 和可选 body；响应有状态码�
 |---|---|---|
 | 方法语义 | `GET` 读取，`POST` 通常创建或触发动作，`PUT` 替换，`DELETE` 删除；是否幂等要看接口语义 | 02、05、17 |
 | 状态码 | 4xx 多是请求或权限问题，5xx 多是服务或下游问题；具体语义以接口契约为准 | 02、21 |
+| 契约和版本 | schema 是客户端和服务端共同遵守的字段约定；`/v1` 是兼容性边界，新增字段通常比改名或改类型安全 | 02、18 |
 | 超时与重试 | 超时只说明客户端没等到结果，不说明服务端没有完成；重试前要确认操作是否可重复 | 05、21 |
 | SSE | 服务端在一个 HTTP 响应里连续发送事件；断线恢复需要事件 id 或 checkpoint | 02、07、18 |
 
@@ -123,6 +124,18 @@ HTTP 请求至少有方法、URL、headers 和可选 body；响应有状态码�
 官方资料访问日期均为 2026-09-10：[REST](https://developer.mozilla.org/en-US/docs/Glossary/REST)、[HTTPS](https://developer.mozilla.org/en-US/docs/Glossary/HTTPS)、[CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS)、[Jinja 模板](https://jinja.palletsprojects.com/en/stable/templates/)、[WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)。遇到一个词时先判断它属于接口、传输、浏览器还是部署层，再决定去哪里查。
 
 名词的放置也按这个标准：主线需要拿来做判断的，写在工程能力正文；项目没用但读 Web 文档常会遇到的，放在本节表格；只需要查一句定义的，放[术语索引](../reference/glossary.md)；具体依赖版本和安装方式，放[技术选型](../reference/stack.md)或参考项目的启动说明。这样不会把工程能力页变成一张没有重点的名词清单。
+
+### 网络底层：出错时先判断停在哪一层
+
+浏览器访问一个地址时，通常先通过 DNS 找到 IP，再建立 TCP 连接；使用 HTTPS 时还要完成 TLS 握手，之后才发送 HTTP 请求。DNS 失败时请求还没到服务器；连接被拒绝通常表示目标端口没有服务在监听；一直超时可能卡在网络、TLS、连接池或下游服务；拿到 4xx 或 5xx 才说明应用已经返回了结果。
+
+这一级只需要知道排查顺序，不要求先学数据包。可以先看 [MDN How the web works](https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works) 和 [DNS 词条](https://developer.mozilla.org/en-US/docs/Glossary/DNS)，资料访问日期均为 2026-09-10。
+
+### 依赖注入：路由函数不自己创建所有对象
+
+路由函数需要租户、数据库、模型和限流器时，不必在函数体里逐个创建。FastAPI 的 `Depends` 让函数声明它需要什么，框架在每次请求时提供对应对象；测试时可以把真实模型换成 fake，把 PostgreSQL 换成内存实现。它只是对象组装和生命周期管理，不会自动解决业务逻辑。
+
+参考实现的依赖入口在 [`api/deps.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/deps.py)，应用装配在 [`api/app.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/app.py)。官方资料访问日期为 2026-09-10：[FastAPI Dependencies](https://fastapi.tiangolo.com/tutorial/dependencies/)。
 
 一个最小请求链是：客户端先发 `POST /v1/threads` 建立线程，再发 `POST /v1/threads/{id}/messages` 发送消息。服务端校验 body 和权限后，以 JSON 或 `text/event-stream` 返回结果。模型输出的每个增量都只是一个事件，只有运行时写入事件存储后，客户端才有恢复依据。
 
@@ -147,6 +160,26 @@ HTTP 请求至少有方法、URL、headers 和可选 body；响应有状态码�
 Redis 适合保存有过期时间的缓存、短期幂等记录、限流桶和运行锁。它不是 PostgreSQL 事实表的替代品：缓存可以重建，事件和账单不能因为缓存丢失而失去。锁也只是并发控制，不能把外部支付和本地记录变成一个原子事务。
 
 参考实现的 Redis 键值和锁在 [`storage/redis_kv.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/storage/redis_kv.py)、[`ops/ratelimit.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/ratelimit.py)。官方资料访问日期为 2026-09-10：[Redis 开发文档](https://redis.io/docs/latest/develop/)。先看数据类型、过期和事务，再看主线第 07、21 课为什么把事实数据和临时控制数据分开。
+
+### ORM、连接和连接池
+
+ORM 把表和行映射成 Python 类和对象，减少重复的 SQL 拼接；它不能替你决定索引、事务和权限过滤。连接池复用已经建立的数据库连接，同时限制并发连接数。池太小，请求会排队；池太大，数据库会被连接和查询压垮。
+
+参考实现用 SQLAlchemy 的 `AsyncEngine`，在 [`storage/postgres.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/storage/postgres.py) 里创建连接池。官方资料访问日期均为 2026-09-10：[SQLAlchemy ORM 快速开始](https://docs.sqlalchemy.org/en/20/orm/quickstart.html)、[Engine 与连接池](https://docs.sqlalchemy.org/en/20/core/engines.html)。
+
+## 可靠性：同一个请求可能执行多次
+
+网络超时只说明调用方没有等到结果，不能证明服务端没有执行。把所有失败都重试，可能把一次扣款、发信或工具副作用执行两遍。参考实现把重试、幂等、限流和熔断分别处理：
+
+| 概念 | 最小概念 | 参考实现 |
+|---|---|---|
+| 重试和退避 | 只重试暂时性失败；每次有超时，总体有次数上限，等待时间逐步增加并加入抖动 | [`ops/resilience.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/resilience.py) |
+| 幂等 | 同一个请求或工具调用重放时，返回已有结果，不再次产生副作用 | [`api/routes/threads.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/routes/threads.py)、[`runtime/runner.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/runner.py) |
+| 限流 | 在请求进入模型和数据库前控制速率；拒绝时返回 429 和 `Retry-After`，让客户端决定何时再试 | [`ops/ratelimit.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/ratelimit.py) |
+| 熔断和 fallback | 下游连续失败时暂时停止调用；恢复或切备用路径，避免每个请求都撞向故障服务 | [`ops/resilience.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/resilience.py) |
+| 队列和后台任务 | 把耗时工作从短 HTTP 请求中移出，由 worker 稍后处理；队列通常至少一次投递，所以任务也要幂等 | 当前参考项目没有持久化队列；长任务只在 [Capstone 3](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/capstones/03-durable-agent) 的设计里讨论 |
+
+先理解“超时后可能已经成功”这一个事实，再看[asyncio 队列](https://docs.python.org/3/library/asyncio-queue.html)和第 21 课。上面资料访问日期均为 2026-09-10。短请求适合直接返回，文档导入、批量评测和长任务才需要队列；不要为了看起来像生产系统而额外加队列。
 
 ## 测试：验证每一层的承诺
 
@@ -186,6 +219,8 @@ fake 和 mock 的边界要分清：fake 是一个行为稳定、可以真正运�
 
 参考实现把项目元数据和锁文件放在 [`pyproject.toml`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/pyproject.toml)、[`uv.lock`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/uv.lock)，启动配置示例在 [`.env.example`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/.env.example)。官方资料访问日期均为 2026-09-10：[Pro Git](https://git-scm.com/book/en/v2)、[uv 项目结构](https://docs.astral.sh/uv/concepts/projects/layout/)、[uv locking and syncing](https://docs.astral.sh/uv/concepts/projects/sync/)、[Missing Semester Shell Tools](https://missing.csail.mit.edu/2020/course-shell/)。
 
+CI 是每次提交自动运行测试、评测、迁移和构建；CD 是把通过检查的构建产物发布或部署。它们的价值是让“这次改动能不能发布”由同一套命令判断，而不是只在某个人电脑上手动点过。参考实现把这些门禁写在 [`.github/workflows/ci.yml`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/.github/workflows/ci.yml)；官方资料访问日期为 2026-09-10：[GitHub Actions](https://docs.github.com/en/actions)。
+
 ## 安全边界：谁能让系统做什么
 
 认证回答“你是谁”，授权回答“你能做什么”。最小权限意味着工具注册表、数据库查询、文件访问和管理操作都要按用户、租户和资源范围限制。把 `tenant_id` 从请求一路传到 repository、事件、成本和 trace，才能在每一层检查边界；只在前端隐藏按钮不算授权。
@@ -219,8 +254,8 @@ fake 和 mock 的边界要分清：fake 是一个行为稳定、可以真正运�
 | 1. Python 与终端 | 类型、异常、`async`、路径、环境变量、Git | [Python Tutorial](https://docs.python.org/3/tutorial/)、[Pro Git](https://git-scm.com/book/en/v2)、[Shell Tools](https://missing.csail.mit.edu/2020/course-shell/) |
 | 2. HTTP 服务 | 方法、状态码、JSON、schema、超时、SSE | [MDN HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview)、[FastAPI async](https://fastapi.tiangolo.com/async/)、[MDN SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) |
 | 3. 数据与并发 | SQL、索引、事务、迁移、Redis、取消 | [PostgreSQL Tutorial](https://www.postgresql.org/docs/current/tutorial.html)、[Alembic Tutorial](https://alembic.sqlalchemy.org/en/latest/tutorial.html)、[Redis 开发文档](https://redis.io/docs/latest/develop/)、[asyncio](https://docs.python.org/3/library/asyncio.html) |
-| 4. 测试与证据 | fixture、替身、契约测试、golden set、CI | [pytest fixtures](https://docs.pytest.org/en/stable/how-to/fixtures.html)、[pytest monkeypatch](https://docs.pytest.org/en/stable/how-to/monkeypatch.html)、[GitHub Actions](https://docs.github.com/en/actions) |
-| 5. 运行与安全 | 镜像、Compose、健康检查、日志、trace、最小权限 | [Docker Compose](https://docs.docker.com/compose/)、[OpenTelemetry primer](https://opentelemetry.io/docs/concepts/observability-primer/)、[OWASP LLM Top 10](https://genai.owasp.org/llm-top-10/) |
+| 4. 测试与可靠性 | fixture、替身、契约测试、golden set、重试、幂等、CI | [pytest fixtures](https://docs.pytest.org/en/stable/how-to/fixtures.html)、[pytest monkeypatch](https://docs.pytest.org/en/stable/how-to/monkeypatch.html)、[GitHub Actions](https://docs.github.com/en/actions) |
+| 5. 运行与安全 | 镜像、Compose、健康检查、队列、日志、trace、最小权限 | [Docker Compose](https://docs.docker.com/compose/)、[OpenTelemetry primer](https://opentelemetry.io/docs/concepts/observability-primer/)、[OWASP LLM Top 10](https://genai.owasp.org/llm-top-10/) |
 
 上表链接访问日期均为 2026-09-10。资料很多时不要从头通读：先看目录和示例，再拿参考实现中的一个请求或一个失败测试对照。
 
