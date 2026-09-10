@@ -131,7 +131,7 @@
 ├── lessons/          主线 27 课，每课一个 README
 ├── prerequisites/    背景知识：工程能力基础与进阶、算法基础、LLM 原理八篇
 ├── principles/       12 条工程原则，一条一个文件
-├── reference/        术语表、技术选型、框架一览、外部资料
+├── reference/        术语表、技术选型、框架一览、外部资料、Mac 工程效率
 └── docs/ mkdocs.yml  文档站配置（内容都是上面几个目录的符号链接）
 ```
 
@@ -146,7 +146,7 @@
 
 ## 参考资料
 
-工程能力和算法基础见 [prerequisites/](./prerequisites/README.md)，术语见 [glossary.md](./reference/glossary.md)，技术选型见 [stack.md](./reference/stack.md)，框架对比见 [frameworks.md](./reference/frameworks.md)，外部资料见 [resources.md](./reference/resources.md)。
+工程能力和算法基础见 [prerequisites/](./prerequisites/README.md)，术语见 [glossary.md](./reference/glossary.md)，技术选型见 [stack.md](./reference/stack.md)，框架对比见 [frameworks.md](./reference/frameworks.md)，外部资料见 [resources.md](./reference/resources.md)，Mac 开发环境见 [Mac 工程效率工具箱](./reference/mac-developer-toolbox.md)。
 
 ## 贡献与许可
 
