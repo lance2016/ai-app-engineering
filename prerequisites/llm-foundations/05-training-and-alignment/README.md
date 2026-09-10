@@ -69,7 +69,7 @@ flowchart LR
 
 ## 延伸阅读
 
-- [LLMs-from-scratch · ch05](https://github.com/rasbt/LLMs-from-scratch/tree/main/ch05)、[ch06](https://github.com/rasbt/LLMs-from-scratch/tree/main/ch06)、[ch07](https://github.com/rasbt/LLMs-from-scratch/tree/main/ch07)（访问日期 2026-09-04）：预训练、分类微调、指令微调的从零实现。ch07 的 bonus 用 GPT-4 给回答打分，和主线第 18 课的 LLM Judge 是同一思路。
+- [LLMs-from-scratch · ch05](https://github.com/rasbt/LLMs-from-scratch/tree/main/ch05)、[ch06](https://github.com/rasbt/LLMs-from-scratch/tree/main/ch06)、[ch07](https://github.com/rasbt/LLMs-from-scratch/tree/main/ch07)（访问日期 2026-09-04）：预训练、分类微调、指令微调的从零实现。ch07 的 bonus 用 GPT-4 给回答打分，和主线第 19 课的 LLM Judge 是同一思路。
 - [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685)（访问日期 2026-09-04）：原始论文，第 4 节的方法描述一页就够。
 - [Happy-LLM 第 6 章](https://github.com/datawhalechina/happy-llm)（访问日期 2026-09-04）：预训练、SFT、LoRA / QLoRA 的训练流程实践。
 - [llm-course · Supervised Fine-Tuning、Preference Alignment](https://github.com/mlabonne/llm-course)（访问日期 2026-09-04）：SFT 和 DPO 的资料与 notebook。
