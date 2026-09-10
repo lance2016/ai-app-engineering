@@ -78,7 +78,47 @@ sequenceDiagram
 
 ### 消息是列表，不是字符串
 
-每条消息有角色。系统消息放指令，用户和助手消息交替。工具结果是单独一种角色，靠一个调用 id 和助手那条里的调用对上，不靠顺序。`content` 建议设计成一串带类型的块——图片和推理模型的思考都以块的形式待在里面，见下面第二节。
+每条消息有角色。系统消息放指令，用户和助手消息交替。工具结果是单独一种角色，靠一个调用 id 和助手那条里的调用对上，不靠顺序。`content` 建议设计成一串带类型的块——图片和推理模型的思考都以块的形式待在里面，见下面的图片输入一节和适配器部分。
+
+### 图片是 content 的一种块：以 DeepSeek V4.1 Flash 为例
+
+DeepSeek 当前 API 用 `deepseek-flash` 调用 V4.1 Flash，图片和文字放在同一条 `user` 消息里。下面是可复制的最小请求，前提是安装 `openai` 并设置 `DEEPSEEK_API_KEY`；图片路径和提示只是示例。
+
+```python
+import base64
+import os
+
+from openai import OpenAI
+
+with open("receipt.png", "rb") as image_file:
+    image_data = base64.b64encode(image_file.read()).decode("ascii")
+
+client = OpenAI(
+    api_key=os.environ["DEEPSEEK_API_KEY"],
+    base_url="https://api.deepseek.com",
+)
+reply = client.chat.completions.create(
+    model="deepseek-flash",
+    messages=[{
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "读这张发票，告诉我总额和币种。"},
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/png;base64,{image_data}"},
+            },
+        ],
+    }],
+)
+print(reply.choices[0].message.content)
+```
+
+这里的重点不是 base64，而是 `content` 不再是字符串：文本块和图片块并列传给模型。外部图片 URL 和 Files API 也可以，Responses API 则使用 `input_image`；适配器要在这些线上形状和自己的 `TextBlock`、`ImageBlock` 之间做转换。图片会按尺寸换算成 token，并和文字一起计费，重复图片或大文件应考虑 Files API。DeepSeek 的[视觉输入指南](https://api-docs.deepseek.com/guides/vision/)访问日期为 2026-09-10。
+
+!!! warning "图片请求也有协议边界"
+    在 DeepSeek 的 Chat Completions 请求里，图片只能放在 `user` 消息；放进 `system` 或 `assistant`，或者交给不支持视觉的模型，都会得到 `400`。这是能力或请求形状不对，重试不会解决，adapter 应在发请求前拦住。
+
+参考项目 M1 的 `Message.content` 目前还是 `str`，`adapters/openai_compat.py` 也只会把它原样序列化，因此它现在只能跑文本；要接图片，至少要同时改内部消息类型、序列化、用量记录和回归用例，不能只把模型名换成 `deepseek-flash`。
 
 ### 参数和消息一起走
 

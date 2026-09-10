@@ -41,7 +41,7 @@ POST /v1/chat/completions → 400
 
 选型第一周要答的三个问题，每个都有一段代码顶着：
 
-1. **它能不能做这件事。** 硬约束过滤：窗口、工具调用、结构化输出、数据驻留、延迟等级、许可证，违反一条就出局，不看价格。
+1. **它能不能做这件事。** 硬约束过滤：输入模态、窗口、工具调用、结构化输出、数据驻留、延迟等级、许可证，违反一条就出局，不看价格。
 2. **完成一次真实任务要花多少钱。** 成本模型：按一段对话算，不按一次调用算，因为历史每轮都要重发。
 3. **在你的任务上做得怎么样。** 能力探针：一个提示配一个确定性检查，几分钟跑完，用来排雷。
 
@@ -137,12 +137,16 @@ def hard_filter(c, req) -> list[str]:
         reasons.append(f"窗口 {c.context_window} 装不下最后一轮的 {needed}")
     if req.needs_tool_calling and not c.tool_calling:
         reasons.append("不支持工具调用")
+    if req.needs_vision and not c.vision:
+        reasons.append("不接受图片输入")
     if c.residency not in req.allowed_residency:
         reasons.append(f"数据驻留 {c.residency} 不合规")
     if LATENCY_ORDER[c.latency_class] > LATENCY_ORDER[req.max_latency_class]:
         reasons.append(f"太慢（{c.latency_class}）")
     return reasons
 ```
+
+图片也应当放进这张硬约束表。DeepSeek 当前 API 把 `deepseek-flash` 作为 V4.1 Flash 的模型名，并支持在文本之外传 JPEG、PNG、GIF 或 WebP；旧的 `deepseek-v4-flash` 和 `deepseek-v4-flash-vision-exp` 名称暂时兼容，但请求实际由新模型处理。需要看截图、票据或图表时，候选记录里要明确写 `vision=True`，不能只看“支持工具调用”这一列。[官方更新日志](https://api-docs.deepseek.com/updates/)和[视觉输入指南](https://api-docs.deepseek.com/guides/vision/)访问日期均为 2026-09-10。
 
 `peak_input_tokens` 是这段里唯一要想一下的函数。很多人估窗口时只算「一轮的输入」，于是长对话用户在第几十轮突然收到 400，开发机上还复现不出来。把峰值放进筛选流程，这类错在选型阶段就挡掉了。
 
@@ -151,7 +155,7 @@ def hard_filter(c, req) -> list[str]:
 ```python
 Candidate(name="hosted-cn-large", context_window=128_000,
           price_in_per_m=0.55, price_out_per_m=2.20,   # 编的数字，真实项目里这里跟一个查价日期
-          tool_calling=True, structured_output=True,
+          tool_calling=True, structured_output=True, vision=False,
           residency="cn", latency_class="medium")
 ```
 

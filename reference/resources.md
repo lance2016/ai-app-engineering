@@ -43,7 +43,13 @@
 | [Claude Agent SDK 概览](https://docs.claude.com/en/api/agent-sdk/overview) | 一个厂商自己实现的 agent 循环，边界划在哪 | 06、07 | 2026-09-06 |
 | [Claude Code · Hooks](https://docs.claude.com/en/docs/claude-code/hooks) | 怎么在 agent 循环里插确定性拦截点，而不是写进提示词 | 13、21 | 2026-09-06 |
 
-**这两家的文档页会改，字段名也会改。** 落到代码里的字段，以你写代码那天打开的页面为准。
+| DeepSeek | 读它回答什么 | 对应课 | 访问日期 |
+|---|---|---|---|
+| [Vision](https://api-docs.deepseek.com/guides/vision/) | 文本和图片怎样放进同一条消息，图片 token、限制和 `input_image` 形状 | 01、02 | 2026-09-10 |
+| [Models & Pricing](https://api-docs.deepseek.com/quick_start/pricing/) | 当前模型名、视觉能力、上下文、价格和并发限制 | 01、20 | 2026-09-10 |
+| [Change Log](https://api-docs.deepseek.com/updates/) | 版本切换、兼容模型名和下线安排 | 01、02 | 2026-09-10 |
+
+**这些厂商的文档页会改，字段名也会改。** 落到代码里的字段，以你写代码那天打开的页面为准。
 
 ## 真实系统：agent harness
 
