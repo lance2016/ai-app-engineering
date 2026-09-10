@@ -48,7 +48,7 @@
 | **想直接看结论** | 学完每个 Part 后回看[工程原则](./principles/README.md) | [12 条工程原则](./principles/README.md)是全课的压缩版 |
 | **正在选框架** | 学完 Part 2 再看 | [框架一览与选型标准](./reference/frameworks.md) |
 
-[背景知识](./prerequisites/README.md)那两组都是**可选的**，不是必修：工程能力页先解释读主线需要的最低概念，再给学习路线；LLM 原理八篇在主线需要时会被点名引用（那八篇大多还是草稿，比主线薄）。
+[背景知识](./prerequisites/README.md)都是**可选的**，不是必修：工程能力页先解释读主线需要的最低概念，工程进阶页集中处理分布式、可靠性和架构取舍；LLM 原理八篇在主线需要时会被点名引用（那八篇大多还是草稿，比主线薄）。
 不确定自己缺不缺什么，看一眼[背景知识](./prerequisites/README.md)；每个 Part 在搭什么、学完怎么算过关，见[课程总览](./lessons/README.md)。
 
 ## 27 课
@@ -129,7 +129,7 @@
 
 ```text
 ├── lessons/          主线 27 课，每课一个 README
-├── prerequisites/    背景知识：工程能力概念与路线、算法基础、LLM 原理八篇
+├── prerequisites/    背景知识：工程能力基础与进阶、算法基础、LLM 原理八篇
 ├── principles/       12 条工程原则，一条一个文件
 ├── reference/        术语表、技术选型、框架一览、外部资料
 └── docs/ mkdocs.yml  文档站配置（内容都是上面几个目录的符号链接）
