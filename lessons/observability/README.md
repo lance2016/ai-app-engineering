@@ -148,7 +148,7 @@ invoke_agent support_bot       11.42s  OK     aiapp.stop_reason=step_limit  step
 
 ## 决定 trace 有用还是没用的细节
 
-**属性名用标准的。** OpenTelemetry 的 [GenAI 语义约定](https://github.com/open-telemetry/semantic-conventions-genai)规定了 `gen_ai.operation.name`、`gen_ai.provider.name`、`gen_ai.request.model`、`gen_ai.usage.input_tokens` 等名字，span 名规定为 `{operation} {model}`（如 `chat deepseek-v4-flash`）、`execute_tool {tool}`、`invoke_agent {agent}`。用这些名字，Phoenix、Langfuse、任何 collector 都直接识别。
+**属性名用标准的。** OpenTelemetry 的 [GenAI 语义约定](https://github.com/open-telemetry/semantic-conventions-genai)给出了 `gen_ai.operation.name`、`gen_ai.provider.name`、`gen_ai.request.model`、`gen_ai.usage.input_tokens` 等推荐名字；模型 span 名推荐写成 `{operation} {model}`（如 `chat deepseek-v4-flash`）。不同框架还会有自己的命名，接入后端前要检查映射，不能假定每个 collector 都会自动识别。
 
 !!! warning "这两个名字已经废弃"
 
@@ -266,7 +266,7 @@ with tracer.span("invoke_agent support_bot",
 
 `contextvars` 有个坑：`asyncio.create_task` 会复制当前上下文（所以子任务能看到父 span），但线程池不会自动传播。SSE 生成器跨任务执行时，父 span 也要显式传。
 
-### 三、OTLP 就是一个 JSON
+### 三、用 JSON 看懂 OTLP/HTTP
 
 ```python
 def build_payload() -> dict:
@@ -286,12 +286,12 @@ def build_payload() -> dict:
         "scopeSpans": [{"scope": {"name": "my.tracer"}, "spans": [root, chat]}],
     }]}
 
-# POST 到 {endpoint}/v1/traces，Content-Type: application/json
+# 教学示意：POST 到 {endpoint}/v1/traces，Content-Type: application/json
 ```
 
 `status.code`：0 UNSET、1 OK、2 ERROR。属性值要包一层类型标签（`stringValue` / `intValue` / `doubleValue` / `boolValue`）。
 
-这段代码的价值是拆掉 SDK 的神秘感：OTLP 就是一个 JSON，属性名是唯一的契约。真实项目用 `opentelemetry-sdk` 加 `opentelemetry-exporter-otlp`，属性名一个都不用改。
+这段代码只用来拆掉 SDK 的神秘感：OTLP/HTTP 可以用 JSON 表示，但 exporter 也常用 protobuf，不能把这个字典直接当成所有 collector 都接受的报文。真实项目用 `opentelemetry-sdk` 加 `opentelemetry-exporter-otlp`，让 exporter 负责编码；需要保持的是属性名和父子关系。
 
 ## 观测为什么会一片绿
 
@@ -340,6 +340,8 @@ uv run python scripts/chaos.py --inject tool_error --spans
 
 ![模型首块超时的结构化错误](../../reference/images/project-model-timeout.jpg)
 
+本地演练记录（2026-09-10，仓库的 fake adapter）：`uv run python scripts/chaos.py --inject model_timeout` 返回 HTTP 504，线程状态为 `failed`，`chat slow(fake)` 和根 `invoke_agent aiapp` 都是 `ERROR`，并带 `error.type=TimeoutError`。这几项分别来自 HTTP 响应、事件线程和 trace；只看其中一项会漏掉故障发生在哪一层。
+
 ## 框架能产出 trace，语义仍归你
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
@@ -348,7 +350,7 @@ uv run python scripts/chaos.py --inject tool_error --spans
 | GenAI 语义约定 | 通过 OTEL 集成 | 自己映射 | 自己映射 |
 | 自定义属性 | 自己写 | 自己写 | 自己写 |
 
-三个框架的内置 tracing 都能用，但属性名不一定符合标准约定，换后端时要重新映射。上面四棵树里那些 `aiapp.*` 属性，三个框架都不会替你打。官方文档：[OpenTelemetry GenAI 约定](https://github.com/open-telemetry/semantic-conventions-genai) · [LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)（核对日期 2026-09-05）。
+LangGraph 和 OpenAI Agents SDK 提供内置 tracing；Claude Agent SDK 要通过自己的回调或观测层接出。即使有内置 tracing，属性名也可能需要映射；上面四棵树里的 `aiapp.*` 属性仍由应用负责。官方文档：[OpenTelemetry GenAI 约定](https://github.com/open-telemetry/semantic-conventions-genai) · [LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)（核对日期 2026-09-05）。
 
 ## 参考实现里的 trace 与 chaos
 

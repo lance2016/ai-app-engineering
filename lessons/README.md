@@ -171,7 +171,7 @@ M0 是项目的并发热身，和课程 Part 0 不一一对应；本课提到的
 | Part 1 | 能被 HTTP 调用、流式返回、错误有结构、prompt 有版本 | [M1](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md) | `uv run pytest tests/project/m1 -q` |
 | Part 2 | 能调工具、副作用要人批准、能暂停能续跑、重启不丢 | [M2](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m2-state-and-storage/README.md) · [M3](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md) | `uv run pytest tests/project/m2 tests/project/m3 -q` |
 | Part 3 | 会检索、引用能对上原文、记得住用户偏好 | [M4](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md) | `uv run pytest tests/project/m4 -q` |
-| Part 4 | 有回归门禁、trace、限流、fallback 和成本账 | [M5](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md) | `uv run pytest tests/project/m5 -q` |
+| Part 4 | 有回归门禁、trace、限流、fallback、成本账和安全边界 | [M5](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md) | `uv run pytest tests/project/m5 -q` |
 | Part 5 | 多租户平台 RFC、容量、威胁和迁移决策 | [M6](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md) | Capstone 4 实现切片 |
 
 主线之外还有一个[Framework Lab](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/framework-lab)：它把同一份审批规格交给普通 Python、LangGraph、OpenAI Agents SDK 和 Claude Agent SDK，各跑一遍 8 个场景，方便对照状态、checkpoint、人工介入和调试成本。四个适配器都用 fake model 离线验证；MCP、真实供应商 trace 和部署差异仍放在评分卡里人工核对。
@@ -469,7 +469,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 
 ## Part 4 生产工程
 
-**解决什么。** 让这套东西能上线、能被观测、坏了能定位、贵了能查账、被攻击时能挡住。这个 Part 决定一个 demo 和一个生产系统的差距。
+**解决什么。** 把前面做出的功能接成可以上线和排障的服务：有评测、trace、成本账，也有故障和安全边界。
 
 **学完之后。** 应用有了评测、trace、限流、fallback、成本账、安全边界和部署流程。
 
@@ -508,12 +508,12 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 → [20](./observability/README.md)
 </details>
 
-**4. 限流、熔断、fallback，为什么三个都要有？**
+**4. 限流、熔断、fallback，分别解决什么问题？**
 
 <details markdown="1">
 <summary>对照</summary>
 
-它们挡的不是同一件事。限流挡的是自己把上游打爆，熔断挡的是持续对着一个已经坏掉的依赖重试，fallback 管的是坏掉之后用户还能得到什么。只做 fallback 的系统，会在上游抖动时把重试放大成雪崩。
+它们挡的不是同一件事。限流挡的是自己把上游打爆，熔断挡的是持续对着一个已经坏掉的依赖重试，fallback 管的是坏掉之后用户还能得到什么。按流量形态和失败代价决定是否启用每一层；只做 fallback 时，仍要处理上游抖动和重试放大。
 
 → [21](./reliability-cost-llmops/README.md)
 </details>
@@ -544,7 +544,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 - 一次请求经过哪些跳，每一跳回答什么问题（18）
 - 没有评测集，为什么就不能说「变好了」（19）
 - 工具超时、上下文溢出、成本尖峰、静默降级，在 trace 里各长什么样（20）
-- 限流、熔断、fallback 各挡哪一类失败，为什么三个都要有（21）
+- 限流、熔断、fallback 各挡哪一类失败，怎么按场景组合（21）
 - 提示注入为什么不能靠提示词防（22）
 - 什么问题该用 RAG、什么问题才轮到微调，这条界线为什么是经验不是规律（23）
 

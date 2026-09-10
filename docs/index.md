@@ -213,7 +213,7 @@ hide:
 
 <section class="part" markdown="1">
 <p class="part__head" markdown="span">[Part 4 生产工程](lessons/README.md#part-4-生产工程){ .part__link }</p>
-<p class="part__goal">一个 demo 和一个生产系统的差距，全在这一层。</p>
+<p class="part__goal">把 demo 接成可以上线、观测和回滚的服务。</p>
 <ul class="part__list" markdown="1">
 <li markdown="span">[<span>18</span> 系统架构与数据流](lessons/system-architecture/README.md){ .lsn data-lesson="system-architecture" }</li>
 <li markdown="span">[<span>19</span> 评测](lessons/evaluation/README.md){ .lsn data-lesson="evaluation" }</li>

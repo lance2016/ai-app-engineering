@@ -179,7 +179,7 @@ def cohen_kappa(a: list[bool], b: list[bool]) -> float:
 
 为什么必须算它：一个**把所有案例都判 pass** 的 judge，在 58% 的案例本来就该 pass 时，一致率也有 58%——看着还行。它的 kappa 是 **0.00**，这才是真实水平。
 
-只报一致率会被这种 judge 骗。经验阈值：kappa < 0.4 基本不可用，0.6 以上才谈得上可信。
+只报一致率会被这种 judge 骗。参考实现把 `0.60` 设成运行门槛，低于它只发警告，不阻断发布；这不是跨任务通用的统计标准。样本分布、标注者和错误代价不同，阈值要在自己的验证集上重新定。
 
 Judge 的 prompt 要求二元结论加一句 critique：
 
@@ -260,7 +260,7 @@ def gate(current: dict, baseline: dict) -> list[str]:
 
 **只评最终答案。** 见第三节。
 
-**评测集 12 条就下结论。** 12 条里一条失败是 8 个百分点，任何阈值都会被噪声触发。反过来算就知道切片该多大：切片阈值定在 10 个点，切片就至少要 30 条——那时一条的波动是 3 个点，落在阈值内；两条挂了才报警。每个切片几十条起，而且要持续从线上失败里补。这一课不做置信区间那套统计，够用的判据就是这条反算。
+**评测集 12 条就下结论。** 12 条里一条失败是 8 个百分点，门禁很容易被一次波动触发。可以先用阈值反算样本量：如果切片允许下降 10 个百分点，30 条样本时一条只占约 3 个点；这只是规划用的近似，正式报告还要看置信区间和样本是否代表线上流量。每个切片从几十条起，并持续补充线上失败。
 
 **把评测跑得很慢。** 需要 key、要半小时、要人盯的评测，只会在发版前跑一次。断言层必须一秒内跑完，这是它能进 CI 的前提。
 
@@ -296,7 +296,7 @@ def gate(current: dict, baseline: dict) -> list[str]:
 
 ## 先跑绿灯，再让门禁变红
 
-参考项目的评测不需要真实模型就能跑断言、检索和工具轨迹：
+参考项目默认使用 fake model，因此不需要供应商 key 就能跑断言、检索和工具轨迹；它验证评测代码和运行时契约，不代表真实模型的质量：
 
 ```bash
 cd ai-app-engineering-ref
@@ -305,6 +305,10 @@ uv run pytest tests/project/m5/test_eval_gate.py -q
 ```
 
 先看 Gate PASS，再打开 [`project/eval/thresholds.toml`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/eval/thresholds.toml) 和 [`m5/test_eval_gate.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m5/test_eval_gate.py)。测试里有一条故意失败的切片，改坏它时门禁必须红；这比只看一次总分更能说明门禁真的在工作。
+
+本地运行记录（2026-09-10，仓库默认的 fake model）是 Gate PASS、`tasks=100%`、`tools=100%`、`retrieval=90%`，但 retrieval 仍列出了 3 条失败案例。这正是门禁的含义：它检查是否跌破基线和下限，不要求每个样本都通过；发布前仍应打开报告里的失败列表。
+
+要评真实模型的工具选择，再运行 `MODEL_PROVIDER=deepseek uv run python scripts/eval_run.py --real-tools`；要用真实模型校准 judge，还要显式设置 `REAL_JUDGE=1`。这两条会消耗供应商额度，结果也会随模型版本和随机性变化，不能直接覆盖仓库里的 fake 基线。
 
 ## 参考实现里的评测门
 

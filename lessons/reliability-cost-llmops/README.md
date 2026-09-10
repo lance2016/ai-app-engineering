@@ -139,27 +139,26 @@ async def call_with_retry(fn, attempts, per_attempt_timeout, base, cap) -> str:
 
 ```python
 class TokenBucket:
-    """每秒补 rate 个令牌，上限 capacity。acquire() 等到有令牌为止。"""
+    """每秒补 rate 个令牌，上限 capacity；acquire() 不等待，返回需等待的秒数。"""
     def __init__(self, rate: float, capacity: int):
         self.rate, self.capacity = rate, capacity
         self.tokens = float(capacity)
         self.updated = time.monotonic()
         self._lock = asyncio.Lock()
 
-    async def acquire(self) -> None:
+    async def acquire(self) -> float | None:
         async with self._lock:
-            while True:
-                now = time.monotonic()
-                self.tokens = min(self.capacity,
-                                  self.tokens + (now - self.updated) * self.rate)
-                self.updated = now
-                if self.tokens >= 1:
-                    self.tokens -= 1
-                    return
-                await asyncio.sleep((1 - self.tokens) / self.rate)
+            now = time.monotonic()
+            self.tokens = min(self.capacity,
+                              self.tokens + (now - self.updated) * self.rate)
+            self.updated = now
+            if self.tokens >= 1:
+                self.tokens -= 1
+                return None
+            return (1 - self.tokens) / self.rate
 ```
 
-`capacity` 有个反直觉的地方：**它不该等于下游的限额**。
+调用方拿到非 `None` 的值就返回 429，并把它写入 `Retry-After`；不要在锁里睡眠，否则一个等待请求会挡住同一桶的其他请求。`capacity` 有个反直觉的地方：**它不该等于下游的限额**。
 
 下游限每秒 5 次（滑动窗口），你把 `capacity` 设成 5：桶一开始满的，5 个请求瞬间放行，紧接着又以每秒 5 个的速度补，一秒的滑动窗口里就是 10 个——照样 429。
 
@@ -213,6 +212,8 @@ async def complete(self, messages) -> ModelResponse:
 
 效果差别很大：有熔断器时，故障期间 30 个请求只有几次探测等在生病的主模型上；没有熔断器时，**每个请求都要等满超时**才切备用。
 
+这段路由还省略了一个产品边界：带副作用的请求不能随意交给另一个模型重试，工具 schema、幂等性和用户确认都可能不同。参考项目的 M6 ADR-4 只允许可重试的只读请求走 fallback；副作用请求在主模型失败时留下 `pending`，由后续流程处理。
+
 ### 四、成本：价格表带日期，预算在运行时生效
 
 ```python
@@ -229,6 +230,7 @@ class CostMeter:
     warn_at: float = 0.8
     spent_usd: float = 0.0
     by_model: dict[str, float] = field(default_factory=dict)
+    warned: bool = False
 
     def charge(self, model: str, usage) -> float:
         price = PRICES_USD_PER_M[model]
@@ -294,7 +296,7 @@ CMD ["uv", "run", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
 |---|---|---|
 | 可用性 | 99.5% 的请求返回非 5xx | 最基本的承诺 |
 | 延迟 | p95 首 token 延迟 < 2s | 用户感知的是首 token，不是总时长 |
-| 质量 | 评测集通过率 ≥ 92%（第 19 课） | AI 服务独有；线上抽样跑离线评测 |
+| 质量 | 评测集通过率 ≥ 92%（第 19 课） | AI 应用还要关注输出质量；线上抽样跑离线评测 |
 | 成本 | 每千次会话成本 < 预算 | 成本超标也是服务劣化 |
 | 降级率 | 走备用模型的请求 < 5% | 熔断在保护你，但也在给用户次一等的结果 |
 
@@ -327,14 +329,14 @@ CMD ["uv", "run", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
 
 - **重试次数与延迟预算。** 每次重试都在花用户的等待时间。面向用户的实时对话通常只允许一次重试，后台任务可以多试几次。所以重试次数要按调用类型配置，不要写成全局常量。
 - **备用模型的质量。** 备用通常更便宜也更弱。切到备用后回答质量下降，用户是否能接受、是否要告知，是产品决定。降级率进 SLO 的原因就在这里。
-- **限流放在哪一层。** 按全局限保护下游配额，按租户限保护其他租户，按用户限防滥用。三层都要，但每层的参数来源不同。
-- **自建还是托管。** 容器、CI、灰度这套东西，云平台的托管服务都能替你做。托管省人力，自建省钱且不被锁定。团队小的时候托管几乎总是对的。
+- **限流放在哪一层。** 按全局限保护下游配额，按租户限保护其他租户，按用户限防滥用；按威胁和容量选择需要的层级，每层的参数来源都不同。
+- **自建还是托管。** 容器、CI、灰度这套东西，云平台的托管服务都能替你做。托管省人力，自建可能省钱且不被锁定；团队规模、合规要求和流量曲线决定哪一种更合适。
 
 ## 把 SLO 和故障演练接进服务
 
 - **每个外部依赖一个独立的熔断器实例。** 共用一个，向量库挂了会把模型调用也一起断掉。熔断器的状态是按依赖分的，不是按服务分的。
 - **价格表是带生效日期的配置，不是代码里的常量。** 供应商调价之后，新调用按新价算，历史账单不能被改写——否则上个月的成本报表每天都在变。
-- **灰度按租户切，不按流量百分比切。** 按百分比切会让同一个用户在新旧版本之间来回跳，行为不一致比慢更让人困惑。
+- **需要会话一致性时，按租户或稳定 hash 灰度。** 直接按请求百分比切，可能让同一个用户在新旧版本之间来回跳；短请求或无状态接口则可以用普通的流量百分比。
 - **配置和密钥分两条路。** 配置可以进镜像和代码库，密钥只能运行时注入。这条界线一旦破了，回滚一个旧镜像就可能把已经轮换掉的密钥带回线上。
 - **怎么测。** 故障演练要能在 CI 里跑，不是一份手工操作手册：把下游换成会超时、会返 429、会吐坏 JSON 的假实现，断言熔断器如期打开、fallback 生效、并且账单记录仍然完整。演练写成测试才会被持续执行。
 
@@ -370,9 +372,13 @@ uv run python scripts/chaos.py --inject provider_down
 
 连续失败三次后，熔断器打开，后续请求由 fallback 提供；输出里的 `served_by` 和 span 属性会把这次切换留下来。`rate_limit` 和 `budget` 场景则分别返回 429 和 402，说明失败路径也要给客户端一个能采取行动的结果。实现入口是 [`ops/resilience.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/resilience.py)、[`ops/ratelimit.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/ratelimit.py) 和 [`ops/cost.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/cost.py)。
 
+本地演练记录（2026-09-10，仓库的 fake adapter）：`provider_down` 的 4 次请求均返回 200，`served_by={'primary': 0, 'fallback': 4}`，熔断器为 `open`；`rate_limit` 的同一租户返回 `[200, 200, 429, 429]`，另一个租户仍返回 200。这里验证的是控制流和隔离，不是供应商的真实可用性。
+
 ## 参考实现里的故障注入
 
 超时、带抖动的重试、熔断和绕过病号的 fallback adapter 在 [`ops/resilience.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/resilience.py)，按租户的令牌桶在 [`ratelimit.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/ratelimit.py)（有 Redis 走一个原子 Lua 脚本，没有就退回内存），计价与日预算在 [`cost.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/cost.py)。主模型病了怎么绕，用例在 [`m5/test_resilience.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m5/test_resilience.py)。
+
+这里有一个刻意的教学取舍：参考实现的 `FallbackAdapter` 为了让故障演练可重复，会把主模型异常统一记为一次 fallback；真实服务应沿用前面的分类，只对超时、429 和明确的上游 5xx 降级，参数错误和鉴权错误要原样失败。
 
 ## 从故障注入继续读 SRE
 

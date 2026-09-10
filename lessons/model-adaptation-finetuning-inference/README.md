@@ -67,7 +67,7 @@ flowchart TD
     E -- 能 --> G[微调 LoRA / SFT]
 ```
 
-下面三条是**默认起点，不是定律**。它们在大多数应用场景里成立，也确实能挡掉大部分「一遇到质量问题就想微调」的冲动，但每一条都可以被你自己的评测结果推翻——推翻它的方式是拿数字，不是拿感觉：
+下面三条是**默认起点，不是定律**。它们适合多数知识问答和固定任务，但必须用自己的评测结果验证；有些任务会需要组合方案：
 
 1. **知识问题不要微调。** 微调不能可靠地让模型记住事实，还会随着数据变化过期。新知识、私有数据、需要引用来源的，走 RAG。
 2. **微调解决的是行为。** 固定的输出格式、领域术语的使用、特定的判断倾向、把一个大模型的能力压进一个小模型。这些是提示词写再长也不稳定、但几千条样本能教会的东西。
@@ -153,7 +153,7 @@ def breakeven_tokens_per_month() -> float:
     return GPU_USD_PER_HOUR * HOURS_PER_MONTH / api_cost_per_m(OUTPUT_SHARE) * 1_000_000
 ```
 
-**`UTILISATION` 是整个公式里最敏感的参数。** 默认 60%；改成 20%（大多数内部工具的真实水平），自建的每 token 成本翻三倍。**GPU 是按小时付费的，空转的小时和满载的小时一样贵。**
+**`UTILISATION` 是整个公式里最敏感的参数。** 这里用 60% 只是演示；如果实际只有 20%，自建的每 token 成本会变成三倍。**GPU 是按小时付费的，空转的小时和满载的小时一样贵。**
 
 用峰值利用率算成本，是自建方案最常见的自我欺骗。
 
@@ -184,7 +184,7 @@ def breakeven_tokens_per_month() -> float:
 ## 质量、延迟和运维成本
 
 - **微调的小模型 vs 提示的大模型。** 微调后的 7B 在特定任务上可以追平大模型，成本和延迟低一个量级，但每次任务定义变化都要重训。任务稳定、量大时值得；任务还在变时不值得。
-- **量化精度。** int8 几乎总是值得的；int4 要在自己的评测集上验，尤其是数学、代码、多语言。质量下降不均匀，**平均分掩盖了某些切片的崩塌**。
+- **量化精度。** int8 在许多任务上能换来较小的显存压力，但仍要在自己的评测集上确认；int4 更要检查数学、代码、多语言等切片。质量下降不均匀，**平均分掩盖了某些切片的崩塌**。
 - **自建的隐性成本。** 上面算的是 GPU 小时费。没算的是搭建和维护推理服务的工程师、值班、模型升级、容量规划、故障切换用的第二张卡。**这些通常比 GPU 本身贵。** 临界点计算给出的是「自建可能划算」的必要条件，不是充分条件。
 - **锁定。** 托管 API 换供应商只改适配器；自建换推理引擎也只改适配器，但换硬件不是。协议兼容保护的是代码，不是采购。
 
@@ -205,7 +205,7 @@ def breakeven_tokens_per_month() -> float:
 | 接自建推理 | LangChain 的 OpenAI 兼容 provider | 改 base URL | 不支持（绑 Anthropic） |
 | 按任务路由模型 | 不同节点配不同 model | 不同 agent 配不同 model | 单模型 |
 
-自建推理的接入点是OpenAI 兼容协议，不是框架特性。官方文档：[vLLM](https://docs.vllm.ai/en/latest/) · [llama.cpp](https://github.com/ggml-org/llama.cpp) · [LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)（核对日期 2026-09-05）。
+自建推理的接入点是 OpenAI 兼容协议，不是框架特性；兼容接口不保证工具调用、流式行为和 tokenizer 完全一致，仍要跑第 19 课的评测。官方文档：[vLLM](https://docs.vllm.ai/en/latest/) · [llama.cpp](https://github.com/ggml-org/llama.cpp) · [LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)（核对日期 2026-09-05）。
 
 ## 分类模型最后为什么改成小模型
 
@@ -228,7 +228,7 @@ uv run pytest tests/project/m1/test_errors.py::test_injection_switch_wraps_the_a
 
 ## 参考实现里的 Adapter seam
 
-参考实现**没有做**微调。托管、自托管还是混合，这个决策留在 [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md) 的 ADR-4。现在能换的只有推理侧：[`adapters/openai_compat.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/openai_compat.py) 改一个 base URL 就能指向自托管的 OpenAI 兼容端点，上层一行不用动。
+参考实现**没有做**微调。M6 的 ADR-4 已经选定「托管主模型 + OpenAI 兼容 fallback」，并把真实供应商基线和工具 schema 兼容列为上线前条件；它不是一张等待填写的自托管方案表。现在能验证的只有推理侧接缝：[`adapters/openai_compat.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/openai_compat.py) 改一个 base URL 就能指向自托管的 OpenAI 兼容端点，上层业务代码保持不变，但质量、容量和故障切换仍需单独验证。
 
 ## 从适配器继续读部署
 
