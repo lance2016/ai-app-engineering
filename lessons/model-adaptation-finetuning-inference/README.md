@@ -228,7 +228,7 @@ uv run pytest tests/project/m1/test_errors.py::test_injection_switch_wraps_the_a
 
 ## 参考实现里的 Adapter seam
 
-参考实现**没有做**微调。托管、自托管还是混合，这个决策留在 [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md) 的 ADR-4（还是草稿）。现在能换的只有推理侧：[`adapters/openai_compat.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/openai_compat.py) 改一个 base URL 就能指向自托管的 OpenAI 兼容端点，上层一行不用动。
+参考实现**没有做**微调。托管、自托管还是混合，这个决策留在 [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md) 的 ADR-4。现在能换的只有推理侧：[`adapters/openai_compat.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/openai_compat.py) 改一个 base URL 就能指向自托管的 OpenAI 兼容端点，上层一行不用动。
 
 ## 从适配器继续读部署
 

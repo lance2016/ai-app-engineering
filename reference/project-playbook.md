@@ -45,31 +45,31 @@ AIAPP_DEMO_SCENARIO=tool-approval \
 | 04、15、17 | Playground 知识库面板、`knowledge/` | 导入、切块、混合检索、引用 | 删除文档后检查 residue；`scripts/eval_recall.py` |
 | 05–07 | `runtime/runner.py`、`runtime/loop.py`、`storage/` | 工具守卫、确认、checkpoint、幂等 | `scripts/chaos.py --inject tool_error` |
 | 08、09、12–14 | `runtime/context.py`、`skills.py`、`mcp_source.py` | 上下文预算、Skill、MCP 工具注册 | 工具白名单、MCP 断开、上下文裁剪测试 |
-| 10、11 | 课程正文、M3 选型记录和 Framework Lab | 长任务清单、handoff 的边界 | 主线运行时暂未实现这两层；Framework Lab 目前只有 baseline 和 LangGraph 可运行 |
+| 10、11 | Capstone 3、Framework Lab 和 M3 选型记录 | 长任务清单、handoff 的边界 | 主线运行时暂未拆 Agent；长任务由 Capstone 3 验收，四个 Lab 适配器可离线运行 |
 | 16 | Memory 面板、`knowledge/memory.py` | 来源事件、冲突合并、定向删除 | `tests/project/m4/test_memory.py` |
 | 18–22 | `api/`、`ops/`、`eval/` | 请求链、trace、成本、限流、fallback | `scripts/chaos.py --all` |
-| 23 | `adapters/openai_compat.py`、M6 ADR-4 | OpenAI 兼容推理端点、替换模型的接缝 | 微调和自托管容量规划仍是设计稿 |
+| 23 | `adapters/openai_compat.py`、M6 ADR-4 | OpenAI 兼容推理端点、替换模型的接缝 | 微调不在项目范围；自托管容量写在 RFC 的退出条件里 |
 | 24 | `api/static/playground.html` | 确认密度、反馈状态和错误恢复 | `tests/project/m5/test_telemetry_and_api.py` |
-| 25 | 课程正文 | 级联语音链路的延迟预算 | 参考项目暂未实现语音链路 |
-| 26 | `m6-platform-design/`、`capstones/` | ADR、容量和退出条件 | 当前是设计稿，不能当作已实现能力 |
+| 25 | [`demos/voice-agents.md`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/demos/voice-agents.md) | 级联语音链路的事件协议与断线验收 | 真实语音供应商仍需单独接入和测量 |
+| 26 | `m6-platform-design/`、`capstones/` | ADR、容量和退出条件 | M6 RFC 已完成；Capstone 2–4 是完整任务说明，业务实现由读者完成 |
 
 完整的课程到文件映射见参考项目的 [project/README.md](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/README.md)（核对日期 2026-09-09）。
 
-Framework Lab 可以单独跑一遍共同规格。当前只有 baseline 和 LangGraph 两个实现接入测试，另两个 SDK 还没有适配器；`skip` 是待实现能力的记录，不是通过：
+Framework Lab 可以单独跑一遍共同规格。baseline、LangGraph、OpenAI Agents SDK 和 Claude Agent SDK 四个实现都接入了离线测试；MCP、真实供应商 trace 和部署差异仍放在评分卡里人工核对：
 
 ```bash
 cd ai-app-engineering-ref
 uv run pytest tests/project/framework_lab -q
 ```
 
-!!! note "本地运行记录（2026-09-09）"
-    下面的结果来自参考项目当前版本；两个待实现 SDK 的适配器补上后，`skipped` 数字会变化。
+!!! note "本地运行记录（2026-09-10）"
+    下面的结果来自参考项目当前版本。四个实现均使用离线 fake model，不需要供应商密钥。
 
 ```text
-8 passed, 24 skipped
+32 passed
 ```
 
-这条结果适合配合 [多智能体与 Handoff](../lessons/multi-agent-handoff/README.md) 和 [Workflow 还是 Agent](../lessons/workflow-vs-agent/README.md) 读：先看同一份事件契约怎样被两种实现满足，再看评分表里哪些能力还没有证据。
+这条结果适合配合 [多智能体与 Handoff](../lessons/multi-agent-handoff/README.md) 和 [Workflow 还是 Agent](../lessons/workflow-vs-agent/README.md) 读：先看同一份事件契约怎样被四种实现满足，再看评分表里 MCP、部署和真实供应商 trace 为什么仍要单独核对。
 
 ## 四个最小演示
 
@@ -163,4 +163,4 @@ uv run python scripts/eval_run.py
 
 先用 fake 和确定性场景理解状态、权限、工具和失败路径，再配置 `.env` 中的 `MODEL_PROVIDER`。真实模型适合观察工具选择准确率和 prompt 变化，不适合承担确定性验收；验收仍然应该由测试、golden set 和故障演练完成。
 
-参考项目当前是一个可启动、可失败、可验收的教学服务。M0–M5 已有代码和测试；Framework Lab 的 baseline 与 LangGraph 已有离线实现，另外两个 SDK 适配器仍在待办；M6 和 Capstone 2–4 是设计稿。真实模型工具基线、长任务清单、handoff 和语音链路都没有假装已经完成。
+参考项目当前是一个可启动、可失败、可验收的教学服务。M0–M5 已有代码和测试；Framework Lab 四个适配器和 Capstone 1 独立安全测试已用 fake model 验证；M6 与 Capstone 2–4 提供完整设计、约束和验收入口，真正的业务实现仍由读者完成。真实模型工具基线、语音端到端延迟和供应商账单对账需要凭据或目标环境，仓库没有把它们写成已完成。

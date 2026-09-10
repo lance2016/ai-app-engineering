@@ -160,7 +160,7 @@ flowchart TB
     M2 --> M3["M3 工具与运行时"]
     M3 --> M4["M4 检索与记忆"]
     M4 --> M5["M5 生产化"]
-    M5 --> M6["M6 平台设计（草稿）"]
+    M5 --> M6["M6 平台设计"]
 ```
 
 | 学完 | 服务这时候能做什么 | 里程碑 | 离线验收 |
@@ -170,13 +170,13 @@ flowchart TB
 | Part 2 | 能调工具、副作用要人批准、能暂停能续跑、重启不丢 | [M2](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m2-state-and-storage/README.md) · [M3](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md) | `uv run pytest tests/project/m2 tests/project/m3 -q` |
 | Part 3 | 会检索、引用能对上原文、记得住用户偏好 | [M4](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md) | `uv run pytest tests/project/m4 -q` |
 | Part 4 | 有回归门禁、trace、限流、fallback 和成本账 | [M5](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md) | `uv run pytest tests/project/m5 -q` |
-| Part 5 | 多租户平台的设计与 ADR，还是草稿 | [M6](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md) | 暂无 |
+| Part 5 | 多租户平台 RFC、容量、威胁和迁移决策 | [M6](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md) | Capstone 4 实现切片 |
 
-主线之外还有一个[Framework Lab](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/framework-lab)：它把同一份审批规格交给普通 Python 和 LangGraph 各跑一遍，方便对照状态、checkpoint、人工介入和调试成本。OpenAI Agents SDK 与 Claude Agent SDK 的适配器仍在待办，不能把评分表里的空格当成已实现能力。
+主线之外还有一个[Framework Lab](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/framework-lab)：它把同一份审批规格交给普通 Python、LangGraph、OpenAI Agents SDK 和 Claude Agent SDK，各跑一遍 8 个场景，方便对照状态、checkpoint、人工介入和调试成本。四个适配器都用 fake model 离线验证；MCP、真实供应商 trace 和部署差异仍放在评分卡里人工核对。
 
 **里程碑的顺序和课程顺序对不上，这是有意的。** 课按理解顺序排，代码按装配顺序排。第 01 课讲成本模型，可成本账要等服务能记账才写得出来，所以它落在 M5；第 04 课讲 embedding，要等 M4 有了检索管线才用得上。想按代码顺序读，顺着 M0 到 M6 走；想按课程顺序读，每课末尾的「参考实现」直接指到对应的文件。
 
-有四课在参考实现里没有落点：11 的 handoff 和 23 的微调是有意不做，理由分别记在 M3 的选型记录和 M6；25 语音应用和 10 的清单机制只在课程里讲。
+11 的 handoff 和 23 的微调不放进主服务：前者在 Framework Lab 里作为框架选型问题比较，后者在 M6 ADR-4 里写模型、fallback 和退出条件；25 的语音供应商仍未接入，但项目保留了事件协议和断线验收说明；10 的清单机制落在 Capstone 3 的长任务验收。
 
 四条判断贯穿全课，哪一课都在用：**模型是不可信的部件**（Part 1）、**执行和状态归运行时**（Part 2）、**知识来自外部而不是权重**（Part 3）、**没有评测就没有「变好了」**（Part 4）。
 
@@ -357,7 +357,7 @@ flowchart TB
 <details markdown="1">
 <summary>对照</summary>
 
-绝大多数时候。多一个 Agent 就多一层交接、一份要决定归属的状态、一个「历史给多少」的问题，以及互相推诿的可能。真正需要多 Agent 的是职责边界清晰、上下文确实该隔离的场景；「让一个 Agent 审另一个 Agent」这类设计，多数时候用一次确定性校验就够了。
+绝大多数时候。多一个 Agent 就多一层交接、一份要决定归属的状态、一个「历史给多少」的问题，以及互相推诿的可能。确实需要多 Agent 的是职责边界清晰、上下文确实该隔离的场景；「让一个 Agent 审另一个 Agent」这类设计，多数时候用一次确定性校验就够了。
 
 → [09](./workflow-vs-agent/README.md) · [11](./multi-agent-handoff/README.md)
 </details>
@@ -612,7 +612,7 @@ Hit@k 问「前 k 条里至少有一条对的吗」，Recall@k 问「该召回�
 - 一份 ADR 里最容易缺的是哪一部分（26）
 - 容量估算错在哪一步最贵（26）
 
-**在参考实现里。** [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md)（还是草稿）。
+**在参考实现里。** [M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md) 是一份已完成的 RFC，Capstone 4 以它为设计阶段。
 
 ---
 

@@ -140,7 +140,7 @@
 3. **追问：「两个 Agent 并行跑，谁的输出算数？」**
    答到这些算过：仲裁规则写在代码里——先到先得、按置信度、还是要求一致，都行，但必须是确定性的，而且要记进 trace。让两个 Agent 自己商量出结果，等于把仲裁交给了概率。
 
-课程：[11](../lessons/multi-agent-handoff/README.md) · [09](../lessons/workflow-vs-agent/README.md) ｜ 代码证据：参考实现有意没做 handoff，理由记在 M3 的选型记录；同一个审批需求在三个框架上各做一遍的对照在 framework-lab
+课程：[11](../lessons/multi-agent-handoff/README.md) · [09](../lessons/workflow-vs-agent/README.md) ｜ 代码证据：参考实现有意没做 handoff，理由记在 M3 的选型记录；同一个审批需求在四个实现上的对照在 framework-lab
 
 ## 还剩两件事
 

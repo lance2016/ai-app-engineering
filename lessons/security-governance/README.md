@@ -106,7 +106,7 @@ def wrap_untrusted(content: str) -> str:
     return f"<untrusted_tool_output>\n{content}\n</untrusted_tool_output>"
 ```
 
-真正管用的是守卫：
+可执行的防线是守卫：
 
 ```python
 ALLOWED_EMAIL_DOMAINS = frozenset({"ourcompany.example"})
@@ -317,7 +317,7 @@ uv run pytest tests/project/m3/test_api_m3.py::test_request_can_narrow_but_not_w
 
 ## 参考实现里的 allowlist
 
-白名单和确认门在 [`runtime/runner.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/runner.py)，租户边界在 [`api/deps.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/deps.py)——检索只从 `RunContext` 取租户，不接受模型传进来的租户。带注入的文档能不能诱导模型删东西、跨租户查询会不会漏，两条都在 [`tests/project/m5`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/tests/project/m5) 里。PII 出站过滤还没做，这一条记在 [M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md) 的验收清单里。
+白名单和确认门在 [`runtime/runner.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/runner.py)，租户边界在 [`api/deps.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/deps.py)——检索只从 `RunContext` 取租户，不接受模型传进来的租户。带注入的文档能不能诱导模型删东西、跨租户查询会不会漏，两条都在 [`tests/project/m5`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/tests/project/m5) 里。Capstone 1 还补了独立的 PII 出站过滤和 Skill 内容 hash 验收，代码在 [`security/outbound.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/security/outbound.py)，测试在 [`tests/capstones/production_agent_service`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/tests/capstones/production_agent_service)。
 
 ## 从 allowlist 继续读供应链安全
 

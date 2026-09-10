@@ -221,7 +221,7 @@ OpenAI Agents SDK 把 handoff 做成了核心概念，它的 input filter 就是
 
 ## 项目边界：handoff 留在 framework-lab
 
-参考项目的 M3 刻意保持单 Agent：工具只有五个，一个上下文装得下，拆开只会增加消息传递和回退路径。想看 Framework Lab 里已经接入的实现怎样表达 handoff 和子 Agent，可以运行 conformance 测试：
+参考项目的 M3 刻意保持单 Agent：工具只有五个，一个上下文装得下，拆开只会增加消息传递和回退路径。想看 Framework Lab 里四个实现怎样表达审批、状态和恢复，可以运行 conformance 测试；handoff 本身不在这组共同规格里：
 
 ```bash
 cd ai-app-engineering-ref
@@ -232,7 +232,7 @@ uv run pytest tests/project/framework_lab/test_conformance.py -q
 
 ## 参考实现里的 framework-lab
 
-参考实现**没有做** handoff。不做的理由记在 [M3 的选型记录](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)：工具只有五个，一个 Agent 的上下文装得下，拆成两个只是把问题换成消息传递。想看拆开之后长什么样，可以看 [framework-lab](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/framework-lab/README.md) 的共同规格、baseline 和 LangGraph 实现；OpenAI Agents SDK 与 Claude Agent SDK 的适配器还在待办中。
+主服务**没有做** handoff。不做的理由记在 [M3 的选型记录](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)：工具只有五个，一个 Agent 的上下文装得下，拆成两个只是把问题换成消息传递。想看拆开之后框架怎么表达，可以看 [Framework Lab](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/framework-lab) 的共同规格和四个离线适配器；它们用于比较原语和状态边界，不代表主服务已经拆成多 Agent。
 
 ## 从交接继续读多 Agent 设计
 

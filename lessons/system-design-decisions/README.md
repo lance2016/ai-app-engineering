@@ -289,13 +289,13 @@ def flips(step: float = 0.10) -> list[str]:
 
 **后来第二个条件真的被触发过一次**，团队据此调整了冲突时的裁决规则，而不是争论方案对错。当时没有人需要先说服谁。
 
-## 用 M6 草稿对照 ADR
+## 用 M6 RFC 对照 ADR
 
 参考项目把这一课的产物放在 [`m6-platform-design`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/m6-platform-design)：先读多租户平台 RFC，再看每个 ADR 的备选、假设、容量数字和退出条件。它当前是设计稿，不能当成已经上线的架构；读者要检查的是一条决定能否被复算、被监控、被撤回。
 
 ## 参考实现里的 M6 决策
 
-这一课的产物是文档，不是代码。[M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md)（还是草稿）就是照这套框架写的一份多租户平台 RFC，四个 [capstone](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/capstones/README.md) 也都要求先写一页设计再动手。
+这一课的产物是文档，不是代码。[M6 综合设计](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md) 是照这套框架写的一份多租户平台 RFC，四个 [capstone](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/capstones/README.md) 也都要求先写一页设计再动手。
 
 ## 从 ADR 继续读容量估算
 
