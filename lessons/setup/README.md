@@ -325,7 +325,7 @@ uv run uvicorn aiapp.api.app:create_app --factory --port 8000
 - [OpenAI · Chat Completions API 参考](https://platform.openai.com/docs/api-reference/chat)（访问日期 2026-09-06）：事实标准的完整字段表。看清楚它，才看得懂「OpenAI 兼容」承诺了什么。
 - [OpenAI · Responses API 参考](https://platform.openai.com/docs/api-reference/responses)（访问日期 2026-09-06）：重点看 `previous_response_id` 和内置工具那两节，这是它和老接口真正的分界。
 - [Anthropic · Messages API 参考](https://platform.claude.com/docs/en/api/messages)（访问日期 2026-09-06）：注意 `system` 和 `max_tokens` 是顶层字段，以及 `content` 的块结构。
-- [DeepSeek · 模型与价格](https://api-docs.deepseek.com/quick_start/pricing)（访问日期 2026-09-06）：跑不通先查这里，模型名会下线。
+- [DeepSeek · 模型与价格](https://api-docs.deepseek.com/quick_start/pricing)（访问日期 2026-09-10）：跑不通先查这里，模型名会下线。
 - [DeepSeek API 文档 · Function Calling](https://api-docs.deepseek.com/guides/function_calling)（访问日期 2026-09-04）：确认它的工具调用格式和 OpenAI 一致。
 - [Anthropic · Tool use overview](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview)（访问日期 2026-09-04）：看 `tool_use` → 执行 → `tool_result` 那一个往返，和上面 DeepSeek 那篇对着读。
 

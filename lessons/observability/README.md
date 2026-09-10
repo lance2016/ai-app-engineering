@@ -68,9 +68,9 @@ flowchart LR
     classDef model stroke:#7c6ee6,stroke-width:2.2px
     classDef runtime stroke:#0d806b,stroke-width:2px
     classDef risk stroke:#b5472d,stroke-width:2px
-    R["invoke_agent support_bot<br/>steps=2 cost_usd=0.004"] --> C1["chat deepseek-chat<br/>input_tokens=182 output_tokens=24"]
+    R["invoke_agent support_bot<br/>steps=2 cost_usd=0.004"] --> C1["chat deepseek-v4-flash<br/>input_tokens=182 output_tokens=24"]
     R --> T["execute_tool search<br/>ERROR error.type=TimeoutError"]
-    R --> C2["chat deepseek-chat<br/>input_tokens=230 output_tokens=31"]
+    R --> C2["chat deepseek-v4-flash<br/>input_tokens=230 output_tokens=31"]
     class R runtime
     class C1,C2 model
     class T risk
@@ -99,9 +99,9 @@ flowchart LR
 
 ```text
 invoke_agent support_bot        2.31s  OK
-├─ chat deepseek-chat           0.42s  OK     in=182  out=24
+├─ chat deepseek-v4-flash           0.42s  OK     in=182  out=24
 ├─ execute_tool search          2.000s ERROR  error.type=TimeoutError
-└─ chat deepseek-chat           0.61s  OK     in=230  out=31
+└─ chat deepseek-v4-flash           0.61s  OK     in=230  out=31
 ```
 
 信号是 `2.000s`：耗时正好等于配置的超时值，是超时而不是慢。注意根 span 仍然是 `OK`——运行时接住了这个失败并继续跑完了，这是对的行为。
@@ -110,23 +110,23 @@ invoke_agent support_bot        2.31s  OK
 
 ```text
 invoke_agent support_bot        0.88s  OK
-└─ chat deepseek-chat           0.83s  OK     in=182  out=0
+└─ chat deepseek-v4-flash           0.83s  OK     in=182  out=0
 ```
 
 整棵树全绿，唯一的信号是 `out=0`。除非运行时主动检查并打属性，否则这次运行在任何仪表盘上都是成功的。加上三行之后：
 
 ```text
 invoke_agent support_bot        0.88s  ERROR  aiapp.stop_reason=empty_output
-└─ chat deepseek-chat           0.83s  ERROR  in=182  out=0  aiapp.empty_output=true
+└─ chat deepseek-v4-flash           0.83s  ERROR  in=182  out=0  aiapp.empty_output=true
 ```
 
 **三、成本尖峰。** 信号滞后一轮出现。
 
 ```text
 invoke_agent support_bot        6.12s  OK     aiapp.cost_usd=0.0412
-├─ chat deepseek-chat           0.44s  OK     in=182     out=28
+├─ chat deepseek-v4-flash           0.44s  OK     in=182     out=28
 ├─ execute_tool list_orders     0.19s  OK     aiapp.tool.result_bytes=168400
-└─ chat deepseek-chat           5.31s  OK     in=41920   out=96
+└─ chat deepseek-v4-flash           5.31s  OK     in=41920   out=96
 ```
 
 工具 span 快、绿、看不出问题。异常在**下一个** chat span 的 `in`：从 182 跳到 41920，因为工具返回了一大坨没分页的结果。`aiapp.tool.result_bytes` 是自定义属性，加上它才能把这两行连起来看；只有标准属性时，你只知道贵了，不知道为什么。
@@ -148,7 +148,7 @@ invoke_agent support_bot       11.42s  OK     aiapp.stop_reason=step_limit  step
 
 ## 决定 trace 有用还是没用的细节
 
-**属性名用标准的。** OpenTelemetry 的 [GenAI 语义约定](https://github.com/open-telemetry/semantic-conventions-genai)规定了 `gen_ai.operation.name`、`gen_ai.provider.name`、`gen_ai.request.model`、`gen_ai.usage.input_tokens` 等名字，span 名规定为 `{operation} {model}`（如 `chat deepseek-chat`）、`execute_tool {tool}`、`invoke_agent {agent}`。用这些名字，Phoenix、Langfuse、任何 collector 都直接识别。
+**属性名用标准的。** OpenTelemetry 的 [GenAI 语义约定](https://github.com/open-telemetry/semantic-conventions-genai)规定了 `gen_ai.operation.name`、`gen_ai.provider.name`、`gen_ai.request.model`、`gen_ai.usage.input_tokens` 等名字，span 名规定为 `{operation} {model}`（如 `chat deepseek-v4-flash`）、`execute_tool {tool}`、`invoke_agent {agent}`。用这些名字，Phoenix、Langfuse、任何 collector 都直接识别。
 
 !!! warning "这两个名字已经废弃"
 
@@ -274,10 +274,10 @@ def build_payload() -> dict:
     root = make_span(trace_id, "invoke_agent support_bot", None,
                      {"gen_ai.operation.name": "invoke_agent",
                       "gen_ai.agent.name": "support_bot"}, status=1, ...)
-    chat = make_span(trace_id, "chat deepseek-chat", root["spanId"],
+    chat = make_span(trace_id, "chat deepseek-v4-flash", root["spanId"],
                      {"gen_ai.operation.name": "chat",
                       "gen_ai.provider.name": "deepseek",
-                      "gen_ai.request.model": "deepseek-chat",
+                      "gen_ai.request.model": "deepseek-v4-flash",
                       "gen_ai.usage.input_tokens": 182,
                       "gen_ai.usage.output_tokens": 24}, status=1, ...)
     return {"resourceSpans": [{

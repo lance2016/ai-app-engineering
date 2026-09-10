@@ -35,7 +35,7 @@ class ModelAdapter(Protocol):
     def stream(self, messages: list[Message], tools: list[ToolSpec] | None = None) -> AsyncIterator[StreamChunk]: ...
 
 PRESETS = {
-    "deepseek":  ProviderPreset("https://api.deepseek.com", "DEEPSEEK_API_KEY", "deepseek-chat"),
+    "deepseek":  ProviderPreset("https://api.deepseek.com", "DEEPSEEK_API_KEY", "deepseek-v4-flash"),
     "dashscope": ProviderPreset("https://dashscope.aliyuncs.com/compatible-mode/v1", "DASHSCOPE_API_KEY", "qwen-plus"),
     "openai":    ProviderPreset("https://api.openai.com/v1", "OPENAI_API_KEY", "gpt-4o-mini"),
 }

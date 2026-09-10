@@ -9,7 +9,7 @@ estimated_time: 约 1.5 小时
 
 # 01 从模型到应用：能力边界、成本模型与选型
 
-> 这一课把模型当成一个有规格书的部件来用。规格书上写着窗口和单价，不写它在你的任务上会怎么错、一段真实对话要花多少钱——这两个数得自己量，项目第一周就得有。答错了，后面全是重做。
+> 模型卡告诉你窗口、单价和接口能力，却不告诉你在自己的任务上会错在哪里，也不替你算完整对话的账。本课用硬约束、成本模型和小探针把这几件事落下来。
 
 <details class="case" markdown="1">
 <summary>例子：客服机器人聊到第 48 轮，接口开始报 400；对话短的用户一次都没碰上</summary>
@@ -58,7 +58,7 @@ POST /v1/chat/completions → 400
 
 ## 模型知识缺口怎么补 { .lesson-meta__heading }
 
-- [00 起步](../setup/README.md)：一次调用就是一次 POST，请求体里有哪四类东西
+- [00 起步](../setup/README.md)：一次业务调用可能对应多次 HTTP 请求，请求体里有哪几类东西
 - 这一课不解释 token、上下文窗口、采样、模型分类是什么。要补的话，[F00 LLM 是什么](../../prerequisites/llm-foundations/00-what-an-llm-is/README.md)、[F01 Tokenization](../../prerequisites/llm-foundations/01-tokenization/README.md)、[F04 Context Window 与 Sampling](../../prerequisites/llm-foundations/04-context-window-and-sampling/README.md)、[F07 模型地图](../../prerequisites/llm-foundations/07-model-landscape/README.md) 分别讲这四件事。不用先读完再回来，正文点到哪篇翻哪篇就行
 
 </div>
@@ -69,7 +69,7 @@ POST /v1/chat/completions → 400
 
 ### 能力边界只能测出来
 
-模型卡告诉你它「支持」什么，不告诉你它在你的任务上会怎么错。数字母、做算术、说出训练截止之后的事、按精确长度输出，这些是所有模型都不稳的地方，只是程度不同。这一课给的探针是 smoke test：一个提示配一个确定性检查，几分钟跑完，用来排雷。它不能当评测集用，为什么不能见探针那一节。
+模型卡告诉你它「支持」什么，不告诉你它在你的任务上会怎么错。数字母、做算术、回答训练截止之后的事实、按精确长度输出，这些任务经常暴露模型之间的差异。这一课给的探针是 smoke test：一个提示配一个确定性检查，几分钟跑完，用来排雷。它不能当评测集用，为什么不能见探针那一节。
 
 ### 钱花在每轮重发的历史上
 
@@ -83,11 +83,11 @@ POST /v1/chat/completions → 400
   → 实际费用
 ```
 
-提示缓存会把稳定不变的前缀算成便宜的一档。所以两个单价差五倍的模型，在一段对话上的差价可能只有两倍，也可能是十倍，取决于固定部分多大、缓存命不命中。还有一类模型在回答前先花 token 想一遍，那段思考用户看不到，却照样按输出价计费。
+如果供应商提供提示缓存，稳定不变的前缀可以按更低价格计算。所以两个单价差五倍的模型，在一段对话上的差价可能只有两倍，也可能是十倍，取决于固定部分多大、缓存命不命中。缓存规则和计费字段要按供应商文档核对。有的推理模型还会在回答前生成用户看不到的思考 token，是否单独计费、是否占窗口，也要按接口确认。
 
 ### 幻觉是机制，不是故障
 
-[F00](../../prerequisites/llm-foundations/00-what-an-llm-is/README.md) 那个 bigram 模型没有随机性也会拼出没见过的句子。应用层只有两条路：把事实放进上下文让它照着说（第 15 课 RAG），或者不让它自由发挥，把输出限制成结构化字段或工具调用（第 02、05 课）。让模型「更努力」、把 temperature 设成 0，都不在选项里。
+[F00](../../prerequisites/llm-foundations/00-what-an-llm-is/README.md) 那个 bigram 模型没有随机性也会拼出没见过的句子。应用层通常把事实放进上下文，或把关键步骤交给检索、工具和确定性校验（第 02、05、15 课）。让模型「更努力」、把 temperature 设成 0，都不能替代这些边界。
 
 ### 可替换要设计出来
 
@@ -146,7 +146,7 @@ def hard_filter(c, req) -> list[str]:
 
 `peak_input_tokens` 是这段里唯一要想一下的函数。很多人估窗口时只算「一轮的输入」，于是长对话用户在第几十轮突然收到 400，开发机上还复现不出来。把峰值放进筛选流程，这类错在选型阶段就挡掉了。
 
-候选的规格该长这样——注意每个数字都要带查价日期，价格和窗口每季度都在变：
+候选的规格该长这样——注意每个数字都要带查价日期，价格和窗口会变：
 
 ```python
 Candidate(name="hosted-cn-large", context_window=128_000,
@@ -174,7 +174,7 @@ def cost_per_conversation(c, req) -> float:
 
 这也解释了为什么第 08 课要花整整一课讲上下文裁剪。
 
-**推理模型要多算一笔。** 它在回答之前先生成一段思考内容，用户看不到，但按输出价计费，也占窗口。上面的函数少了两行：
+**推理模型可能要多算一笔。** 有的供应商会单独统计思考 token，有的把它算进输出上限或下一轮上下文；计费字段和传递规则必须按接口确认。下面只是其中一种计费模型：
 
 ```python
     thinking = req.turns * req.reasoning_tokens_per_turn   # ← 按输出价算
@@ -187,7 +187,7 @@ def cost_per_conversation(c, req) -> float:
 - 要不要把它原样回传。有的供应商给思考块带了签名，改一个字符就报错
 - 同一轮里发生多次工具调用时，中间那几段思考怎么携带
 
-不管哪家，代价都一样：首字延迟从秒级变成十几秒。而 `reasoning_tokens_per_turn` 是几百还是几万，取决于任务难度和你设的思考预算，**事前估不准，只能实测**。
+推理预算通常会增加费用和延迟，具体幅度取决于任务、模型和服务端。`reasoning_tokens_per_turn` 是几百还是几万，也取决于任务难度和你设的思考预算，**事前估不准，只能实测**。
 
 ### 三、探针 = 一个提示 + 一个确定性检查
 
@@ -233,7 +233,7 @@ PROBES = [
 
 **相信模型的自我评估。** 把 `check` 从确定性函数换成「模型说自己 confident 了吗」，通过率会好看不少——全是假的。模型对自己的判断和它对事实的判断来自同一个机制，同样不可靠。检查必须是确定性代码，这是原则 01 在选型阶段的形态。
 
-**默认用推理模型做所有任务。** 抽取、分类、改写、格式转换这类有确定答案的任务，推理模型贵几倍、慢十几秒，准确率却不见得更高，有时还会因为「想多了」偏离格式要求。它的收益在多步推导和需要自我纠错的任务上。选型时把这两类任务分开测。
+**默认用推理模型做所有任务。** 抽取、分类、改写、格式转换这类有确定答案的任务，推理模型通常更贵、延迟更高，准确率却不一定更高，有时还会偏离格式要求。它的收益在多步推导和需要自我纠错的任务上。选型时把这两类任务分开测。
 
 **只算输出 token，或用字数估 token。** 输入随历史增长，很快成为主要开销。至于字数换 token，不同 tokenizer 对中文、英文、代码的密度差别很大，同一段文本在两个模型上的 token 数可能差出几成，没有一个通用换算比例可抄。要数字就调供应商的计数接口，或者用对应模型的 tokenizer 本地算一遍——而且换模型之后要重新量。
 
@@ -290,6 +290,7 @@ uv run pytest tests/project/m5/test_ratelimit_and_cost.py -q
 ## 把模型选型接到调用链 { .section--reference }
 
 - [generative-ai-for-beginners · 02 Exploring and comparing LLMs](https://github.com/microsoft/generative-ai-for-beginners/tree/main/02-exploring-and-comparing-different-llms)（访问日期 2026-09-04）：模型分类和「在自己的数据上测」的讲法。
+- [OpenAI · Models](https://developers.openai.com/api/docs/models)（访问日期 2026-09-10）：当前模型的能力、上下文和选型入口；模型名和规格会更新，接入前重新核对。
 - [OpenAI · Model selection](https://platform.openai.com/docs/guides/model-selection)（访问日期 2026-09-04）：「先用最强的模型建评测，再往下换」的顺序值得借。
 - [Artificial Analysis](https://artificialanalysis.ai/)（访问日期 2026-09-04）：独立的价格、延迟、吞吐对比。用它做初筛，不要用它替代探针。
 - [OpenAI · Reasoning models](https://platform.openai.com/docs/guides/reasoning)（访问日期 2026-09-06）：reasoning token 怎么计费、effort 怎么选。
