@@ -60,7 +60,7 @@ estimated_time: 约 1.5 小时
 
 一句话区分：**Tool 和 MCP 是运行时执行的，Skill 是模型阅读的。** 一个 Skill 不会自己做任何事，它只是让模型在合适的时候知道该调哪些工具、按什么顺序、注意什么。第 05 课的守卫对 Skill 里提到的每一个工具照样生效。
 
-Skill 的形态很简单：一个目录，里面一个 `SKILL.md`，YAML frontmatter 里至少有 `name` 和 `description`，正文是给模型看的说明，可以带 `scripts/`、`references/` 等附属文件。这个形式来自 Anthropic 的 [Agent Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)，有一份公开规范。
+Skill 的形态很简单：一个目录，里面一个 `SKILL.md`，YAML frontmatter 里至少有 `name` 和 `description`，正文是给模型看的说明，可以带 `scripts/`、`references/` 等附属文件。`description` 要同时写做什么和何时使用，官方上限是 1024 个字符；本项目把常驻描述限到 300 个字符，是为了控制每次请求的上下文成本。这个形式来自 Anthropic 的 [Agent Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)，有一份公开规范。
 
 **渐进式加载是 Skill 有用的前提。** 几十个 Skill 全文都放进上下文，模型还没开始干活就先花掉几万 token。所以分三级：
 
@@ -97,7 +97,7 @@ allowed-tools: search_notes
 
 - **`description` 是判断条件，不是功能介绍。** 「处理报销单」和「当用户问某笔费用能不能报、或要审一份报销清单时使用」，模型对后者的触发判断准确得多。
 - **正文引用附属文件的路径**，模型看到这句话才会去请求级别 3。
-- **`allowed-tools` 声明它需要什么工具**，安装时和注册表对账。
+- **`allowed-tools` 声明它需要什么工具**，安装时和注册表对账。它是本课程参考项目的扩展字段，不是 Agent Skills 通用规范的必填项。
 
 ### 二、级别 1：只发 name 和 description
 

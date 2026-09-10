@@ -7,7 +7,7 @@ estimated_time: 约 2 小时
 
 # 09 Workflow 还是 Agent：架构模式
 
-> 面对一个需求，先问「能不能不用 Agent」。Anthropic 跟几十个团队做过 Agent 之后的结论是：最成功的实现用的都是简单、可组合的模式，而不是复杂框架。这一课给出五种 workflow 模式和一张判断表，帮你在「写死流程」和「放开让模型决定」之间选一个正确的位置。
+> 面对一个需求，先问「能不能不用 Agent」。Anthropic 在多支团队的实践中总结出一组简单、可组合的模式。这一课给出五种 workflow 模式和一张判断表，帮你在固定流程和模型决策之间找到合适的位置。
 
 <details class="case" markdown="1">
 <summary>例子：同一张发票跑两遍，一遍校验了税号，一遍直接入账</summary>

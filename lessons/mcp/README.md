@@ -11,14 +11,14 @@ estimated_time: 约 1.5 小时
 
 ## 工具住在另一个进程里
 
-第 05 课的工具是你自己写的函数：schema 和实现在同一个仓库里，一起改，永远对得上。
+第 05 课的工具是你自己写的函数：schema 和实现在同一个仓库里，通常一起改，比较容易保持一致。
 
 MCP 换掉的就是这一条。工具跑在另一个进程里——可能是另一台机器、另一个人的代码——host 通过一个协议把它接进来。一次完整的往返长这样：
 
 ```mermaid
 sequenceDiagram
     participant H as Host / 运行时
-    participant S as MCP Server（另一个进程）
+    participant S as MCP Server（旧版握手协议）
     H->>S: initialize(protocolVersion, capabilities, clientInfo)
     S-->>H: protocolVersion, capabilities, serverInfo
     H->>S: notifications/initialized
@@ -32,7 +32,9 @@ sequenceDiagram
 
 这张图上有三件事，这一课后面全靠它们：
 
-- **host 要先问「你有哪些工具」**（`tools/list`），拿回来的是每个工具的名字、说明和参数 schema。这一步之后 host 才知道该告诉模型什么。
+先区分协议版本。当前最新修订版 `2026-07-28` 是无状态模式：每个请求都带协议版本、客户端信息和能力元数据，不再依赖 `initialize` 握手；`server/discover` 可以用来发现服务端支持的版本。`2025-11-25` 及更早版本仍使用下面这套 `initialize` → `notifications/initialized` 生命周期。参考项目的 toy server 为了把 stdio 生命周期讲清楚，固定实现后者，不能把它当成最新版的完整实现。
+
+- **在旧版握手协议中，host 要先完成初始化，再问「你有哪些工具」**（`tools/list`）；拿回来的是每个工具的名字、说明和参数 schema。这一步之后 host 才知道该告诉模型什么。最新无状态版本仍需要 `tools/list`，但不要求先走初始化握手。
 - **模型选定之后，host 才发 `tools/call`**，参数按上一步拿到的那份 schema 填。
 - **这两步之间可以隔很久。** 长驻进程通常只在启动时问一次，然后把工具列表缓存下来。
 
@@ -123,32 +125,34 @@ flowchart LR
 
 ### 两条错误通道，处理方式相反
 
-参数不合法、方法不存在、没握手就调用，走 JSON-RPC 的 `error` 对象，带标准错误码。工具本身执行失败（比如要删的笔记不存在），走 `result.isError = true`，正文里说明原因。**前者是 host 代码有 bug，后者要回喂给模型让它换办法。** 混在一起，模型就会看到一堆它无法处理的协议错误。
+参数不合法、方法不存在，或在旧版握手完成前调用，走 JSON-RPC 的 `error` 对象，带标准错误码。工具本身执行失败（比如要删的笔记不存在），走 `result.isError = true`，正文里说明原因。**前者是 host 代码有 bug，后者要回喂给模型让它换办法。** 混在一起，模型就会看到一堆它无法处理的协议错误。
 
 开头那个案例正好卡在这条界线上：它长得像通道 A，根因却在通道 A 管不到的地方。所以 host 侧除了分开处理这两条通道，还要能看出「通道 A 的错误突然变多」这个信号。
 
 ### server 是另一个进程
 
-它会崩、会挂起、会在你不知道的时候升级。client 必须能在 stdout 关闭时立刻得到一个错误而不是永远阻塞；重连后要重新握手、重新发现能力，不能假设工具列表和上次一样。
+它会崩、会挂起、会在你不知道的时候升级。client 必须能在 stdout 关闭时立刻得到一个错误而不是永远阻塞；旧版连接重建时要重新握手，无状态版本则按每个请求重新带元数据，并重新发现或校验能力，不能假设工具列表和上次一样。
 
-规范里还有很多这里没碰的部分：prompts、sampling、elicitation、resource 订阅、Streamable HTTP 传输、鉴权。它们都建在同一个生命周期上，学会 stdio 上的这一小圈，其余是查文档的事。
+规范里还有很多这里没碰的部分：prompts、sampling、elicitation、resource 订阅、Streamable HTTP 传输、鉴权。它们都建在同一套 JSON-RPC 和能力声明上；接最新版时还要核对请求元数据和传输绑定，不能只照搬旧版 stdio 生命周期。
 
 ## 消息长什么样
 
 MCP 就是 JSON-RPC 2.0 加一套约定好的方法名。看清消息形状，协议就没有神秘感了。
 
-### 一、握手：三条消息
+如果服务端采用当前 `2026-07-28` 修订版，先不走下面三条握手；每个请求的 `_meta` 携带 `protocolVersion`、`clientInfo` 和 `clientCapabilities`，必要时先调用 `server/discover`。下面这段只为说明 `2025-11-25` 及更早版本的 stdio 生命周期。
+
+### 一、旧版握手：三条消息
 
 ```jsonc
 // → 客户端发起
 {"jsonrpc":"2.0","id":1,"method":"initialize","params":{
-   "protocolVersion":"2026-07-28",
+   "protocolVersion":"2025-11-25",
    "capabilities":{},
    "clientInfo":{"name":"my-agent","version":"0.1"}}}
 
 // ← 服务端回应它支持什么
 {"jsonrpc":"2.0","id":1,"result":{
-   "protocolVersion":"2026-07-28",
+   "protocolVersion":"2025-11-25",
    "capabilities":{"tools":{},"resources":{}},
    "serverInfo":{"name":"notes","version":"0.1"}}}
 
@@ -156,9 +160,11 @@ MCP 就是 JSON-RPC 2.0 加一套约定好的方法名。看清消息形状，�
 {"jsonrpc":"2.0","method":"notifications/initialized"}
 ```
 
-**在第三条之前调 `tools/list` 是协议错误**，规范里明确要求 server 拒绝。理由很实际：双方还没就协议版本达成一致，此时交换的任何结构都可能对不上。
+**对旧版握手协议，在第三条之前调 `tools/list` 是协议错误**，规范里明确要求 server 拒绝。理由很实际：双方还没就协议版本达成一致，此时交换的任何结构都可能对不上。
 
 `serverInfo.version` 那一行是开头那个 bug 的检测点：握手时记下它，和上次不一样就强制重新 `tools/list`，别信缓存。
+
+下面的分派代码是旧版握手服务端的状态机；无状态版本不保存 `initializing` / `ready` 这两个连接状态。
 
 server 侧的方法分派就是这样一个状态机：
 
@@ -212,7 +218,7 @@ def specs_from_server(client, allowlist) -> list[ToolSpec]:
 
 1.  删掉这个过滤，`delete_note` 就直通模型了。白名单在 host 侧，不在 server 侧——server 说它有什么，和这次请求能用什么，是两件事。
 
-`annotations.readOnlyHint` 值得用起来：它可以直接决定这个工具要不要过第 05 课的确认门。没有这个标注的工具，默认当成有副作用。
+`annotations.readOnlyHint` 只能作为提示，不能单独决定是否绕过确认门。除非 server 是受信来源，否则 host 应把 annotation 当不可信元数据；没有明确、可信的只读信息时，默认按有副作用处理。
 
 ### 三、两条通道长得不一样
 
@@ -291,12 +297,12 @@ def call(client, tool):
 
 **读到 EOF 还在等。** 没有 `ServerGone` 那两行，`json.loads("")` 会抛一个和真实原因完全无关的异常，排查方向立刻跑偏。
 
-**缓存了工具列表，却没有让它失效的条件。** 就是开头那个案例。缓存本身没问题，问题是没有任何东西能告诉它「对面变了」。`serverInfo.version` 变化、`listChanged` 通知、进程重启，至少要认一个。
+**缓存了工具列表，却没有让它失效的条件。** 就是开头那个案例。缓存本身没问题，问题是没有任何东西能告诉它「对面变了」。当前修订版的 `tools/list` 可以返回 `ttlMs`、`cacheScope` 和 `nextCursor`；server 声明 `listChanged` 后，host 还可以订阅 `notifications/tools/list_changed`。旧版握手实现没有这些无状态元数据，至少要用 `serverInfo.version` 变化、进程重启或定时重新发现作为失效条件。
 
 ## 接一个 server，还是接一堆
 
-- **stdio 还是 HTTP。** stdio 简单、无网络、无鉴权问题，适合本地工具（文件、shell、本地数据库）。Streamable HTTP 适合远程共享的 server，但要处理鉴权、会话和重连。协议层面两者一样，差别在传输和安全。
-- **工具列表缓存多久。** 每次调用前都 `tools/list`，永远不会用错 schema，代价是每次多一个往返。缓存加订阅 `listChanged` 通知是折中，但要接受通知可能丢。启动一次跑几天的 host，缓存必须配一个失效条件；短命进程每次重新发现最省心。
+- **stdio 还是 HTTP。** stdio 简单，不需要单独配置网络鉴权，适合本地工具（文件、shell、本地数据库）；但仍要管本地进程权限和输入边界。Streamable HTTP 适合远程共享的 server，但要处理鉴权、会话和重连。协议层面两者一样，差别在传输和安全。
+- **工具列表缓存多久。** 每次调用前都 `tools/list`，能把缓存陈旧带来的错误降到最低，代价是每次多一个往返。缓存加订阅 `listChanged` 通知是折中，但要接受通知可能丢。启动一次跑几天的 host，缓存必须配一个失效条件；短命进程每次重新发现最省心。
 - **一个大 server 还是多个小 server。** 一个 server 暴露 50 个工具，模型的上下文里就是 50 段描述。按领域拆成小 server，host 按任务挑选接哪几个，和第 06 课「一个 Agent 管 3～10 步」是同一个逻辑。第 13 课的 Skill 是在这之上再加一层「什么时候用哪组工具」的说明。
 
 ## 从一个假 server 到生产
@@ -335,7 +341,7 @@ MCP client 在 [`mcp/client.py`](https://github.com/lance2016/ai-app-engineering
 
 ## 从协议消息继续读
 
-- [MCP 规范 · 最新版](https://modelcontextprotocol.io/specification/latest)（访问日期 2026-09-04，当前修订版 2026-07-28）：先读 [Lifecycle](https://modelcontextprotocol.io/specification/latest/basic/lifecycle)，再读 [Tools](https://modelcontextprotocol.io/specification/latest/server/tools) 和 [Resources](https://modelcontextprotocol.io/specification/latest/server/resources)。本课的消息形状就是这三页的子集，`listChanged` 通知也在 Tools 那一页。
+- [MCP 规范 · 最新版](https://modelcontextprotocol.io/specification/latest)（访问日期 2026-09-10，当前修订版 2026-07-28；`2025-11-25` 是本课 toy server 使用的旧版生命周期）：先读 [Lifecycle](https://modelcontextprotocol.io/specification/latest/basic/lifecycle)，再读 [Tools](https://modelcontextprotocol.io/specification/latest/server/tools) 和 [Resources](https://modelcontextprotocol.io/specification/latest/server/resources)。本课的消息形状是旧版握手和最新版工具接口的子集，`listChanged` 通知也在 Tools 那一页。
 - [JSON-RPC 2.0 规范 · Error object](https://www.jsonrpc.org/specification#error_object)（访问日期 2026-09-07）：`-32600` 到 `-32603` 各是什么意思。开头那个案例里 `-32602` 的语义是「参数无效」，也就是「调用方错了」，这正是它误导人的地方。
 - [modelcontextprotocol/python-sdk](https://github.com/modelcontextprotocol/python-sdk)（访问日期 2026-09-04）：README 里「15 行写一个 server、10 行写一个 client」两段，对照本课看 SDK 替你做了什么。
 - [modelcontextprotocol/inspector](https://github.com/modelcontextprotocol/inspector)（访问日期 2026-09-04）：调试任何 MCP server 的第一工具。

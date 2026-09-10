@@ -7,7 +7,7 @@ estimated_time: 约 2 小时
 
 # 11 多智能体、Handoff 与 Racing
 
-> 一个 Agent 管 [3～10 步](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-10-small-focused-agents.md)是可靠的上限。任务再大，就拆成几个小 Agent，让运行时把它们串起来或并起来。这一课讲三个具体问题：控制权怎么交接、交接时历史给多少、两个 Agent 并行时谁的输出算数。它们的共同答案是：**由运行时决定，不由任何一个 Agent 决定**。
+> 一个 Agent 管 [3～10 步](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-10-small-focused-agents.md)是一个常用经验范围，不是可靠性的硬上限。任务再大，可以拆成几个小 Agent，让运行时把它们串起来或并起来。这一课讲三个具体问题：控制权怎么交接、交接时历史给多少、两个 Agent 并行时谁的输出算数。它们的共同答案是：**由运行时决定，不由任何一个 Agent 决定**。
 
 <details class="case" markdown="1">
 <summary>例子：转给账单 Agent 之后，它把用户五轮前给过的订单号又问了一遍</summary>
@@ -35,7 +35,7 @@ estimated_time: 约 2 小时
 
 ## 一个 Agent 什么时候该把控制权交出去
 
-多个 Agent 直接互传上下文，会造成状态归属不明、权限扩大、失败无法回退。交接需要显式事件、最小视图和明确的控制权。
+多个 Agent 直接互传上下文，容易造成状态归属不明、权限扩大、失败无法回退。交接需要显式事件、最小视图和明确的控制权。
 
 ## 交接前要回答的三个问题
 
@@ -171,6 +171,8 @@ async def handle(thread: Thread) -> str:
 ```
 
 `handoff` 和 `handoff_failed` 都是线程里的事件，所以「这次对话转交过几次、哪次失败了」事后能查。
+
+回退前还要确认 billing 是否已经产生副作用。若它在返回错误前已经完成扣款或发信，triage 不能直接重做同一动作，必须沿用第 05、07 课的幂等键或状态查询。
 
 triage 的兜底回复要诚实：「我暂时联系不上账务系统，已经记录你的请求，一天内会有人跟进」。比假装处理好了强得多。
 

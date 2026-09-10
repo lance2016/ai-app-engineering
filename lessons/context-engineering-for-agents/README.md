@@ -65,7 +65,7 @@ flowchart LR
     class M model
 ```
 
-Anthropic 把上下文叫作 [attention budget](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)：窗口里每多一个 token，模型对其他 token 的注意力就少一点。上下文越长，模型对窗口中段内容的召回越容易出问题。这一点在各家模型上都反复出现过，只是程度不同。所以上下文工程的目标不是「塞得越多越好」，而是**在预算内放进信号最强的一组 token**。
+Anthropic 用 [attention budget](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) 来描述这个取舍：窗口里每多一段内容，模型处理其他内容的注意力就会被分走。上下文过长时，中段内容有时更容易被忽略，不同模型的程度不同。所以上下文工程的目标不是「塞得越多越好」，而是**在预算内放进信号最强的一组 token**。
 
 ### 组装有顺序
 
@@ -198,7 +198,7 @@ def shape(rows: list[dict], head: int = 3, tail: int = 2) -> str:
     return json.dumps({
         "result_id":     ref,
         "row_count":     len(rows),
-        "columns":       list(rows[0].keys()),
+        "columns":       list(rows[0].keys()) if rows else [],
         "status_counts": dict(by_status),        # 聚合比原始行有用得多
         "head":          rows[:head],
         "tail":          rows[-tail:],
@@ -212,7 +212,7 @@ def shape(rows: list[dict], head: int = 3, tail: int = 2) -> str:
 
 ### 四、稳定前缀省钱
 
-供应商缓存的是它见过的最长前缀。系统提示词开头放一个时间戳，每次请求前缀都不同，缓存永远不命中：
+供应商缓存的是它见过的最长前缀。系统提示词开头放一个时间戳，每次请求前缀都不同，无法按这个前缀命中缓存：
 
 ```python
 def build_window(turn, history) -> list[Message]:
@@ -226,7 +226,7 @@ def build_window(turn, history) -> list[Message]:
             Message(role="user", content=f"(current time: {now})")]
 ```
 
-十轮对话，稳定布局从第二轮起每轮命中，易变布局零命中。模型行为完全一样，成本差一大截。
+在供应商的缓存规则允许、且前缀达到最小长度时，稳定布局从后续请求起更容易命中；易变布局会缩短可复用前缀。模型行为可以保持不变，成本差异要用 usage 实测。
 
 ## 上下文最容易在哪里坏
 
