@@ -3,130 +3,179 @@ status: complete
 part: 背景知识
 ---
 
-# 工程能力：读懂、跑通和排查这门课的代码
+# 工程能力：读懂一个 AI 应用怎样运行
 
-> 这页是索引，不是另一套 Python 或后端教程。它回答三个问题：主线开始前要会什么、遇到具体主题去哪补、在参考实现里先看哪个文件。
+> 这页先讲到能读懂主线和参考实现的最低程度，再给出继续学习的路线。它不替代 Python、Web 或数据库教程；读完一节，知道自己缺哪块，直接沿着这一节的官方资料往下补。
 >
-> 最小开工组合是：会在终端里进入目录并设置环境变量，会读 Python 的类型注解、`dataclass`、异常和 `async`，能看懂 HTTP/JSON，能写一条 SQL，能用 `pytest` 验证一个结果。其他能力可以跟着课程补。
->
-> **必备**表示缺了会卡住主线；**用到再学**表示遇到对应课程再补；**可选**表示有帮助，但不影响主线。每一项都只列这门课实际会碰到的范围。
+> 最短起步组合是：能在终端里进入目录和设置环境变量；能读懂 Python 的类型、异常和 `async`；知道 HTTP 请求由什么组成；能看懂一条 SQL；知道测试、日志和容器分别解决什么问题。其余内容在遇到对应课程时再补。
 
-## 先按这条路线补
+## 先建立一张图
 
-| 你要做的事 | 先补的能力 | 参考实现里的入口 |
+一次请求通常会经过这些边界：客户端发 HTTP 请求，API 校验输入，运行时组装上下文并调用模型；模型返回文本或工具请求，运行时校验后才执行工具；状态和结果写入数据库，日志和 trace 记录这次请求经过了哪些边界。
+
+| 边界 | 它解决的问题 | 主线落点 | 参考实现入口 |
+|---|---|---|---|
+| HTTP API | 请求怎样进来，错误怎样返回，流式结果怎样送回去 | 00、02、18 | [`api/routes/threads.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/routes/threads.py) |
+| 运行时 | 循环什么时候停，状态怎样恢复，副作用怎样去重 | 06、07、09、10 | [`runtime/runner.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/runner.py) |
+| 模型适配器 | 不同供应商的请求和响应怎样转换 | 01、02、23 | [`adapters/base.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/base.py) |
+| 数据与状态 | 事实数据、事件、缓存和向量分别存在哪里 | 04、07、15、17 | [`storage/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/src/aiapp/storage)、[`knowledge/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/src/aiapp/knowledge) |
+| 观测与控制 | 出错后怎样定位，怎样限制时间、成本和权限 | 19、20、21、22 | [`ops/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/src/aiapp/ops)、[`security/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/src/aiapp/security) |
+
+读代码时先问这五个问题：输入从哪里来？谁校验它？谁改变外部世界？事实写到哪里？出了问题拿什么证据定位？这五个问题比记框架名更有用。
+
+## Python：数据、错误和等待
+
+### 类型和数据模型
+
+类型注解主要给人和静态检查工具看，运行时默认不会替你校验数据。`dataclass` 适合表达应用内部的值对象；Pydantic 模型会在边界上解析和校验外部输入，还能生成 JSON Schema。一个工具参数既要有 Python 类型，也要有运行时校验，因为模型返回的参数仍是外部输入。
+
+| 最低概念 | 这门课怎样用 | 参考实现 |
 |---|---|---|
-| 读懂第 00–05 课 | 类型注解、`dataclass`、异常、HTTP/JSON、环境变量 | [`src/aiapp/adapters/base.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/base.py)、[`api/errors.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/errors.py) |
-| 读懂第 06–14 课 | `asyncio`、取消、生成器、SQL 事务、Redis、MCP 的进程通信 | [`runtime/loop.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/loop.py)、[`storage/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/src/aiapp/storage)、[`mcp/client.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/mcp/client.py) |
-| 读懂第 15–18 课 | 文档入库、迁移、数据库索引、请求链和 SSE | [`knowledge/ingest.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/ingest.py)、[`api/routes/threads.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/routes/threads.py) |
-| 读懂第 19–23 课 | 测试分层、日志与 trace、限流、容器、配置和安全边界 | [`tests/project/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/tests/project)、[`ops/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/src/aiapp/ops)、[`.github/workflows/ci.yml`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/.github/workflows/ci.yml) |
+| `typing`、`Protocol`、`TypedDict` | 表达模型、工具、事件和存储接口 | [`adapters/base.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/base.py) |
+| `dataclass` | 表达配置、事件和检索结果 | [`runtime/turn.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/turn.py) |
+| Pydantic v2 | 校验 API 输入、工具参数并生成 schema | [`api/schemas.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/schemas.py)、[`runtime/registry.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/registry.py) |
 
-参考实现默认用 fake model，先跑通协议和失败路径，再接真实模型。第一次可以按[参考项目路线](../reference/project-playbook.md)走，不需要先把下面所有项目学完。
+官方资料访问日期均为 2026-09-10：[Python 类型注解](https://docs.python.org/3/library/typing.html)、[`dataclasses`](https://docs.python.org/3/library/dataclasses.html)、[Pydantic Models](https://docs.pydantic.dev/latest/concepts/models/)。先看类型、类和异常，再查 Pydantic 的模型与验证。
 
-## Python
+### 异常和错误边界
 
-| 项 | 档 | 这门课哪里用到它 |
+异常表示当前操作没有得到承诺的结果。调用方要先区分错误类型：输入不合法通常返回 4xx；下游暂时不可用可能重试；预算耗尽和权限不足应该停止；未知异常要记录上下文并返回通用错误。不要把所有异常都重试，也不要把 traceback 原样返回给用户。
+
+参考实现把 API 错误、运行时错误和工具结果分开：[`api/errors.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/errors.py)、[`runtime/errors.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/errors.py)、[`runtime/runner.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/runner.py)。官方资料访问日期为 2026-09-10：[Python Errors and Exceptions](https://docs.python.org/3/tutorial/errors.html)。
+
+### `async`、并发和取消
+
+`async` 适合等待网络、数据库或文件 I/O。`await` 把控制权交回事件循环，其他任务可以在等待期间运行；它不会把 CPU 密集计算自动变成并行。并发也不等于并行：前者是交错推进多个任务，后者需要多个线程、进程或执行单元同时计算。
+
+取消是正常控制流的一部分。用户断开连接、预算用完或超时后，运行时要把取消传到正在等待的模型和工具；吞掉取消异常会留下继续运行的后台任务。同步库放进异步处理函数，还会阻塞整个事件循环。
+
+参考实现的并发和取消在 [`runtime/loop.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/loop.py)、[`runtime/budget.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/budget.py)；M0 用五个小实验对照顺序执行、`gather`、超时和取消。官方资料访问日期均为 2026-09-10：[asyncio](https://docs.python.org/3/library/asyncio.html)、[asyncio Tasks](https://docs.python.org/3/library/asyncio-task.html)、[FastAPI 并发与 async](https://fastapi.tiangolo.com/async/)。先理解 coroutine、task、取消和超时，再看框架怎样调用它们。
+
+### 生成器和上下文管理器
+
+生成器一次产出一个值，异步生成器可以边等待边产出事件，所以适合 SSE 和流式模型响应。上下文管理器把“开始、结束、异常时清理”绑定在一起，数据库事务、文件、trace span 都常用它。它们不是语法装饰，而是控制资源生命周期的工具。
+
+参考实现的事件生成在 [`api/routes/threads.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/routes/threads.py)，trace 生命周期在 [`ops/telemetry.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/telemetry.py)。官方资料访问日期为 2026-09-10：[生成器](https://docs.python.org/3/tutorial/classes.html#generators)、[`contextlib`](https://docs.python.org/3/library/contextlib.html)。
+
+## HTTP：把一次调用看成一组消息
+
+HTTP 请求至少有方法、URL、headers 和可选 body；响应有状态码、headers 和可选 body。JSON 只是 body 的一种格式，schema 才说明字段、类型和必填关系。HTTP 本身无状态，应用要用 cookie、token 或自己的 thread id 关联多次请求。
+
+| 概念 | 先理解什么 | 主线落点 |
 |---|---|---|
-| 类型注解（`typing`） | 必备 | 工具契约、状态、事件和适配器接口都靠它表达 |
-| `dataclass` | 必备 | 工具参数、事件、候选模型、检索结果和配置对象 |
-| 异常与自定义异常 | 必备 | 第 06 课按错误类型选择重试、停止或回退 |
-| `async` / `await` | 必备 | 第 06 课起的模型调用、并行工具和流式响应 |
-| 上下文管理器（`with`） | 用到再学 | 第 20 课用它管理 span 的开始、结束和异常状态 |
-| 生成器与异步生成器 | 用到再学 | 第 02 课的 `async for` 消费增量事件 |
-| Pydantic v2 | 用到再学 | 第 05 课用同一份模型定义校验工具参数和生成 schema |
-| `asyncio` 的任务、取消与超时 | 用到再学 | 第 06 课的预算与取消，第 21 课的超时和重试 |
-| `contextvars` | 可选 | 第 20 课在异步任务间关联 trace；线程池不会自动继承上下文 |
+| 方法语义 | `GET` 读取，`POST` 通常创建或触发动作，`PUT` 替换，`DELETE` 删除；是否幂等要看接口语义 | 02、05、17 |
+| 状态码 | 4xx 多是请求或权限问题，5xx 多是服务或下游问题；具体语义以接口契约为准 | 02、21 |
+| 超时与重试 | 超时只说明客户端没等到结果，不说明服务端没有完成；重试前要确认操作是否可重复 | 05、21 |
+| SSE | 服务端在一个 HTTP 响应里连续发送事件；断线恢复需要事件 id 或 checkpoint | 02、07、18 |
 
-**去哪学。** 只读对应范围，不必通读整套文档。链接访问日期均为 2026-09-10。
+一个最小请求链是：客户端发 `POST /v1/threads/{id}/runs`，服务端先校验 body 和权限，再返回 JSON 或 `text/event-stream`。模型输出的每个增量都只是一个事件，只有运行时写入事件存储后，客户端才有恢复依据。
 
-| 想补的项 | 去哪学 | 读哪几节 |
+官方资料访问日期均为 2026-09-10：[MDN HTTP 概览](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview)、[HTTP 方法](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods)、[状态码](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status)、[Server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events)。读完方法和状态码，再看主线第 02 课的流式与错误处理。
+
+## 数据：事实、索引和缓存不是一回事
+
+### 表、索引和查询
+
+关系数据库用表保存事实，用约束保证字段和关系，用索引减少查询需要扫描的行。索引是读路径的加速结构，不能代替权限过滤，也不能证明写入已经成功。向量列只是表中的一种数据；租户、文档版本、权限和更新时间仍然需要普通字段和索引。
+
+参考实现的表模型和 PostgreSQL 存储在 [`storage/models.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/storage/models.py)、[`storage/postgres.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/storage/postgres.py)、[`knowledge/postgres_store.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/postgres_store.py)。官方资料访问日期均为 2026-09-10：[PostgreSQL Tutorial](https://www.postgresql.org/docs/current/tutorial.html)、[Indexes](https://www.postgresql.org/docs/current/indexes.html)、[pgvector](https://github.com/pgvector/pgvector)。
+
+### 事务和迁移
+
+事务把一组写入放进一个提交边界：全部成功才提交，失败则回滚。隔离级别决定一个事务能看到哪些并发写入；它不会替你解决业务幂等。迁移是数据库结构的版本控制，升级和回滚都要在 CI 中跑过，不能只在本地手动改表。
+
+参考实现用 Alembic 管理迁移，入口在 [`storage/migrations/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/src/aiapp/storage/migrations)；CI 会执行升级、降级和再次升级，见 [`.github/workflows/ci.yml`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/.github/workflows/ci.yml)。官方资料访问日期均为 2026-09-10：[PostgreSQL Transactions](https://www.postgresql.org/docs/current/tutorial-transactions.html)、[Alembic Tutorial](https://alembic.sqlalchemy.org/en/latest/tutorial.html)。
+
+### Redis、缓存和锁
+
+Redis 适合保存有过期时间的缓存、短期幂等记录、限流桶和运行锁。它不是 PostgreSQL 事实表的替代品：缓存可以重建，事件和账单不能因为缓存丢失而失去。锁也只是并发控制，不能把外部支付和本地记录变成一个原子事务。
+
+参考实现的 Redis 键值和锁在 [`storage/redis_kv.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/storage/redis_kv.py)、[`ops/ratelimit.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/ratelimit.py)。官方资料访问日期为 2026-09-10：[Redis 开发文档](https://redis.io/docs/latest/develop/)。先看数据类型、过期和事务，再看主线第 07、21 课为什么把事实数据和临时控制数据分开。
+
+## 测试：验证每一层的承诺
+
+测试不是“请求返回 200”就结束。单元测试验证一个纯函数；集成测试验证数据库、Redis 或 HTTP 边界；契约测试让内存实现和 PostgreSQL 实现遵守同一组接口；评测集验证模型行为；故障演练验证超时、断连和重启后的状态。
+
+| 测试材料 | 它替代什么 | 参考实现 |
 |---|---|---|
-| 类型注解 | [mypy 类型速查表](https://mypy.readthedocs.io/en/stable/cheat_sheet_py3.html) | 常用类型、联合类型、泛型 |
-| `Protocol`、泛型、`TypedDict` | [`typing` 模块文档](https://docs.python.org/3/library/typing.html) | 需要时查，不通读 |
-| `dataclass`、异常、生成器 | [Python 官方教程](https://docs.python.org/3/tutorial/) | 类、异常、生成器 |
-| `async` / `await` | [`asyncio` 文档](https://docs.python.org/3/library/asyncio.html) | coroutine、task、`gather`、取消 |
-| 任务和超时 | [`asyncio` 任务文档](https://docs.python.org/3/library/asyncio-task.html) | `Task`、取消、`wait_for` 和 timeout |
-| 上下文管理器 | [`contextlib` 文档](https://docs.python.org/3/library/contextlib.html) | `@contextmanager` 和异步上下文管理器 |
-| Pydantic v2 | [Pydantic 文档](https://docs.pydantic.dev/latest/) | Models、Validators、JSON Schema |
+| fake model | 不稳定、昂贵的真实模型调用 | [`adapters/fake.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/fake.py) |
+| fixture | 每个测试重复搭建的环境 | [`tests/project/m1/conftest.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m1/conftest.py) |
+| monkeypatch / mock | 外部时间、环境变量和故障 | [`tests/project/m1/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/tests/project/m1) |
+| golden set | “这次输出更好”的主观印象 | [`project/m5-production/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/m5-production)、[`scripts/eval_run.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/scripts/eval_run.py) |
+| chaos script | 假设服务永远正常 | [`scripts/chaos.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/scripts/chaos.py) |
 
-## 工具链与工程协作
+fake 和 mock 的边界要分清：fake 是一个行为稳定、可以真正运行的替代实现；mock 更适合断言某个调用是否发生。两者都不能证明真实供应商的质量，所以模型评测和协议测试还要单独保留。
 
-这些能力不会出现在某一段 Agent 代码里，却决定你能不能复现一次运行、确认改动来自哪里、在另一台机器上重建环境。
+官方资料访问日期均为 2026-09-10：[pytest fixtures](https://docs.pytest.org/en/stable/how-to/fixtures.html)、[pytest monkeypatch](https://docs.pytest.org/en/stable/how-to/monkeypatch.html)、[GitHub Actions](https://docs.github.com/en/actions)。学习顺序是 fixture 和参数化 → 替换外部依赖 → 在 CI 中运行 → 为模型和轨迹建立回归集。
 
-| 项 | 档 | 这门课哪里用到它 |
+## 日志、指标和 trace：给失败留下证据
+
+日志回答“发生了什么”，指标回答“发生了多少”，trace 回答“一次请求经过了哪些步骤、每步花了多久”。一次模型请求至少要能关联 request id、thread id、model、工具名、耗时、token 用量和停止原因；这些字段要避免放入密钥、完整用户隐私和未经处理的 prompt。
+
+参考实现的结构化日志、成本和 trace 在 [`ops/logging.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/logging.py)、[`ops/cost.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/cost.py)、[`ops/telemetry.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/telemetry.py)。第 20 课会把一条请求串成模型、工具、检索和存储的 span。
+
+官方资料访问日期为 2026-09-10：[OpenTelemetry Observability primer](https://opentelemetry.io/docs/concepts/observability-primer/)。先分清 logs、metrics、traces，再看 trace context 怎样跨异步任务和 HTTP 边界传播。
+
+## 容器、配置和部署
+
+容器镜像是应用和依赖的只读打包，容器是这个镜像的一次运行。镜像本身不保存运行时数据；数据库卷、环境变量和密钥要单独管理。Compose 适合在本地把应用、PostgreSQL、Redis 和观测服务接成一组，生产环境还要考虑备份、滚动更新和资源限制。
+
+健康检查至少分两类：`/healthz` 只说明进程还活着，`/readyz` 才说明依赖已经连好、可以接流量。收到 `SIGTERM` 后，进程应停止接新请求，等待正在写入的事件完成，再退出；否则重启可能留下半条流或未保存的 checkpoint。
+
+参考实现的镜像、Compose、健康检查和退出处理在 [`Dockerfile`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/Dockerfile)、[`docker-compose.yml`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/docker-compose.yml)、[`ops/health.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/health.py)、[`runtime/runner.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/runner.py)。官方资料访问日期均为 2026-09-10：[Docker Compose](https://docs.docker.com/compose/)、[Dockerfile reference](https://docs.docker.com/reference/dockerfile/)。
+
+## 工具链：让问题可以重现
+
+终端、Git 和依赖锁文件解决的是同一个问题：别人能不能重建你看到的结果。环境变量把配置从代码中分开；`pyproject.toml` 描述项目和依赖；`uv.lock` 固定解析后的版本；Git 记录每次改变了什么。遇到失败时，先保存完整 traceback，再缩小输入、固定 seed、记录依赖版本和运行命令。
+
+参考实现把项目元数据和锁文件放在 [`pyproject.toml`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/pyproject.toml)、[`uv.lock`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/uv.lock)，启动配置示例在 [`.env.example`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/.env.example)。官方资料访问日期均为 2026-09-10：[Pro Git](https://git-scm.com/book/en/v2)、[uv 项目结构](https://docs.astral.sh/uv/concepts/projects/layout/)、[uv locking and syncing](https://docs.astral.sh/uv/concepts/projects/sync/)、[Missing Semester Shell Tools](https://missing.csail.mit.edu/2020/course-shell/)。
+
+## 安全边界：谁能让系统做什么
+
+认证回答“你是谁”，授权回答“你能做什么”。最小权限意味着工具注册表、数据库查询、文件访问和管理操作都要按用户、租户和资源范围限制。把 `tenant_id` 从请求一路传到 repository、事件、成本和 trace，才能在每一层检查边界；只在前端隐藏按钮不算授权。
+
+密钥只进运行时配置，不进仓库、镜像、日志和 trace。用户输入、检索文档和 MCP/Skill 内容都可能包含指令，模型可以提出工具调用，但不能凭这段文字获得新的权限。工具白名单、参数校验、人工确认、幂等和审计要由确定性代码执行。
+
+参考实现的出站限制在 [`security/outbound.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/security/outbound.py)，工具权限和租户过滤分布在 [`runtime/registry.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/registry.py)、[`api/deps.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/deps.py) 和存储层。官方资料访问日期为 2026-09-10：[OWASP Top 10 for LLM Applications](https://genai.owasp.org/llm-top-10/)。先看风险名称，再回到主线第 05、12、22 课看代码怎样挡住它们。
+
+## 参考实现：按这个顺序观察
+
+参考实现默认使用 fake model，先把协议、状态和失败路径跑通，再替换真实供应商。下面的顺序对应仓库里的里程碑，不要求把所有代码一次读完。
+
+| 阶段 | 先观察什么 | 运行入口或测试 |
 |---|---|---|
-| 终端、路径、管道和环境变量 | 必备 | 第 00 课启动服务、设置模型和数据库配置；所有参考项目命令都从终端执行 |
-| Git 基础与代码 review | 必备 | 每次实验要比较改动、保留回滚点；第 26 课的 ADR 也应和代码一起版本化 |
-| `pyproject.toml`、虚拟环境和 `uv` | 必备 | 用 `uv sync` 重建环境，用 `uv run` 在项目环境里执行测试和脚本 |
-| 锁文件与可复现安装 | 用到再学 | 参考实现把 `uv.lock` 提交到仓库；部署镜像用冻结的依赖安装 |
-| 读 traceback、缩小复现样本 | 必备 | 每一课的失败案例都要先定位层，再判断是模型、工具、数据还是基础设施 |
-| 格式化、静态检查和类型检查 | 可选 | 改动较大时减少低级错误；它们不能代替运行时测试和评测 |
+| M0 并发 | 顺序、并发、超时、取消的差异 | [`project/m0-concurrency/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/m0-concurrency) |
+| M1 API 骨架 | fake adapter、HTTP schema、结构化错误 | [`tests/project/m1/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/tests/project/m1) |
+| M2 数据与状态 | 事件、checkpoint、PostgreSQL、Redis 锁 | [`project/m2-state-and-storage/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/m2-state-and-storage) |
+| M3 工具与运行时 | 注册、白名单、确认、幂等和恢复 | [`project/m3-tool-workflow/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/m3-tool-workflow) |
+| M4 检索与记忆 | 入库、引用、混合检索和记忆生命周期 | [`project/m4-rag-and-memory/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/m4-rag-and-memory) |
+| M5 生产化 | 评测、trace、限流、成本、容器和故障演练 | [`project/m5-production/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/m5-production) |
 
-| 想补的项 | 去哪学 | 读哪几节 |
+课程按理解顺序排，参考实现按装配顺序排。想边读边跑，先看[参考项目路线](../reference/project-playbook.md)；想只补一个概念，直接从上面的章节入口跳进去。
+
+## 推荐学习路线
+
+下面按“先能读代码，再能运行服务，最后能判断线上问题”的顺序排列。每一步先看概念页，再回到课程和参考实现中找它的落点。
+
+| 阶段 | 先掌握 | 推荐资料 |
 |---|---|---|
-| 命令行 Git | [Pro Git · Git 基础](https://git-scm.com/book/en/v2) | Getting Started、Basic Git Workflow、撤销改动 |
-| Python 项目与锁文件 | [uv · 项目结构](https://docs.astral.sh/uv/concepts/projects/layout/) | `pyproject.toml`、虚拟环境、`uv.lock` |
-| 安装与冻结依赖 | [uv · Locking and syncing](https://docs.astral.sh/uv/concepts/projects/sync/) | `uv sync`、`--locked`、`--frozen` |
-| 终端和环境变量 | [The Missing Semester · Shell Tools](https://missing.csail.mit.edu/2020/course-shell/) | 路径、重定向、管道、环境变量 |
+| 1. Python 与终端 | 类型、异常、`async`、路径、环境变量、Git | [Python Tutorial](https://docs.python.org/3/tutorial/)、[Pro Git](https://git-scm.com/book/en/v2)、[Shell Tools](https://missing.csail.mit.edu/2020/course-shell/) |
+| 2. HTTP 服务 | 方法、状态码、JSON、schema、超时、SSE | [MDN HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview)、[FastAPI async](https://fastapi.tiangolo.com/async/)、[MDN SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) |
+| 3. 数据与并发 | SQL、索引、事务、迁移、Redis、取消 | [PostgreSQL Tutorial](https://www.postgresql.org/docs/current/tutorial.html)、[Alembic Tutorial](https://alembic.sqlalchemy.org/en/latest/tutorial.html)、[Redis 开发文档](https://redis.io/docs/latest/develop/)、[asyncio](https://docs.python.org/3/library/asyncio.html) |
+| 4. 测试与证据 | fixture、替身、契约测试、golden set、CI | [pytest fixtures](https://docs.pytest.org/en/stable/how-to/fixtures.html)、[pytest monkeypatch](https://docs.pytest.org/en/stable/how-to/monkeypatch.html)、[GitHub Actions](https://docs.github.com/en/actions) |
+| 5. 运行与安全 | 镜像、Compose、健康检查、日志、trace、最小权限 | [Docker Compose](https://docs.docker.com/compose/)、[OpenTelemetry primer](https://opentelemetry.io/docs/concepts/observability-primer/)、[OWASP LLM Top 10](https://genai.owasp.org/llm-top-10/) |
 
-## Web、并发与数据
+上表链接访问日期均为 2026-09-10。资料很多时不要从头通读：先看目录和示例，再拿参考实现中的一个请求或一个失败测试对照。
 
-| 项 | 档 | 这门课哪里用到它 |
-|---|---|---|
-| HTTP 方法、状态码、超时和重试 | 必备 | 第 02、21 课根据状态码和错误类型决定是否重试 |
-| REST、JSON 和 schema | 必备 | 模型适配器、工具调用和 `/v1` 接口都交换结构化数据 |
-| SQL（建表、查询、索引） | 必备 | 第 04 课的 pgvector、第 07 课事件线程、第 17 课文档版本和删除 |
-| 事务、隔离和迁移 | 用到再学 | 第 07、17 课保证 checkpoint、事件和删除的一致性；参考实现用 Alembic 管迁移 |
-| `asyncio` 并发模型 | 用到再学 | 第 06 课并行工具、第 07 课运行锁、第 21 课限流和超时 |
-| SSE（Server-Sent Events） | 用到再学 | 第 02、18 课把增量事件送到客户端，断线后按事件序号恢复 |
-| Redis 的锁、缓存和限流桶 | 用到再学 | 第 07、21 课；需要分清可重建缓存和事实数据 |
-| WebSocket | 可选 | 语音或客户端持续上行时使用；主线文本示例用 SSE |
-| 消息队列 | 可选 | 第 10 课长任务会比较队列和同步请求，但主线不要求自己搭建队列 |
+## 从哪里开始
 
-| 想补的项 | 去哪学 | 读哪几节 |
-|---|---|---|
-| HTTP 与状态码 | [MDN · HTTP 指南](https://developer.mozilla.org/en-US/docs/Web/HTTP) | 方法、状态码、缓存和连接 |
-| SSE | [MDN · Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) | `EventSource`、事件格式和重连 |
-| SQL、索引、事务 | [PostgreSQL 官方文档](https://www.postgresql.org/docs/current/) | SQL、索引、事务 |
-| 数据库迁移 | [Alembic 教程](https://alembic.sqlalchemy.org/en/latest/tutorial.html) | 创建迁移、升级、回滚 |
-| pgvector | [pgvector](https://github.com/pgvector/pgvector) | 建表、距离查询和索引 |
-| FastAPI 并发模型 | [FastAPI · Concurrency and async](https://fastapi.tiangolo.com/async/) | `def` 与 `async def` 的选择 |
-| Redis | [Redis 开发文档](https://redis.io/docs/latest/develop/) | 数据类型、过期和事务 |
-
-## 测试、观测与运行
-
-工程能力不止是“接口返回 200”。这门课会把成功路径、失败路径、评测集和运行证据放在一起看。
-
-| 项 | 档 | 这门课哪里用到它 |
-|---|---|---|
-| pytest、fixture 和参数化 | 必备 | 第 19 课把确定性断言、golden set 和回归门禁放进测试 |
-| fake、mock 和故障注入 | 用到再学 | 第 00–07 课的离线适配器、第 21 课的超时、供应商故障和预算演练 |
-| 结构化日志 | 用到再学 | 第 20 课用 JSON 日志记录 request、thread、trace 和停止原因 |
-| trace、span 和上下文传播 | 用到再学 | 第 20 课定位一次请求经过了哪些模型、工具和数据边界 |
-| CI 工作流 | 用到再学 | 第 19、21 课把测试、评测、迁移、故障演练和镜像构建串起来 |
-| Docker 与 Compose | 用到再学 | 第 18、21 课起 PostgreSQL、Redis、Phoenix 和应用服务 |
-| 配置、密钥与健康检查 | 用到再学 | 第 00、21、22 课区分配置和密钥，区分 `/healthz` 与 `/readyz` |
-| 进程退出与重启 | 可选 | 第 07、10 课验证 checkpoint、取消和恢复；了解 `SIGTERM` 有助于部署排查 |
-
-| 想补的项 | 去哪学 | 读哪几节 |
-|---|---|---|
-| pytest fixture 与参数化 | [pytest fixtures](https://docs.pytest.org/en/stable/how-to/fixtures.html) | fixture、参数化、作用域 |
-| 测试替身与环境隔离 | [pytest monkeypatch](https://docs.pytest.org/en/stable/how-to/monkeypatch.html) | `setenv`、替换依赖、恢复环境 |
-| CI 工作流 | [GitHub Actions 文档](https://docs.github.com/en/actions) | workflow、job、service container、artifact |
-| Docker 与 Compose | [Docker Compose](https://docs.docker.com/compose/) | 服务、网络、卷和健康检查 |
-| 日志、指标与 trace | [OpenTelemetry Observability primer](https://opentelemetry.io/docs/concepts/observability-primer/) | logs、metrics、spans、trace 和关联关系 |
-
-参考实现里的对应入口：[`tests/project/`](https://github.com/lance2016/ai-app-engineering-ref/tree/main/tests/project) 是分里程碑的测试，[`scripts/chaos.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/scripts/chaos.py) 是故障演练，[`ops/telemetry.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/telemetry.py) 和 [`ops/logging.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/logging.py) 是观测入口，`.github/workflows/ci.yml` 把它们放进同一条 CI。
-
-## 安全边界
-
-| 项 | 档 | 这门课哪里用到它 |
-|---|---|---|
-| 鉴权与最小权限 | 必备 | 第 05、22 课限制工具、资源和管理操作的可见范围 |
-| 租户上下文与数据过滤 | 用到再学 | 第 07、18、22 课；`tenant_id` 要从请求传到 repository、事件、成本和 trace |
-| 密钥和敏感数据处理 | 用到再学 | 第 00、20、22 课；密钥进运行时，prompt、日志和 trace 做脱敏 |
-| 依赖和供应链边界 | 可选 | 第 13、22 课的 Skill / MCP 加载、白名单和内容校验 |
-
-去哪学：先读 [OWASP Top 10 for LLM Applications](https://genai.owasp.org/llm-top-10/) 的风险名称，再回到[第 22 课](../lessons/security-governance/README.md)看确定性代码怎样挡住它们。访问日期为 2026-09-10。
+| 你的情况 | 建议 |
+|---|---|
+| Python 和后端基本熟悉，没做过 AI 应用 | 读第 00 课；遇到表格里的“用到再学”再回来补 |
+| 只缺 Python 基础 | 先看“Python”一节，再补类型、异常、`asyncio` 和 pytest |
+| 只缺服务和数据库基础 | 先看“HTTP”和“数据”两节，再读第 02、05、07 课 |
+| 想直接跑项目 | 按[参考项目路线](../reference/project-playbook.md)从 M0 或 M1 开始；fake model 不需要 API key |
+| 想补模型原理 | 回到[背景知识总览](./README.md)的 F00–F07，不必先读完工程能力 |
 
 ## 这门课不要求你先学什么
 
@@ -135,16 +184,6 @@ part: 背景知识
 - **线性代数和概率论的完整推导。** 主线需要的向量、余弦和采样直觉在 LLM 原理的对应章节里给出。
 - **前端框架。** 第 24 课只讲交互状态、确认和反馈，不要求 React。
 - **Kubernetes。** 第 21 课到容器、CI、灰度和回滚；更大的编排系统不影响主线理解。
-
-## 从哪里开始
-
-| 你的情况 | 建议 |
-|---|---|
-| Python 和后端基本熟悉，没做过 AI 应用 | 先读[第 00 课](../lessons/setup/README.md)，遇到表格中的“用到再学”再补 |
-| 只缺 Python 基础 | 先补类型注解、`dataclass`、异常、`asyncio` 和 pytest，再读第 00 课 |
-| 只缺数据库和服务基础 | 先补 HTTP/JSON、SQL、事务、SSE，再从第 05 或第 07 课切入 |
-| 想直接跑项目 | 按[参考项目路线](../reference/project-playbook.md)执行；fake model 不需要 API key |
-| 想补模型原理 | 回到[背景知识总览](./README.md)的 F00–F07，不必先读完工程能力页 |
 
 ---
 
