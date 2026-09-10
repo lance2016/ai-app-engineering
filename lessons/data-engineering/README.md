@@ -7,7 +7,7 @@ estimated_time: 约 1.5 小时
 
 # 17 数据工程与数据质量
 
-> RAG 的上限不是模型定的，是数据定的。检索不到、检索错、引用了过期版本、把别人不该看的内容放进上下文，这些故障没有一个能靠换模型解决。这一课讲文档从进来到被删掉的整个生命周期，以及怎么证明每一步做对了。
+> RAG 的效果常常先受数据质量限制。检索不到、检索错、引用了过期版本、把别人不该看的内容放进上下文，这些故障不能靠换模型解决。这一课讲文档从进来到被删掉的整个生命周期，以及怎么证明每一步做对了。
 
 <details class="case" markdown="1">
 <summary>例子：客户要求下线一份合同，源库删干净了，两周后它出现在一次回答里</summary>
@@ -79,7 +79,7 @@ flowchart LR
 
 **哈希决定要不要重做。** 重新处理一份文档时，按内容哈希对比：一样的跳过，不一样的替换，源里没有了的删掉。embedding 是这条链里最贵的一步，增量更新省的就是它。
 
-**质量检查在入库前。** 空块、重复块、乱码块进了索引就是噪音，检索时会占掉本该给有效内容的名额。入库前拒掉，比事后清理便宜十倍。
+**质量检查在入库前。** 空块、重复块、乱码块进了索引就是噪音，检索时会占掉本该给有效内容的名额。入库前拒掉，通常比事后清理省事。
 
 **删除是一个必须演练的操作。** 派生物散落在索引、缓存、摘要、记忆里。「删了源文档」不等于「删干净了」。
 
@@ -111,7 +111,7 @@ class Chunk:
 
 ```python
 def parse_sections(markdown: str) -> list[tuple[str, str]]:
-    """按标题切分。PDF、DOCX、扫描件要用真正的解析器，但输出形状一样。"""
+    """按标题切分。PDF、DOCX、扫描件要用专用解析器，但输出形状一样。"""
     sections, title, buf = [], "root", []
     for line in markdown.splitlines():
         if re.match(r"^#{1,6}\s", line):
@@ -155,7 +155,7 @@ def quality_check(chunks) -> tuple[list[Chunk], list[str]]:
     return kept, problems
 ```
 
-`�` 那一条检查特别值得有。它是解码失败时的占位符，出现它就说明某一步的编码猜错了——通常是 PDF 解析或者非 UTF-8 的旧文档。这类块检索时永远不会命中，但会一直占着存储和索引。
+`�` 那一条检查特别值得有。它是解码失败时的占位符，出现它就说明某一步的编码猜错了——通常是 PDF 解析或者非 UTF-8 的旧文档。这类块通常无法命中有效查询，却会一直占着存储和索引。
 
 `problems` 要输出成报告，不是静默丢弃。「这次入库拒了多少、为什么」是数据质量的第一个指标。
 
@@ -237,7 +237,7 @@ if any(stores.residue(source_id).values()):
 
 **权限在检索后过滤。** 先检索 top-10 再按权限过滤，用户可能拿到 3 条甚至 0 条——名额被他看不到的内容占了。更糟的是有些实现忘了过滤。
 
-**删除漏掉派生物。** 最常见的漏法是答案缓存：文档删了，缓存里那条基于它生成的回答还在，用户下次问同样的问题还能拿到已删除内容。**[「被遗忘权」](https://gdpr-info.eu/art-17-gdpr/)要求的是删除，不是「从主表删除」。**
+**删除漏掉派生物。** 最常见的漏法是答案缓存：文档删了，缓存里那条基于它生成的回答还在，用户下次问同样的问题还能拿到已删除内容。**如果业务受 GDPR 约束，第 17 条的删除权涉及个人数据及其处理链路，并有法定例外。** 工程上不能只删除主表，还要按适用法规和保留义务检查缓存、索引与审计记录。[GDPR 第 17 条（EUR-Lex）](https://eur-lex.europa.eu/eli/reg/2016/679/oj)（访问日期 2026-09-10）
 
 ## 质量、速度和删除成本
 
@@ -249,19 +249,19 @@ if any(stores.residue(source_id).values()):
 
 - **入库要有报告**：这批文档产出多少 chunk、拒了多少、原因分布、embedding 花了多少钱。没有报告，数据质量退化时你不会知道。
 - **陈旧检查每天跑**，见第四节。
-- **删除演练进 CI**，见第五节。它是唯一能证明合规能力的东西。
+- **删除演练进 CI**，见第五节。它是验证删除链路的一种直接方式。
 - **源文档要留原始副本**。解析器升级后需要重新解析全量文档，没有原始副本就只能让内容团队重新上传。
 - **ACL 变更也要触发重新索引**。一份文档从「内部」改成「公开」，索引里的 acl 字段要跟着变，否则权限判断用的还是旧值。
 - **怎么测。** 删除演练本身就是一条测试，见第五节。另外两条：拿一份只改了一段的文档跑增量更新，断言只有那一段的 chunk 变了、其余 chunk 的哈希一个都没动；再造一份故意落后于源文档的索引，断言 `stale_chunks()` 把它报出来。两条都不调模型（embedding 用假实现），能进 CI（第 19 课）。
 
-## 框架没有替你管的部分
+## 框架没有替你设计数据生命周期
 
 | 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
 |---|---|---|---|
-| 文档加载与切分 | LangChain 的 loader + text splitter | 托管 file search 自己处理 | 外部数据源 |
-| 版本与删除 | 框架不管，自己做 | 按 file id 删 | 自己做 |
+| 文档加载与切分 | LangChain 的 loader + text splitter | OpenAI 的 file search 托管处理 | 外部数据源 |
+| 版本与删除 | 框架不管，自己做 | 按 file / vector store id 管理 | 自己做 |
 
-**没有框架管数据生命周期。** 这一层是纯工程，也是最容易被跳过、最后代价最大的一层。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)（核对日期 2026-09-05）。
+**跨源数据的一致性、版本替换和删除验收仍需要自己设计。** 托管服务可以提供文件和向量的删除接口，但不会知道你的答案缓存、摘要和记忆怎样关联。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)（核对日期 2026-09-10）。
 
 ## 旧版本索引曾经没有被替换
 
@@ -290,7 +290,7 @@ uv run pytest tests/project/m4/test_ingest.py tests/project/m4/test_knowledge_st
 
 - [Docling](https://github.com/docling-project/docling)（访问日期 2026-09-04）：多格式文档转结构化输出的开源解析器，看 README 的 Features 和 Python usage 两节。
 - [Unstructured](https://github.com/Unstructured-IO/unstructured)（访问日期 2026-09-04）：另一个常用解析库，`partition` 系列函数把文档拆成带类型的元素。
-- [GDPR 第 17 条 · 被遗忘权](https://gdpr-info.eu/art-17-gdpr/)（访问日期 2026-09-04）：删除演练存在的法律原因。看第一段就知道「删除」的范围是什么。
+- [GDPR 第 17 条 · 被遗忘权](https://eur-lex.europa.eu/eli/reg/2016/679/oj)（访问日期 2026-09-10）：删除演练存在的法律背景；同时注意条文中的适用条件和例外。
 - [generative-ai-for-beginners · 15 RAG and Vector Databases](https://github.com/microsoft/generative-ai-for-beginners/blob/main/15-rag-and-vector-databases/README.md)（访问日期 2026-09-04）：「Creating a knowledge base」一节讲了从文本到 embedding 的准备过程。
 
 ---

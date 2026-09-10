@@ -7,14 +7,14 @@ estimated_time: 约 2 小时
 
 # 15 RAG 端到端
 
-> RAG 是七个步骤串成的一条流水线：解析、切块、索引、检索、重排、生成、引用。每一步都有一种自己独有的坏法，而用户看到的永远只是「答错了」。这一课的目标不是把七步做得多好，而是让你能对任何一次答错说出「坏在第几步」，并且有数据证明。
+> RAG 可以拆成七个阶段：解析、切块、索引、检索、重排、生成、引用。每一阶段都可能出错，用户看到的通常只有「答错了」。这一课的目标不是把七步做得多好，而是让你能对一次答错说出「坏在第几步」，并且有数据证明。
 
 <details class="case" markdown="1">
 <summary>例子：问「数字商品能退款吗」，它答「7 天内可退」，政策原文里根本没这句</summary>
 
 一个内部文档问答。用户问：数字商品能退款吗？
 
-它答：「可以，7 天内可退，需要提供订单号。」后面带了引用 `[refund-policy#3]`。
+它答：「可以，7 天内可退，需要提供订单号。」后面带了引用 `[refund-policy@v1#3]`。
 
 政策原文写的是两条：实体商品 7 天内可退；数字商品一经激活不予退款。
 
@@ -23,10 +23,10 @@ estimated_time: 约 2 小时
 | 可能坏在 | 这个假设成立的话 |
 |---|---|
 | 切块 | 两条各有适用范围的规则被切进同一块，而「哪条管哪种商品」写在被切掉的小标题里，模型手上只剩两句并列的结论 |
-| 检索 | 「数字商品」那一块压根没进 top-k，模型只看到实体商品那条 |
+| 检索 | 「数字商品」那一块没有进 top-k，模型只看到实体商品那条 |
 | 生成 | 两块都在上下文里，模型挑了更常见的那条 |
 
-光看这句回答，三个假设分不出来。分得出来只有一个办法：把 `refund-policy#3` 的原文打出来，把这次检索的 top-k 打出来，把最后送进模型的那段上下文打出来。三样一摆，坏在第几步就是确定的。
+光看这句回答，三个假设分不出来。分得出来只有一个办法：把 `refund-policy@v1#3` 的原文打出来，把这次检索的 top-k 打出来，把最后送进模型的那段上下文打出来。三样一摆，坏在第几步就是确定的。
 
 而这三样，工单里那句「答错了」一样都没有。
 
@@ -82,7 +82,7 @@ flowchart LR
 
 ### 引用是生成阶段的校验
 
-模型说「来源 `[refund-policy#0]` 支持这句话」，这和第 05 课模型说「我调用了工具」是同一类陈述：一个建议，需要代码去核实。
+模型说「来源 `[refund-policy@v1#0]` 支持这句话」，这和第 05 课模型说「我调用了工具」是同一类陈述：一个建议，需要代码去核实。
 
 ### Agentic RAG 就是这条流水线加上第 06 课的循环
 
@@ -113,7 +113,7 @@ flowchart LR
 ### 一、切块要看语义边界，不只看长度
 
 ```python
-SENTENCE = re.compile(r"(?<=[.!?])\s+")
+SENTENCE = re.compile(r"(?<=[.!?])\s+|(?<=[。！？])")
 
 def units(text: str, max_chars: int) -> list[str]:
     """按段落切；单个段落超长时，退到句子级。"""
@@ -124,24 +124,24 @@ def units(text: str, max_chars: int) -> list[str]:
         out += SENTENCE.split(para) if len(para) > max_chars else [para]
     return out
 
-def chunk_document(doc, text, max_chars, overlap_units=1) -> list[Chunk]:
+def chunk_document(doc, version, text, max_chars, overlap_units=1) -> list[Chunk]:
     """把整段（或整句）攒到 max_chars，末尾几个单位带进下一块作为重叠。"""
     chunks, current = [], []
     for unit in units(text, max_chars):
         if current and len("\n\n".join(current + [unit])) > max_chars:
-            chunks.append(Chunk(f"{doc}#{len(chunks)}", doc, "\n\n".join(current)))
+            chunks.append(Chunk(f"{doc}@v{version}#{len(chunks)}", doc, "\n\n".join(current)))
             current = current[-overlap_units:] if overlap_units else []
         current.append(unit)
     if current:
-        chunks.append(Chunk(f"{doc}#{len(chunks)}", doc, "\n\n".join(current)))
+        chunks.append(Chunk(f"{doc}@v{version}#{len(chunks)}", doc, "\n\n".join(current)))
     return chunks
 ```
 
-关键在 `units()`：**永远以完整的段落或句子为最小单位**，`max_chars` 只是攒够多少就切。固定字符数硬切会把「1 到 2 个工作日」切成「1 到」和「2 个工作日」——两边都答不了问题。
+关键在 `units()`：以完整的段落或句子为最小单位，`max_chars` 只是攒够多少就切。固定字符数硬切会把「1 到 2 个工作日」切成「1 到」和「2 个工作日」——两边都答不了问题。
 
 `overlap_units=1` 让相邻块共享一个段落。收益是跨段落的答案不会被切口吞掉，代价是索引变大——大多少取决于块大小和重叠策略：块大、只重叠一个短段落，可能只多几个百分点；块小、或者按句重叠好几句，多出三成也不奇怪。别背固定比例，入库前后数一下块数就知道。
 
-`Chunk.id` 用 `"<doc>#<n>"` 的形式，因为它最后要变成给用户看的引用。
+`Chunk.id` 用 `"<doc>@v<version>#<n>"` 的形式，因为它最后要变成给用户看的引用；版本写进 id，旧版本和新版本不会混淆。
 
 ### 二、BM25：二十几行，值得亲手写一遍
 
@@ -168,7 +168,7 @@ class BM25:
         return s
 ```
 
-两个参数的含义值得记住：`k1` 控制词频饱和（一个词出现 10 次不该比出现 5 次强一倍），`b` 控制文档长度惩罚（长文档天然含更多词，要打折）。默认 1.5 / 0.75 在多数语料上够用。
+两个参数的含义值得记住：`k1` 控制词频饱和（一个词出现 10 次不该比出现 5 次强一倍），`b` 控制文档长度惩罚（长文档天然含更多词，要打折）。1.5 / 0.75 可以作为常见的起点，最终仍要用自己的语料调。
 
 生产里用 PostgreSQL 的 `tsvector` 或 Elasticsearch，不用自己写。但知道它在算什么，才能解释「为什么这篇明明包含关键词却排在后面」。
 
@@ -184,7 +184,7 @@ def rrf(*rankings: list[int], k: int = 60) -> list[int]:
     return sorted(scores, key=scores.get, reverse=True)
 ```
 
-BM25 的分数是几点几，没有上界；余弦相似度的取值范围是 -1 到 1（文本 embedding 算出来的多数落在 0 以上那半边，但这只是经验，不是保证）。量纲和范围都对不上，两者没法直接加。RRF 只用名次，所以完全不需要把两种分数拉到同一尺度——这是它成为默认融合方法的原因。
+BM25 的分数是几点几，没有上界；余弦相似度的取值范围是 -1 到 1（文本 embedding 算出来的多数落在 0 以上那半边，但这只是经验，不是保证）。量纲和范围都对不上，两者没法直接加。RRF 只用名次，所以不需要把两种分数拉到同一尺度——这是它成为常用融合方法的原因。
 
 `k=60` 是论文里的经验值。它的作用是压平头部差距：第 1 名和第 2 名的分差不会大到让另一个检索器完全说不上话。
 
@@ -209,12 +209,12 @@ def rerank(query, candidates, top_n=3) -> list[Chunk]:
 ### 五、引用校验：id 存在还不够
 
 ```python
-CITATION = re.compile(r"\[([a-z-]+#\d+)\]")
+CITATION = re.compile(r"\[([A-Za-z0-9_.\-/]+@v\d+#\d+)\]")
 
 def verify(answer: str, ctx: list[Chunk]) -> list[str]:
     by_id = {c.id: c for c in ctx}
     problems = []
-    for sentence in re.split(r"(?<=[.!?])\s+", answer):
+    for sentence in re.split(r"(?<=[.!?])\s+|(?<=[。！？])", answer):
         for cid in CITATION.findall(sentence):
             if cid not in by_id:
                 problems.append(f"[{cid}] 根本没被检索到")     # 编造的引用
@@ -227,7 +227,7 @@ def verify(answer: str, ctx: list[Chunk]) -> list[str]:
     return problems
 ```
 
-**只检查 id 存在是不够的。** 模型可以把任何一句话挂在任何一个真实 id 后面，看起来有据可查，实际上是拼贴。第二道检查（词汇重叠）虽然粗糙，但能挡住绝大多数这种情况。
+**只检查 id 存在是不够的。** 模型可以把任何一句话挂在任何一个真实 id 后面，看起来有据可查，实际上是拼贴。第二道检查（词汇重叠）虽然粗糙，但能拦住一部分明显不相干的引用；它不是语义蕴含证明，仍需要 golden set 和人工抽样。
 
 系统提示词那边要配合：
 
@@ -252,21 +252,22 @@ def recall_at_k(retriever, golden, chunks, ks=(1, 3, 5)) -> dict[int, float]:
     return {k: hits[k] / len(golden) for k in ks}
 ```
 
-用一个 10 题的 golden set，三种检索器在 450 字符块大小下的实测：
+参考项目 M4 用 31 条 golden 问答、`max_chars=600` 跑出的基线如下。它是这套示例语料和 hashing embedding 的结果，换一批语料后要重新计算。
 
-| 检索器 | R@1 | R@3 | R@5 |
-|---|---|---|---|
-| bm25 | 0.80 | 1.00 | 1.00 |
-| 向量（玩具） | 0.50 | 0.90 | 0.90 |
-| hybrid | 0.70 | 0.90 | 1.00 |
+!!! note "参考实现基线"
+    数字取自 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md)（核对日期 2026-09-10）。内存后端和 PostgreSQL 后端的差异来自 BM25 与 `ts_rank` 的实现、向量排序的浮点精度。
 
-把块大小降到 120，向量的 R@3 掉到 0.70，hybrid 掉到 0.80。
+    | 检索器 | 内存后端 R@1 / R@3 / R@5 | PostgreSQL 后端 R@1 / R@3 / R@5 |
+    |---|---|---|
+    | text（BM25 / tsvector） | 0.74 / 0.87 / 0.90 | 0.71 / 0.84 / 0.90 |
+    | vector（hashing） | 0.42 / 0.74 / 0.81 | 0.45 / 0.74 / 0.84 |
+    | hybrid（RRF） | 0.65 / 0.84 / 0.90 | 0.65 / 0.84 / 0.87 |
 
-**这张表是这一课最重要的产出。没有它，任何一次调参都是猜。**
+**这张表是调参时的参照物。换语料、切块策略或 embedding 模型后要重新计算。**
 
 ## 每一步会怎样坏
 
-**用弱向量得出「hybrid 更好」的结论。** 上表里 hybrid 的 R@1 比纯 BM25 还低——因为玩具向量把 how、is 这些词也算进相似度，噪音拖累了融合。这不是 RRF 的问题，是融合一个弱检索器的必然结果。换成真实 embedding 模型后结论通常反转，但**你必须重新测**，不能沿用别人的结论。
+**用弱向量得出「hybrid 更好」的结论。** 上表里 hybrid 的 R@1 比纯 BM25 还低——因为玩具向量把 how、is 这些词也算进相似度，噪音拖累了融合。这不是 RRF 的问题，而是弱检索器参与融合后的结果。换成真实 embedding 模型后排序可能变化，但**你必须重新测**，不能沿用别人的结论。
 
 **切块只看大小不看边界。** 见第一节。
 
@@ -281,7 +282,7 @@ def recall_at_k(retriever, golden, chunks, ks=(1, 3, 5)) -> dict[int, float]:
 - **块大小。** 小块检索精确、上下文少；大块上下文全、分数平。经验起点是 300～800 字符加一段重叠，然后用 Recall@k 在自己的语料上调出来。
 - **图表和表格：转成文本，还是保留原图。** 转文本便宜、可检索、能给到块级引用，但复杂表格和图示会丢信息；保留原图交给视觉模型信息最全，代价是每次都要重看一遍图（贵且慢），引用只能到页。常见做法是两者都留：文本进索引负责召回，命中之后需要时再把原图一起给模型。
 - **BM25 还是向量还是都要。** 只有 BM25，同义改写会漏；只有向量，型号和数字会混。都要就多一套索引和一次融合。语料里精确标识符多的（法规、技术手册）BM25 权重要高。
-- **重排的代价。** cross-encoder 把候选数从几十压到几个，质量提升明显，但每个候选都要过一次模型。候选取多少是延迟和召回的直接权衡，通常 20～50。
+- **重排的代价。** cross-encoder 把候选数从几十压到几个，可能提升排序质量，但每个候选都要过一次模型。候选取多少是延迟和召回的直接权衡，通常从 20～50 起测。
 - **pgvector 还是专用向量库。** pgvector 让一个库同时放业务数据和向量，少一个组件，权限过滤可以用 SQL 的 `WHERE`。到千万级向量、或者需要复杂过滤加近邻组合时，再评估专用库。
 
 ## 把检索链变成可验收的流水线
@@ -299,7 +300,7 @@ def recall_at_k(retriever, golden, chunks, ks=(1, 3, 5)) -> dict[int, float]:
 | 混合检索 | `EnsembleRetriever` | 自己写 | 自己写 |
 | 引用校验 | 自己写 | 内置 file search 带引用 | 自己写 |
 
-托管的 file search 省事，但你看不到切块策略和检索参数，也算不了自己的 Recall@k。数据是核心资产时，这一层建议自己掌控。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
+托管的 file search 省事，但切块过程和部分检索细节由供应商控制；即使能把搜索结果带回，也不等于拿到了自己的 chunk 和完整 Recall@k 测量链。数据是核心资产时，这一层建议自己掌控。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-10）。
 
 ## 跑一条带引用的问答
 
@@ -316,7 +317,7 @@ AIAPP_DEMO_SCENARIO=rag-citation \
 
 ## 参考实现里的引用校验
 
-切分与增量入库在 [`knowledge/ingest.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/ingest.py)，混合检索在 [`hybrid.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/hybrid.py)，重排与拼装在 [`retriever.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/retriever.py)，引用校验在 [`citations.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/citations.py)——模型写的引用是待核实的声明，指不到本次检索到的块就打回。用例在 [`m4/test_citations.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m4/test_citations.py)，全貌见 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md)。
+切分与增量入库在 [`knowledge/ingest.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/ingest.py)，混合检索和 RRF 在 [`hybrid.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/hybrid.py)，两路检索的装配在 [`retriever.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/retriever.py)，引用校验在 [`citations.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/citations.py)。参考项目当前没有 cross-encoder 重排；课程里的重排是接在 RRF 之后的扩展位置。模型写的引用是待核实的声明，指不到本次检索到的块就打回。用例在 [`m4/test_citations.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m4/test_citations.py)，全貌见 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md)。
 
 ## 从引用校验继续读 RAG
 

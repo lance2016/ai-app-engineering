@@ -89,7 +89,8 @@ flowchart LR
 class MemoryCandidate(BaseModel):
     content: str
     kind: str = Field(pattern="^(preference|fact|episode)$")
-    source_event_ids: list[int] = Field(min_length=1)     # ← 整条规则就在这一行
+    subject: str = Field(min_length=1)                  # 冲突整合的主题
+    source_event_seqs: list[int] = Field(min_length=1)    # ← 整条规则就在这一行
 
 class ExtractionResult(BaseModel):
     memories: list[MemoryCandidate]
@@ -103,12 +104,18 @@ def numbered_transcript(t: Thread) -> str:
                      for i, e in enumerate(t.events))
 
 prompt = ("Extract durable facts about the user worth remembering across conversations. "
-          "Return JSON {memories:[{content, kind, source_event_ids}]}. "
-          "source_event_ids are the bracketed numbers of the lines the fact comes from.\n\n"
+          "Return JSON {memories:[{content, kind, subject, source_event_seqs}]}. "
+          "source_event_seqs are the bracketed numbers of the lines the fact comes from.\n\n"
           + numbered_transcript(thread))
+
+def validate_sources(result: ExtractionResult, thread: Thread) -> None:
+    user_seqs = {i for i, e in enumerate(thread.events) if e.type == "user_message"}
+    for memory in result.memories:
+        if not set(memory.source_event_seqs) <= user_seqs:
+            raise ValueError("memory source must point to a user event in this thread")
 ```
 
-`min_length=1` 让缺来源的整批被拒。为什么值得这么严：
+`min_length=1` 让缺来源的整批被拒；`validate_sources()` 再挡住把助手消息或别的线程当成用户证据。为什么值得这么严：
 
 - 用户问「你为什么觉得我不吃辣」，你答得上来。
 - 用户说「我没说过这话」，你能核对。
@@ -117,8 +124,8 @@ prompt = ("Extract durable facts about the user worth remembering across convers
 存的时候连原文一起存下来，事后不用回线程里翻：
 
 ```python
-record = {"user_id": "u42", "thread_id": thread.thread_id, **m.model_dump(),
-          "source_text": [thread.events[i].data["content"] for i in m.source_event_ids]}
+record = {"user_id": "u42", "source_thread_id": thread.thread_id, **m.model_dump(),
+          "source_text": [thread.events[i].data["content"] for i in m.source_event_seqs]}
 ```
 
 ### 二、整合：三条规则，全是代码
@@ -182,8 +189,8 @@ def forget(memories, user_id: str, subject: str, requested_by: str) -> list[Memo
         "user_id": user_id,
         "subject": subject,
         "requested_by": requested_by,
-        "removed": [{"id": m.id, "source_thread": m.source_thread,
-                     "source_event_ids": list(m.source_event_ids)} for m in removed],
+        "removed": [{"id": m.id, "source_thread_id": m.source_thread_id,
+                     "source_event_seqs": list(m.source_event_seqs)} for m in removed],
     })
     return kept
 ```
@@ -223,7 +230,7 @@ def forget(memories, user_id: str, subject: str, requested_by: str) -> list[Memo
 | 跨会话存储 | `BaseStore`（有命名空间，天然按用户隔离） | `Session` 主要存会话历史 | 项目级 memory 文件 |
 | 提取与整合 | 自己写节点 | 自己写 | 自己写 |
 
-三个框架都给存储，都不给整合逻辑。这正是本课的重点：整合是业务判断，不该外包。官方文档：[LangGraph Memory](https://langchain-ai.github.io/langgraph/concepts/memory/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
+这些框架提供的存储接缝不同，但都不替你写整合逻辑。这正是本课的重点：整合是业务判断，不该外包。官方文档：[LangGraph Memory](https://docs.langchain.com/oss/python/concepts/memory) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-10）。
 
 ## 记忆更新曾经覆盖了用户原话
 
