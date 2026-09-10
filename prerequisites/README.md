@@ -1,15 +1,17 @@
 # 背景知识：要会什么，模型为什么这样工作
 
-> 这里的东西**都不是必修**，分两类：**工程能力**回答「读这门课的代码需要会什么」，**算法基础**回答「模型和检索为什么这样工作」。完全没写过程序，先从工程能力页的“零基础先认这些词”开始；其他人缺哪块补哪块，不用通读。
+> 这里的东西**都不是必修**，分两类：**工程能力**回答「读这门课的代码需要会什么」，**算法基础**回答「模型和检索为什么这样工作」。完全没写过程序，先从工程能力目录的“零基础与开工”开始；其他人缺哪块补哪块，不用通读。
 >
 > 这些都清楚的人直接去 [第 00 课](../lessons/setup/README.md)；主线课点到哪一篇，再回来看哪一篇。
 
 ## 一、工程能力
 
-| 页 | 管什么 |
-|---|---|
-| [工程能力](./engineering-foundations.md) | 用最小概念解释 Python、工具链、Web、数据、测试、观测、运行和安全；每项再标出课程落点、参考实现和深入路线 |
-| [工程进阶](./engineering-advanced.md) | 面向有后端经验的读者，集中讲分布式执行、数据演进、SLO、容量、多租户、可靠性和架构决策；不重复基础概念 |
+工程能力分成两条入口。基础目录按“读懂一条请求 → 能启动和排查服务”的顺序展开；进阶目录按“长期运行的服务会怎样坏”展开。两个目录都可以只读其中一页，不要求从头通读。
+
+| 目录 | 适合谁 | 页面 |
+|---|---|---|
+| [工程能力](./engineering-foundations/README.md) | 第一次系统做后端或 AI 应用的人 | [零基础与开工](./engineering-foundations/getting-started.md) · [Python 运行时](./engineering-foundations/python-runtime.md) · [Web 与 HTTP](./engineering-foundations/web-http.md) · [数据与存储](./engineering-foundations/data-storage.md) · [可靠性与测试](./engineering-foundations/reliability-testing.md) · [观测、容器与部署](./engineering-foundations/observability-deployment.md) · [工具链与安全](./engineering-foundations/tooling-security.md) |
+| [工程能力进阶](./engineering-advanced/README.md) | 已经做过几年后端、需要处理线上取舍的人 | [分布式执行](./engineering-advanced/distributed-execution.md) · [可靠性与容量](./engineering-advanced/reliability-capacity.md) · [数据演进与异步工作流](./engineering-advanced/data-evolution-workflows.md) · [多租户与安全架构](./engineering-advanced/multi-tenant-security.md) · [评测与观测](./engineering-advanced/evaluation-observability.md) · [架构决策](./engineering-advanced/architecture-decisions.md) |
 
 **这一页讲到够用为止，不替代完整教程。** 先把概念和边界说清，再给官方资料和学习顺序；需要动手时，沿着入口去参考实现，不在这里复制一套后端课程。
 
@@ -20,13 +22,13 @@
 | 页 | 管什么 |
 |---|---|
 | [算法与数学](./algorithm-foundations.md) | 复杂度、哈希表、向量与余弦、top-k、ANN。够做判断就行，不考推导 |
-| [LLM 原理 F00–F07](#llm-原理f00f07) | 模型为什么这样、为什么慢、为什么贵 |
+| [LLM 原理 F00–F07](./llm-foundations/README.md) | 模型为什么这样、为什么慢、为什么贵 |
 
 ### LLM 原理（F00–F07）
 
 主线课程不解释 token、上下文窗口、采样、attention 是什么。这八篇把这些讲清楚，**只到应用工程师能做决策的深度**——不推公式，不讲怎么训练。
 
-**这一组大部分还是草稿。** F02 和 F07 已经补齐，其余六篇的学习目标、核心要点和可跑的小实验都在，但比主线课薄——定位是「够你做决策」，不是完整的原理教程。想深入，看每篇末尾的「延伸阅读」。主线 27 课不受影响，是完整的。
+这八篇按同一个目录收在“LLM 原理”下面。它们是主线的可选背景，不要求先读完；主线课点到哪个概念，再回来看对应一篇。每篇末尾都有继续学习的资料。
 
 ### 自检
 
@@ -70,8 +72,8 @@
 | 必备项基本都有，没做过 AI 应用 | [第 00 课](../lessons/setup/README.md)顺着读 |
 | 做过 AI 应用，想查漏补缺 | 看[课程总览](../lessons/README.md)，每个 Part 开头有几道题，答不上就读那个 Part |
 | 模型原理不熟（token、attention、KV cache） | 上面那八篇 |
-| 必备项缺得比较多 | 先读工程能力页的“零基础先认这些词”和“零基础的第一段学习路线”，再补 Python 的类型注解、dataclass、async 三项和 SQL |
-| 有几年后端经验，想看高阶取舍 | 直接读[工程进阶](./engineering-advanced.md)，按它指向的 M2–M6 和第 07、17–22、26 课回到主线 |
+| 必备项缺得比较多 | 先读工程能力目录的“零基础与开工”，再补 Python 运行时、Web 与 HTTP、数据与存储三页 |
+| 有几年后端经验，想看高阶取舍 | 直接读[工程能力进阶](./engineering-advanced/README.md)，按它指向的 M2–M6 和第 07、17–22、26 课回到主线 |
 
 ---
 

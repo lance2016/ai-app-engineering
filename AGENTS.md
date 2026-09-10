@@ -11,7 +11,7 @@
 
 | 层 | 目录 | 形式 |
 |---|---|---|
-| 背景知识 | `prerequisites/` | 两类：工程能力（`engineering-foundations.md`）和算法基础（`algorithm-foundations.md` 加 `llm-foundations/` 的 F00–F07）。前两者是学习索引，只指路不教；八篇讲 LLM 原理 |
+| 背景知识 | `prerequisites/` | 两类：工程能力（`engineering-foundations/`，含基础与进阶目录）和算法基础（`algorithm-foundations.md` 加 `llm-foundations/` 的 F00–F07）。前两者是学习索引，工程能力页面给最低概念和学习路径；八篇讲 LLM 原理 |
 | 主线 | `lessons/` | 27 课，每课一个 `README.md`。目录名不带编号，课号由 `mkdocs.yml` 的 nav 位置决定 |
 | 原则 | `principles/` | 12 条，一条一个文件 |
 | 查阅 | `reference/` | 术语表、技术选型、框架一览、外部资料、诊断题 |

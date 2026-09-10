@@ -36,7 +36,7 @@ Claude Messages 只接受 `user` 和 `assistant` 两种消息角色，工具结�
 
 所以这一课分两步：先让一次调用跑起来，再把请求和响应的形状看清楚。后面的消息、工具结果和状态章节都会用到这几个形状。
 
-如果类型注解、`async`、HTTP/JSON 或 pytest 还不熟，先看[工程能力索引](../../prerequisites/engineering-foundations.md)里的“最小开工组合”。它只列学习入口，不需要读完整页再开始。
+如果类型注解、`async`、HTTP/JSON 或 pytest 还不熟，先看[工程能力索引](../../prerequisites/engineering-foundations/README.md)里的“最小开工组合”。它只列学习入口，不需要读完整页再开始。
 
 ## 跑通第一调用后要看懂什么
 

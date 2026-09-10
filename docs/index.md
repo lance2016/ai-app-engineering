@@ -16,7 +16,7 @@ hide:
 
 <p class="hero__subline" markdown="span">配套一个可本地启动的[参考项目](reference/project-playbook.md)：先看运行结果，再回到课程读机制。</p>
 
-主线写给已经会 Python 和后端、想系统做 AI 应用的开发者。完全没做过后端，先看[背景知识里的工程能力](prerequisites/engineering-foundations.md)；每课的重点是这个机制在生产里会怎么坏，以及拿什么证据说它修好了。
+主线写给已经会 Python 和后端、想系统做 AI 应用的开发者。完全没做过后端，先看[背景知识里的工程能力](prerequisites/engineering-foundations/README.md)；每课的重点是这个机制在生产里会怎么坏，以及拿什么证据说它修好了。
 
 <ul class="hero__meta">
 <li>27 课</li>
@@ -120,12 +120,12 @@ hide:
 <article class="path" data-path="c" markdown="1">
 <p class="path__label">路线 C · 生产进阶</p>
 <p class="path__who" markdown="span">手上有正在跑的 AI 应用，关心的是评测、trace、可靠性和架构。从生产那一圈骨架切进去。</p>
-<p class="path__pick" markdown="span">推荐章节：[工程进阶](prerequisites/engineering-advanced.md) → [18 系统架构](lessons/system-architecture/README.md) → [20 可观测性](lessons/observability/README.md) · [19 评测](lessons/evaluation/README.md) → [21 可靠性与成本](lessons/reliability-cost-llmops/README.md) · [22 安全与治理](lessons/security-governance/README.md)</p>
-<p class="path__go" markdown="span">[先看工程进阶](prerequisites/engineering-advanced.md){ .md-button .md-button--primary }</p>
+<p class="path__pick" markdown="span">推荐章节：[工程能力进阶](prerequisites/engineering-advanced/README.md) → [18 系统架构](lessons/system-architecture/README.md) → [20 可观测性](lessons/observability/README.md) · [19 评测](lessons/evaluation/README.md) → [21 可靠性与成本](lessons/reliability-cost-llmops/README.md) · [22 安全与治理](lessons/security-governance/README.md)</p>
+<p class="path__go" markdown="span">[先看工程能力进阶](prerequisites/engineering-advanced/README.md){ .md-button .md-button--primary }</p>
 <details class="path__more" markdown="1">
 <summary>这条路线怎么读</summary>
 <ol class="tl" markdown="1">
-<li markdown="span">**先看[工程进阶](prerequisites/engineering-advanced.md)**，用分布式执行、SLO、数据演进和架构决策四个问题定位自己的薄弱处，再从 [18 系统架构](lessons/system-architecture/README.md)开始。</li>
+<li markdown="span">**先看[工程能力进阶](prerequisites/engineering-advanced/README.md)**，用分布式执行、SLO、数据演进和架构决策四个问题定位自己的薄弱处，再从 [18 系统架构](lessons/system-architecture/README.md)开始。</li>
 <li markdown="span">**先建证据链，再谈优化。** [20 可观测性](lessons/observability/README.md)给 trace，[19 评测](lessons/evaluation/README.md)给「凭什么说变好了」。顺序别反：没有 trace 的评测查不出原因。</li>
 <li markdown="span">**再补兜底。** [21 可靠性与成本](lessons/reliability-cost-llmops/README.md)讲限流、熔断、fallback 各挡哪一类失败；[22 安全与治理](lessons/security-governance/README.md)讲边界为什么必须由代码执行。</li>
 <li markdown="span">**回头补 [08 Context Engineering](lessons/context-engineering-for-agents/README.md)。** 线上「模型忘事」和成本尖峰，多数是这一层的问题。</li>

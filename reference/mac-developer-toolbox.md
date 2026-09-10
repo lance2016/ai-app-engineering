@@ -184,8 +184,8 @@ gh auth status
 
 **不要把插件数量当效率。** 一个 formatter、一个语言服务器、一套 Git 操作入口就够了。遇到补全慢、保存时文件被改两次、诊断重复出现，先停掉重复扩展，再加新的。
 
-**不要把“能启动”当“可排查”。** 服务启动后至少跑一次健康检查、一次测试和一次日志查看；参考项目的[工程基础页](../prerequisites/engineering-foundations.md)解释了进程、端口、HTTP、容器和日志之间的关系。
+**不要把“能启动”当“可排查”。** 服务启动后至少跑一次健康检查、一次测试和一次日志查看；参考项目的[工程基础页](../prerequisites/engineering-foundations/README.md)解释了进程、端口、HTTP、容器和日志之间的关系。
 
 ---
 
-[工程能力基础](../prerequisites/engineering-foundations.md) · [工程进阶](../prerequisites/engineering-advanced.md) · [参考项目路线](./project-playbook.md)
+[工程能力基础](../prerequisites/engineering-foundations/README.md) · [工程能力进阶](../prerequisites/engineering-advanced/README.md) · [参考项目路线](./project-playbook.md)

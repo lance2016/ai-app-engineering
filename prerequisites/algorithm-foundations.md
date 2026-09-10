@@ -7,7 +7,7 @@ part: 背景知识
 
 > **这门课不考算法。** 但下面几项如果没有直觉，某些判断做不出来——比如「要不要给向量建索引」，答案取决于你对复杂度和压测结果的理解。
 >
-> 和[工程能力](./engineering-foundations.md)一样，这一页是索引不是教程：标清每项在哪一课用到、缺了去哪学。模型侧的原理是另一件事，在 [LLM 原理那八篇](./README.md)。
+> 和[工程能力](./engineering-foundations/README.md)一样，这一页是索引不是教程：标清每项在哪一课用到、缺了去哪学。模型侧的原理是另一件事，在 [LLM 原理那八篇](./README.md)。
 
 ## 该有的直觉
 
@@ -39,4 +39,4 @@ part: 背景知识
 
 ---
 
-[背景知识总览](./README.md) · [工程能力](./engineering-foundations.md)
+[背景知识总览](./README.md) · [工程能力](./engineering-foundations/README.md)
