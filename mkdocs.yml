@@ -169,7 +169,7 @@ nav:
   - 背景知识:
       - 概述: prerequisites/README.md
       - 工程能力:
-          - 编程与后端: prerequisites/engineering-foundations.md
+          - 工程能力: prerequisites/engineering-foundations.md
       - 算法基础:
           - 算法与数学: prerequisites/algorithm-foundations.md
           - F00 LLM 是什么: prerequisites/llm-foundations/00-what-an-llm-is/README.md
