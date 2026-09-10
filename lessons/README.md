@@ -155,7 +155,7 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    M0["M0 并发与 fake 模型"] --> M1["M1 API 骨架"]
+    M0["M0 并发实验"] --> M1["M1 API 骨架与 fake 模型"]
     M1 --> M2["M2 数据与状态"]
     M2 --> M3["M3 工具与运行时"]
     M3 --> M4["M4 检索与记忆"]
@@ -165,7 +165,7 @@ flowchart TB
 
 | 学完 | 服务这时候能做什么 | 里程碑 | 离线验收 |
 |---|---|---|---|
-| Part 0 | 五个并发对照实验，一个离线 fake 模型 | [M0](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m0-concurrency/README.md) | `python project/m0-concurrency/code/01_sequential_vs_gather.py` |
+| Part 0 | 五个并发对照实验，先认识超时、取消和阻塞 | [M0](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m0-concurrency/README.md) | `python project/m0-concurrency/code/01_sequential_vs_gather.py` |
 | Part 1 | 能被 HTTP 调用、流式返回、错误有结构、prompt 有版本 | [M1](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md) | `uv run pytest tests/project/m1 -q` |
 | Part 2 | 能调工具、副作用要人批准、能暂停能续跑、重启不丢 | [M2](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m2-state-and-storage/README.md) · [M3](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md) | `uv run pytest tests/project/m2 tests/project/m3 -q` |
 | Part 3 | 会检索、引用能对上原文、记得住用户偏好 | [M4](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md) | `uv run pytest tests/project/m4 -q` |

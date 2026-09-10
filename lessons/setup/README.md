@@ -7,13 +7,34 @@ estimated_time: 约 30 分钟
 
 # 00 起步：怎么读这门课，怎么接第一个模型
 
-> 一次模型调用就是一次 HTTP POST。这一课先用八行代码跑通一次真实调用，再回头看清请求和响应里有什么，最后把三套主流接口摆在一起对照——它们字段名互不相同，做的是同一件事。
+> 先把一条请求跑通，再拆开它的输入、输出和工具回传。你会看到 Chat Completions、Responses、Claude Messages 的形状差异，也会知道为什么要把供应商 SDK 藏在适配器后面。
+
+<details class="case" markdown="1">
+<summary>例子：把 Chat Completions 的 role=tool 消息发给 Claude，第二次请求返回 400</summary>
+
+第一次请求在 OpenAI 兼容接口上返回一个工具调用。应用照原样拼下一轮请求：
+
+```json
+{
+  "messages": [
+    {"role": "assistant", "tool_calls": [{"id": "call_1", "type": "function"}]},
+    {"role": "tool", "tool_call_id": "call_1", "content": "{\"temp_c\":31}"}
+  ]
+}
+```
+
+Claude Messages 只接受 `user` 和 `assistant` 两种消息角色，工具结果要放在 `user` 消息的 `tool_result` 内容块里。接口因此拒绝这次请求。修正后的形状见本课「同一件事在 Claude 上的写法」。
+
+!!! note "构造的例子"
+    请求和 400 是为说明角色映射构造的；真实接口的错误文本会随供应商和版本变化。Claude 的工具往返规则见[官方 Tool use 文档](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview)（访问日期 2026-09-10）。
+
+</details>
 
 ## 先把一次调用跑通，再谈抽象
 
 打开任何一家模型厂商的文档，第一页都是「几行代码调通」。照着抄能跑，但换一家就得重抄一遍，也说不清哪些差异是本质的、哪些只是命名——各家的字段名不一样，OpenAI 自己还有新旧两套。
 
-所以这一课分两步：先让一次调用真的跑起来，再把请求和响应的形状看清楚。后面所有课都站在这个底座上：消息是什么、工具结果算谁说的话、状态存在谁那里。
+所以这一课分两步：先让一次调用跑起来，再把请求和响应的形状看清楚。后面的消息、工具结果和状态章节都会用到这几个形状。
 
 ## 跑通第一调用后要看懂什么
 
@@ -42,22 +63,22 @@ flowchart LR
     class M model
 ```
 
-这条链上只有应用是你的。模型是一个外部部件，它只做一件事：收一段 JSON，回一段 JSON。
+这条链上只有应用是你的。从应用视角，模型端点接收结构化输入，返回文本或结构化事件；鉴权、状态、工具执行和业务校验仍由接口或应用层负责。
 
-它做不了的事，恰恰定义了这门课后面在讲什么：
+应用要明确负责的事，定义了这门课后面在讲什么：
 
-| 模型不做 | 谁来做 | 哪几课 |
+| 默认不会替你做 | 通常由谁负责 | 哪几课 |
 |---|---|---|
-| 记得上一轮说过什么 | 应用，每次把历史重新发过去 | 07 · 08 · 15 |
-| 执行任何动作 | 应用，模型只能「请求」调一个工具 | 05 |
-| 保证输出格式对 | 应用，收到就校验 | 02 |
-| 知道你的业务数据 | 应用，检索出来放进请求里 | 04 · 14 |
+| 自动保留完整对话状态 | 应用，或使用接口提供的会话状态 | 07 · 08 · 15 |
+| 执行客户端工具 | 应用；模型只返回工具调用请求 | 05 |
+| 证明输出符合业务规则 | 应用，按 schema 和业务规则校验 | 02 |
+| 读取你的业务数据 | 应用，检索后放进请求里 | 04 · 14 |
 
-表里那个「工具」先按字面理解：**你写好的一个函数，把它的名字、用途和参数格式告诉模型，模型就能在回答里说「我要调它，参数是这些」**。去执行的始终是你的代码。第 05 课整课讲这件事，本课第三节先看一眼它长什么样。
+表里那个「工具」先按字面理解：**你写好的一个函数，把它的名字、用途和参数格式告诉模型，模型就能在回答里说「我要调它，参数是这些」**。这里说的是客户端工具；网页搜索等服务端工具由供应商执行，协议和权限边界要单独看文档。第 05 课整课讲客户端工具，本课第三节先看一眼它长什么样。
 
-还有一条不在表里，但比表里任何一行都重要：**同样的输入，模型两次的回答可以不一样。** 它是一个概率性的外部部件，不是一个函数。你熟悉的那套「写好断言、跑通就对了」在这里不成立，所以这门课后面才有整整一课讲评测（第 19 课）。
+同样的输入，模型两次的回答可以不一样。它是一个概率性的外部部件，不是一个函数。单靠「写好断言、跑通就对了」不够，所以第 19 课会讲评测。
 
-**这一课只需要建立到这里。** 工具、循环、状态、上下文都会在后面一层层加进来，现在先把最左边那一格——应用怎么跟模型说上话——跑通。
+工具、循环、状态、上下文会在后面逐层加进来；现在先把应用和模型之间的调用跑通。
 
 ### 课文里的代码是哪一种
 
@@ -73,10 +94,10 @@ flowchart LR
 
 ## 从 HTTP 请求到适配器
 
-这一课的代码是全课唯一的例外：**第一段能直接复制去跑**，后面几段接着第一段的 `client` 写，单独拿走会缺东西。国内直接可访问的是 DeepSeek，在 <https://platform.deepseek.com> 申请 key。
+这一课的代码是全课唯一的例外：**第一段能直接复制去跑**，后面几段接着第一段的 `client` 写，单独拿走会缺东西。为让示例少受供应商 SDK 差异影响，这里用 DeepSeek 的 OpenAI 兼容端点；可以在 <https://platform.deepseek.com> 申请 key（访问日期 2026-09-10）。
 
 ```bash
-pip install openai
+python -m pip install openai
 export DEEPSEEK_API_KEY=sk-...
 ```
 
@@ -104,7 +125,7 @@ print(resp.choices[0].message.content)
 
 ### 二、这次调用里到底发了什么
 
-刚才那八行里，`client.chat.completions.create(...)` 底下就是一次 HTTP POST。不管用哪家 SDK，底下都是同一件事：把一段 JSON 发到一个 URL，收回一段 JSON。SDK 只负责拼请求体、带上 key、把响应转成对象。
+刚才那八行里，`client.chat.completions.create(...)` 通常会发出一次 HTTP POST。不管用哪家 SDK，底层都要把结构化请求发到一个 URL；非流式调用收回一个响应对象，流式调用则会收到一串事件。SDK 负责拼请求体、带上 key、把响应转成对象，重试和超时还可能让一次业务调用对应多次网络请求。
 
 请求体的主干是四类东西：对话内容（历史消息）、可用的工具（一组 JSON Schema）、抽样参数（temperature、输出上限）、模型名。响应的主干是两类：模型说的话，或者模型想调的工具。
 
@@ -114,7 +135,7 @@ print(resp.choices[0].message.content)
 
 ### 三、预告：模型想调一个工具的时候
 
-这一段不用背，看形状就行——它是第 05 课的内容，放在这里只是让你知道「模型请求调用工具」长什么样：
+这一段不用背，看形状就行——它是第 05 课的内容，放在这里只是让你知道「模型请求调用工具」长什么样。下面是示意代码，省略了导入、完整消息序列化和错误处理，不能直接运行。
 
 ```python
 WEATHER = {
@@ -142,7 +163,7 @@ if reply.tool_calls:                      # ← 模型没有执行任何东西�
         model="deepseek-v4-flash", messages=messages).choices[0].message.content)
 ```
 
-要留意的只有一件事：**`tool_calls` 出现的时候，外部世界什么都没发生。** 模型返回的是一段「我想调 get_weather，参数是这个」的 JSON，查天气、校验参数、决定要不要真的执行，全是你的代码的事。这条判断是第 05 课的全部前提。
+要留意的只有一件事：**在客户端工具这条路径上，`tool_calls` 出现时，外部世界还没有变化。** 模型返回的是一段「我想调 get_weather，参数是这个」的 JSON，查天气、校验参数、决定要不要执行，全是你的代码的事。这是第 05 课的起点。
 
 真实系统里这里是个循环——模型可能连着调好几轮工具才给出答案，所以要有步数上限和停止条件。那是第 06 课，这里先不展开。
 
@@ -157,7 +178,7 @@ if reply.tool_calls:                      # ← 模型没有执行任何东西�
 
     client = OpenAI()
     resp = client.chat.completions.create(
-        model="gpt-5.5",
+        model="gpt-5",
         messages=[
             {"role": "system", "content": "You are terse."},   # ← 系统提示是消息列表里的一条
             {"role": "user", "content": "深圳现在天气怎么样？"},
@@ -173,8 +194,8 @@ if reply.tool_calls:                      # ← 模型没有执行任何东西�
 
     client = OpenAI()
     resp = client.responses.create(
-        model="gpt-5.5",
-        instructions="You are terse.",        # ← 系统提示是顶层字段，不在对话里
+        model="gpt-5",
+        instructions="You are terse.",        # ← 顶层快捷写法；也可在 input 条目中表达
         input="深圳现在天气怎么样？",           # ← 单轮可以直接给一个字符串
     )
     print(resp.output_text)                   # ← 帮你把返回条目里的文本拼好了
@@ -201,30 +222,32 @@ if reply.tool_calls:                      # ← 模型没有执行任何东西�
 |---|---|---|---|
 | 端点 | `POST /v1/chat/completions` | `POST /v1/responses` | `POST /v1/messages` |
 | 对话输入 | `messages` 列表 | `input`，字符串或条目列表 | `messages` 列表 |
-| 系统提示 | 列表里 `role="system"` 的一条 | 顶层 `instructions` | 顶层 `system` |
+| 系统提示 | 列表里 `role="system"` 的一条 | 顶层 `instructions`，也可放进 `input` 条目 | 顶层 `system` |
 | 返回 | `choices[0].message` | `output` 条目列表，`output_text` 是快捷方式 | `content` 块列表 |
 | 工具定义 | `{"type": "function", "function": {…}}`，嵌一层 | `{"type": "function", "name": …, "parameters": …}`，平铺 | `{"name": …, "input_schema": …}` |
 | 工具结果回传 | 一条 `role="tool"` 消息，认 `tool_call_id` | 一个 `function_call_output` 条目，认 `call_id` | 一条 **`role="user"`** 消息里的 `tool_result` 块，认 `tool_use_id` |
 | 输出上限字段 | `max_completion_tokens`，可选 | `max_output_tokens`，可选 | `max_tokens`，**必填** |
-| 服务端存历史 | 不存，每次重发全部 | `store` 加 `previous_response_id` | 不存，每次重发全部 |
+| 续接对话 | 默认按请求处理，不靠 response id 续接 | `store` 与 `previous_response_id`（具体状态语义看服务端） | 不存为可续接的会话，每次重发全部 |
+
+Chat Completions 在较新的 OpenAI 模型上还支持 `developer` 角色；不少兼容服务仍只接受 `system`。表里的示例用 `system`，因为它在跨供应商场景更常见，接入具体模型时要按该模型的消息角色要求调整（OpenAI 文档核对日期 2026-09-10）。
 
 最后两行最容易写错。**Claude 把工具结果算成用户说的话**，因为它的协议里只有 user 和 assistant 两种角色；工具结果是「外部世界带回来的信息」，所以挂在 user 那边。适配器如果按 OpenAI 的习惯造一条 `role="tool"`，Claude 直接报错。
 
-**为什么 OpenAI 有两套。** [Chat Completions](https://platform.openai.com/docs/api-reference/chat) 2023 年定型，早已成了事实标准——DeepSeek、通义千问、vLLM、Ollama 都实现了它，所以「OpenAI 兼容」这四个字才有意义。[Responses](https://platform.openai.com/docs/api-reference/responses) 是后来推出的新端点，把两件老接口做不了的事收了进来：对话历史可以存在服务端（下一轮只传 `previous_response_id`），以及网页搜索、文件检索、代码执行这类内置工具直接在同一个请求里声明。OpenAI 明确说 Chat Completions 会长期支持，不是弃用关系。
+**为什么 OpenAI 有两套。** [Chat Completions](https://platform.openai.com/docs/api-reference/chat) 早已成了事实标准——DeepSeek、通义千问等兼容服务都实现了它，所以「OpenAI 兼容」这四个字才有意义。[Responses](https://platform.openai.com/docs/api-reference/responses) 是后来的端点，在 OpenAI API 里提供 `previous_response_id` 和网页搜索、文件检索、代码执行等内置工具（核对日期 2026-09-10）。OpenAI 当前仍维护 Chat Completions，同时在新项目提示中推荐先评估 Responses；这表示产品方向变化，不等于兼容服务可以不加核对地互换。
 
-Responses 的兼容层也在铺开：vLLM 已经提供 `/v1/responses`，DeepSeek 的文档里有专门一节讲怎么用它。所以「非 OpenAI 就只有 Chat Completions」这个判断已经过期了——但支持程度参差，内置工具和服务端历史这些依赖服务端状态的能力，各家的完整度差很多。**用之前查它自己的文档，别按 OpenAI 的字段表想当然。**
+一些兼容服务也提供 Responses 端点，但可能只实现字段形状，不实现服务端状态或内置工具。比如 [DeepSeek 的 Responses API 文档](https://api-docs.deepseek.com/api/create-response/)明确写着接口无状态，多轮请求要在 `input` 里重发完整历史（访问日期 2026-09-10）。**用之前查它自己的文档，别按 OpenAI 的字段表想当然。**
 
-选哪套，看一个问题：**你要不要跨供应商。** 要，就用 Chat Completions，它的兼容层最宽也最一致；只用 OpenAI 并且想要服务端状态或内置工具，用 Responses；用 Claude 就是 Messages，没有第二个选项。这门课后面的示意代码统一用 Chat Completions 的形状，因为它最通用。
+选型先看两个约束：要不要跨供应商，以及是否依赖供应商提供的会话状态或内置工具。需要跨供应商时，Chat Completions 的兼容范围通常更宽；只用 OpenAI 且需要 `previous_response_id` 或内置工具时，再考虑 Responses；使用 Claude 原生 API 时则是 Messages。这门课后面的示意代码统一用 Chat Completions 的形状，因为它最通用。
 
 ### 五、同一件事在 Claude 上的写法
 
-机制一样，形状不一样。只看工具结果怎么回传：
+机制一样，形状不一样。只看工具结果怎么回传。下面是示意代码，省略了请求初始化、导入和错误处理，不能直接运行：
 
 ```python
-messages.append({"role": "assistant", "content": reply.content})   # ← 原样带回，别拍平成字符串
+messages.append({"role": "assistant", "content": response.content}) # ← 原样带回，别拍平成字符串
 messages.append({"role": "user", "content": [{                     # ← 工具结果算「用户说的话」
     "type": "tool_result",
-    "tool_use_id": call.id,        # ← 不叫 tool_call_id
+    "tool_use_id": tool_use.id,    # ← 不叫 tool_call_id
     "content": json.dumps(result),
 }]})
 ```
@@ -237,25 +260,25 @@ messages.append({"role": "user", "content": [{                     # ← 工具�
 
 ```mermaid
 flowchart LR
-    L[应用代码] --> A[ModelAdapter.complete]
+    L[应用代码] --> A[ModelAdapter.complete / stream]
     A --> F[FakeAdapter<br/>按剧本回答]
     A --> R[真实供应商<br/>DeepSeek / 通义 / OpenAI / Claude]
 ```
 
-`ModelAdapter` 就一个方法：给它一串消息和可选的工具列表，返回一个响应。响应里要么是文本，要么是一组工具调用请求。上面那张表里的差异，全部关在这一层里面消化。
+`ModelAdapter` 的最小协议有两个入口：`complete` 返回完整响应，`stream` 返回增量片段。两者都接收一串消息和可选的工具列表，响应里要么是文本，要么是一组工具调用请求。上面那张表里的差异，全部关在这一层里面消化。
 
-这不是过度设计。第 12 条工程原则就是「模型是可替换的适配器」：模型换代的速度远快于业务代码，任何直接调供应商 SDK 的地方，将来都是一次改动。
+对会持续迭代的服务，这层可以隔离供应商变更。第 12 条工程原则就是「模型是可替换的适配器」：模型换代的速度远快于业务代码，直接调用供应商 SDK 的地方都要跟着改。
 
 **也有不必要的时候。** 一个跑一次就删的脚本、一次性的数据清洗，直接调 SDK 更省事——这一层的收益要等「换模型」「加 fake 写测试」「同时接两家」出现才兑现。判断标准是问一句：这段代码会不会活过下一次模型换代。
 
-**它的第一个实现是一个按剧本回答的 fake。** 不需要 key，行为确定，可以写断言，还能让模型「按要求犯错」。代价是它不会思考——讲机制用 fake，看效果用真模型，这是贯穿全课的做法。怎么用它搭评测是第 19 课的事，这里只要知道适配器这层一旦有了，fake 就是免费的。
+**参考项目里的第一个实现是一个按剧本回答的 fake。** 不需要 key，行为确定，可以写断言，还能让模型「按要求犯错」。代价是它不会思考——讲机制用 fake，看效果用真模型，这是贯穿全课的做法。怎么用它搭评测是第 19 课的事，这里只要知道适配器这层一旦有了，fake 就能复用。
 
 ## 第一次调用通常坏在哪里
 
 - **`RuntimeError: DEEPSEEK_API_KEY is not set`**：环境变量没设，或者设在了另一个终端窗口里。
 - **`openai.AuthenticationError`**：key 和 base URL 不是同一家的。DeepSeek 的 key 只能配 `https://api.deepseek.com`。
 - **`Model Not Exist` 或者 400**：模型名过期了。各家都会下线老模型，`deepseek-chat` 就是一例。课文里的模型名有保质期，报这个错先去官方的模型列表核对，别怀疑代码。
-- **拿 Responses 的字段去调兼容接口**：`client.responses.create` 在越来越多的兼容服务上能通了，但支持程度参差——同一个字段在这家生效、在那家被忽略，比直接 404 更难查。跨供应商就老实用 Chat Completions。反过来，把 `instructions` 塞进 `messages` 也不会报错，只是那句话被当成了普通用户消息。
+- **拿 Responses 的字段去调兼容接口**：`client.responses.create` 在越来越多的兼容服务上能通了，但支持程度参差——同一个字段在这家生效、在那家被忽略，比直接 404 更难查。跨供应商就老实用 Chat Completions。把本该放在 `instructions` 的内容改成普通 `user` 消息，接口可能接受，但指令优先级已经变了。
 - **`resp.content[0].text` 在 Claude 上取到空字符串**：`content` 是块列表，开了思考的模型第一块是 thinking 块，正文在后面。按 `b.type == "text"` 过滤，不要按下标取。
 - **`ImportError: Using SOCKS proxy, but the 'socksio' package is not installed`**：终端里设了 `all_proxy=socks5://...`，httpx 会跟着走代理。DeepSeek 和通义都不需要代理，跑的时候去掉即可：`env -u all_proxy -u http_proxy -u https_proxy python x.py`。
 - **401 但 key 是从别处复制来的**：先用 `curl` 直接打接口确认 key 有效，再怀疑代码。写这一课时就踩过一次，环境变量里放着一个早已失效的 key。
@@ -295,7 +318,7 @@ uv run uvicorn aiapp.api.app:create_app --factory --port 8000
 
 ## 参考实现里的 fake adapter
 
-这一课的 fake adapter 在参考实现里是 [`adapters/fake.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/fake.py)，[`base.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/base.py) 是全课共用的那个 `ModelAdapter` 协议。离线怎么跑，看 [M0 并发实验](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m0-concurrency/README.md)。
+这一课的 fake adapter 在参考实现的 [M1 API 骨架](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md)里，代码是 [`adapters/fake.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/fake.py)，[`base.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/base.py) 定义了全课共用的 `ModelAdapter` 协议。M0 的 [并发实验](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m0-concurrency/README.md)是另一条起步线，先用标准库演示等待、超时和取消，不包含模型适配器。
 
 ## 从第一调用继续读模型接口
 
