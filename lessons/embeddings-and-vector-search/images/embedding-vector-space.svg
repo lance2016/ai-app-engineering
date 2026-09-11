@@ -2,21 +2,50 @@
 <title>Vector search</title><desc>相似度只提供候选集：离查询点最近的邻居里也会混进不相关的块</desc>
 <defs>
 <style>
+  /* An SVG loaded through an img tag is its own document: the page's --ws-*
+     custom properties and its data-md-color-scheme attribute do not reach in
+     here, so the values below are copied from wabi.css by hand. The palette in
+     mkdocs.yml is keyed to prefers-color-scheme, so the same query picks the
+     matching half. A reader who flips the site toggle against their OS setting
+     gets the other half -- still readable, because each paints its own
+     background. */
   .t  { font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
-  .h1 { font-size: 26px; font-weight: 600; fill: #2a2823; }
-  .h2 { font-size: 17px; fill: #5c574d; }
-  .bx { font-size: 21px; font-weight: 600; fill: #2a2823; }
-  .sub{ font-size: 15px; fill: #5c574d; }
-  .an { font-size: 16px; fill: #857f72; }
-  .warn { font-size: 17px; fill: #8a5334; }
-  .box { fill: none; stroke: #5c574d; stroke-width: 1.5; }
-  .arw { stroke: #5c574d; stroke-width: 1.5; }
-  .dot { fill: #5c574d; }
+  .bg { fill: #ffffff; }
+  .h1 { font-size: 26px; font-weight: 600; fill: #202123; }
+  .h2 { font-size: 17px; fill: #6b6b6b; }
+  .bx { font-size: 21px; font-weight: 600; fill: #202123; }
+  .sub{ font-size: 15px; fill: #6b6b6b; }
+  .an { font-size: 16px; fill: #8e8e8e; }
+  .warn { font-size: 17px; fill: #b5472d; }
+  .box { fill: none; stroke: #6b6b6b; stroke-width: 1.5; }
+  .arw { stroke: #6b6b6b; stroke-width: 1.5; }
+  .head { fill: #6b6b6b; }
+  .dot { fill: #6b6b6b; }
+  .space { fill: none; stroke: #e5e5e5; stroke-width: 1.5; }
+  .topk { fill: none; stroke: #8e8e8e; stroke-width: 1.5; stroke-dasharray: 5 5; }
+  .q { fill: none; stroke: #202123; stroke-width: 2; }
+  .miss { fill: #b5472d; }
+  .missline { stroke: #b5472d; stroke-width: 1.5; stroke-dasharray: 4 4; }
+
+  @media (prefers-color-scheme: dark) {
+    .bg { fill: #0f0f10; }
+    .h1, .bx { fill: #ececee; }
+    .h2, .sub { fill: #a5a5aa; }
+    .an { fill: #86868b; }
+    .warn { fill: #e08a63; }
+    .box, .arw { stroke: #a5a5aa; }
+    .head, .dot { fill: #a5a5aa; }
+    .space { stroke: #2d2d31; }
+    .topk { stroke: #86868b; }
+    .q { stroke: #ececee; }
+    .miss { fill: #e08a63; }
+    .missline { stroke: #e08a63; }
+  }
 </style>
-<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#5c574d"/></marker>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0 0L10 5L0 10z"/></marker>
 </defs>
 
-<rect width="1200" height="675" fill="#eae7df"/>
+<rect class="bg" width="1200" height="675"/>
 <text class="t h1" x="54" y="54">04 Vector search</text>
 <text class="t h2" x="54" y="84">相似度只提供候选集，排序和业务过滤决定结果能不能用</text>
 
@@ -30,22 +59,22 @@
 <text class="t sub" x="335" y="357">vector</text>
 <line class="arw" x1="485" y1="336" x2="588" y2="336" marker-end="url(#arrow)"/>
 
-<ellipse cx="735" cy="335" rx="140" ry="105" fill="none" stroke="#d2cdc1" stroke-width="1.5"/>
+<ellipse class="space" cx="735" cy="335" rx="140" ry="105"/>
 <text class="t an" x="600" y="218">vector space</text>
 
-<circle cx="700" cy="330" r="62" fill="none" stroke="#857f72" stroke-width="1.5" stroke-dasharray="5 5"/>
+<circle class="topk" cx="700" cy="330" r="62"/>
 <text class="t an" x="668" y="256">top-k</text>
 
 <circle class="dot" cx="665" cy="310" r="7"/>
 <circle class="dot" cx="672" cy="355" r="7"/>
 <circle class="dot" cx="730" cy="300" r="7"/>
 <circle class="dot" cx="820" cy="290" r="7"/>
-<circle cx="745" cy="352" r="7" fill="#8a5334"/>
+<circle class="miss" cx="745" cy="352" r="7"/>
 
-<circle cx="700" cy="330" r="5" fill="none" stroke="#2a2823" stroke-width="2"/>
+<circle class="q" cx="700" cy="330" r="5"/>
 <text class="t an" x="710" y="322">q</text>
 
-<line x1="750" y1="360" x2="706" y2="452" stroke="#8a5334" stroke-width="1.5" stroke-dasharray="4 4"/>
+<line class="missline" x1="750" y1="360" x2="706" y2="452"/>
 <text class="t warn" x="600" y="478">离得近，不代表相关：这一块也会进候选集</text>
 
 <line class="arw" x1="878" y1="335" x2="958" y2="335" marker-end="url(#arrow)"/>
