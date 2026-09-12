@@ -26886,14 +26886,20 @@
     trimWhitespace: true,
     caseSensitive: false,
     ignoreBlank: true,
+    compareScope: "all",
     query: "",
     resultFilter: "all",
     sourceFilter: "all",
-    markedOnly: false,
+    expandedGroups: /* @__PURE__ */ new Set(["D01"]),
+    groupLimit: 60,
+    occurrenceLimit: 30,
+    detailQuery: "",
+    detailShowAll: false,
     marks: /* @__PURE__ */ new Set(["demo-roster-1"]),
     selectedResult: null,
     toast: null,
-    isDemo: true
+    isDemo: true,
+    analysisCache: null
   };
   var app = document.querySelector("#app");
   var fileInput = document.querySelector("#file-input");
@@ -26903,6 +26909,7 @@
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
   };
+  var formatCount = (number) => new Intl.NumberFormat("zh-CN").format(number);
   var allSheets = () => state.files.flatMap((file) => file.sheets.map((sheet) => ({ file, sheet })));
   var activeSource = () => allSheets().find(({ sheet }) => sheet.id === state.activeSheetId) || allSheets()[0];
   var normalizeCell = (value) => {
@@ -26912,6 +26919,8 @@
     return text;
   };
   var normalizedSheet = (file, sheet) => {
+    const cacheKey = `${sheet.headerRow}:${sheet.rows.length}`;
+    if (sheet._normalized?.cacheKey === cacheKey) return sheet._normalized.value;
     const rawHeader = sheet.rows[sheet.headerRow] || [];
     const headers = [];
     rawHeader.forEach((cell, index) => {
@@ -26929,7 +26938,9 @@
       sheet,
       headers
     }));
-    return { headers, rows };
+    const value = { headers, rows };
+    sheet._normalized = { cacheKey, value };
+    return value;
   };
   var availableColumns = () => {
     const names = [];
@@ -26948,18 +26959,39 @@
   };
   var buildResults = () => {
     ensureColumnSelection();
+    const signature = JSON.stringify({
+      files: state.files.map((file) => ({ id: file.id, sheets: file.sheets.map((sheet) => ({ id: sheet.id, included: sheet.included, headerRow: sheet.headerRow, rowCount: sheet.rows.length })) })),
+      keyMode: state.keyMode,
+      selectedKeyColumns: state.selectedKeyColumns,
+      trimWhitespace: state.trimWhitespace,
+      caseSensitive: state.caseSensitive,
+      ignoreBlank: state.ignoreBlank,
+      compareScope: state.compareScope
+    });
+    if (state.analysisCache?.signature === signature) return state.analysisCache.value;
     const columns = availableColumns();
     const records = [];
+    const coverageIssues = [];
+    let scannedRows = 0;
     allSheets().forEach(({ file, sheet }) => {
       if (!sheet.included) return;
       const data = normalizedSheet(file, sheet);
+      scannedRows += data.rows.length;
+      if (state.keyMode === "columns") {
+        const missingColumns = state.selectedKeyColumns.filter((column) => !data.headers.includes(column));
+        if (missingColumns.length) {
+          coverageIssues.push({ file, sheet, missingColumns, rowCount: data.rows.length });
+          return;
+        }
+      }
       data.rows.forEach((row) => {
         const valuesByHeader = Object.fromEntries(data.headers.map((header, index) => [header, row.values[index] ?? ""]));
         const values = state.keyMode === "row" ? data.headers.map((header) => normalizeCell(valuesByHeader[header])) : state.selectedKeyColumns.map((header) => normalizeCell(valuesByHeader[header] ?? ""));
-        const blank = values.every((value) => value === "");
+        const blank = values.every((value2) => value2 === "");
         if (state.ignoreBlank && blank) return;
-        const key = JSON.stringify(values);
-        records.push({ ...row, file, sheet, data, valuesByHeader, key, displayKey: values.map((value) => value || "\u7A7A\u767D").join(" \xB7 "), columns });
+        const scopeKey = state.compareScope === "file" ? file.id : state.compareScope === "sheet" ? sheet.id : "all";
+        const key = JSON.stringify([scopeKey, ...values]);
+        records.push({ ...row, file, sheet, data, valuesByHeader, key, displayKey: values.map((value2) => value2 || "\u7A7A\u767D").join(" \xB7 "), columns });
       });
     });
     const groups = /* @__PURE__ */ new Map();
@@ -26970,16 +27002,18 @@
     let groupIndex = 0;
     const duplicateGroups = [...groups.entries()].filter(([, rows]) => rows.length > 1).map(([key, rows]) => {
       groupIndex += 1;
-      return { key, rows, groupId: `D${String(groupIndex).padStart(2, "0")}` };
+      const groupId = `D${String(groupIndex).padStart(2, "0")}`;
+      const resultRows = rows.map((record, index) => ({
+        ...record,
+        groupId,
+        groupSize: rows.length,
+        occurrence: index + 1
+      }));
+      return { key, rows: resultRows, groupId };
     });
-    const resultRows = duplicateGroups.flatMap((group) => group.rows.map((record, index) => ({
-      ...record,
-      groupId: group.groupId,
-      groupSize: group.rows.length,
-      occurrence: index + 1,
-      marked: state.marks.has(record.id) || state.marks.has(group.key)
-    })));
-    return { records, duplicateGroups, resultRows, columns };
+    const value = { records, duplicateGroups, resultRows: duplicateGroups.flatMap((group) => group.rows), columns, coverageIssues, scannedRows };
+    state.analysisCache = { signature, value };
+    return value;
   };
   var currentAnalysis = () => buildResults();
   var renderHeader = (analysis) => `
@@ -27103,48 +27137,80 @@
     </section>
   `;
   };
-  var renderStat = (number, label, detail, accent = "") => `<div class="stat-card ${accent}"><div class="stat-number">${number}</div><div class="stat-label">${label}</div><div class="stat-detail">${detail}</div></div>`;
-  var visibleResults = (analysis) => analysis.resultRows.filter((row) => {
-    if (state.resultFilter === "marked" && !row.marked) return false;
+  var renderStat = (number, label, detail, accent = "") => `<div class="stat-card ${accent}"><div class="stat-number">${formatCount(number)}</div><div class="stat-label">${label}</div><div class="stat-detail">${detail}</div></div>`;
+  var rowIsMarked = (row) => state.marks.has(row.id) || state.marks.has(row.key);
+  var rowMatches = (row) => {
+    if (state.resultFilter === "marked" && !rowIsMarked(row)) return false;
     if (state.sourceFilter !== "all" && row.file.id !== state.sourceFilter) return false;
     if (state.query) {
       const haystack = [row.file.name, row.sheet.name, row.groupId, row.displayKey, row.rowNumber, ...Object.values(row.valuesByHeader)].join(" ").toLocaleLowerCase("zh-CN");
       if (!haystack.includes(state.query.toLocaleLowerCase("zh-CN"))) return false;
     }
     return true;
-  });
+  };
+  var visibleGroups = (analysis) => analysis.duplicateGroups.map((group) => {
+    const rows = group.rows.filter(rowMatches);
+    return { group, rows };
+  }).filter(({ rows }) => rows.length);
+  var groupIsMarked = (group) => group.rows.some(rowIsMarked);
+  var groupKeyPreview = (row) => {
+    const keyColumns = state.keyMode === "row" ? row.data.headers : state.selectedKeyColumns;
+    const visibleColumns = keyColumns.slice(0, 3);
+    const pills = visibleColumns.map((column) => `<span class="key-pill"><em>${escapeHtml(column)}</em>${escapeHtml(row.valuesByHeader[column] || "\u7A7A\u767D")}</span>`).join("");
+    const extra = keyColumns.length > visibleColumns.length ? `<span class="key-more">+${keyColumns.length - visibleColumns.length}</span>` : "";
+    return `<span class="key-pills">${pills}${extra}</span>`;
+  };
   var renderResultTable = (analysis) => {
-    const rows = visibleResults(analysis);
+    const groups = visibleGroups(analysis);
     if (!analysis.records.length) {
       return `<div class="no-duplicates empty-results"><div class="success-icon neutral">${icon("upload", 25)}</div><h3>\u5148\u5BFC\u5165\u4E00\u4EFD\u8868\u683C</h3><p>\u62D6\u5165\u4E00\u4E2A\u6216\u591A\u4E2A Excel\u3001CSV \u6587\u4EF6\uFF0C\u5F00\u59CB\u9009\u62E9\u8868\u5934\u5E76\u67E5\u627E\u91CD\u590D\u9879\u3002</p><button class="small-button" data-action="open-file-picker">\u9009\u62E9\u6587\u4EF6 ${icon("arrow", 14)}</button></div>`;
     }
-    if (!analysis.resultRows.length) {
+    if (!analysis.duplicateGroups.length) {
       return `<div class="no-duplicates"><div class="success-icon">${icon("check", 28)}</div><h3>\u6CA1\u6709\u53D1\u73B0\u91CD\u590D\u9879</h3><p>\u5F53\u524D\u8303\u56F4\u5185\u7684 ${analysis.records.length} \u884C\u6570\u636E\uFF0C\u6CA1\u6709\u7B26\u5408\u89C4\u5219\u7684\u91CD\u590D\u952E\u503C\u3002</p></div>`;
     }
-    if (!rows.length) {
+    if (!groups.length) {
       return `<div class="no-duplicates filtered-empty"><div class="success-icon neutral">${icon("filter", 25)}</div><h3>\u8FD9\u4E2A\u7B5B\u9009\u6CA1\u6709\u7ED3\u679C</h3><p>\u6362\u4E00\u4E2A\u5173\u952E\u8BCD\u6216\u6E05\u9664\u7B5B\u9009\u6761\u4EF6\u8BD5\u8BD5\u3002</p><button class="small-button" data-action="reset-filters">\u6E05\u9664\u7B5B\u9009</button></div>`;
     }
+    const displayedGroups = groups.slice(0, state.groupLimit);
+    const groupRows = displayedGroups.map(({ group, rows }) => {
+      const expanded = state.expandedGroups.has(group.groupId);
+      const marked = groupIsMarked(group);
+      const sourceCount = new Set(group.rows.map((row) => row.file.id)).size;
+      const sourceLabel = sourceCount > 1 ? `\u8DE8 ${sourceCount} \u4E2A\u6587\u4EF6` : "\u540C\u4E00\u6587\u4EF6";
+      const occurrenceRows = expanded ? rows.slice(0, state.occurrenceLimit).map((row) => `
+      <tr class="occurrence-row ${state.selectedResult?.id === row.id ? "selected" : ""}" data-action="select-result" data-row-id="${row.id}">
+        <td class="mark-column"><button class="mark-button ${rowIsMarked(row) ? "marked" : ""}" data-action="toggle-mark" data-mark-id="${row.id}" aria-label="${rowIsMarked(row) ? "\u53D6\u6D88\u6807\u8BB0" : "\u6807\u8BB0"}">${icon("pin", 14)}</button></td>
+        <td class="occurrence-index"><span>${row.occurrence}</span></td>
+        <td><span class="occurrence-key">${groupKeyPreview(row)}</span></td>
+        <td class="source-cell"><span class="file-dot"></span>${escapeHtml(row.file.name)}</td>
+        <td>${escapeHtml(row.sheet.name)}</td>
+        <td class="row-cell">\u7B2C ${row.rowNumber} \u884C</td>
+        <td><span class="occurrence">${row.occurrence} / ${row.groupSize}</span></td>
+        <td class="view-cell">${icon("eye", 16)}</td>
+      </tr>
+    `).join("") : "";
+      const rest = rows.length > state.occurrenceLimit ? `<tr class="more-occurrences"><td></td><td colspan="7">\u8FD8\u6709 ${formatCount(rows.length - state.occurrenceLimit)} \u6761\u8BB0\u5F55\uFF0C\u4F7F\u7528\u641C\u7D22\u6216\u6765\u6E90\u7B5B\u9009\u7EE7\u7EED\u5B9A\u4F4D</td></tr>` : "";
+      return `
+      <tr class="group-summary ${expanded ? "expanded" : ""}" data-action="toggle-group" data-group-id="${group.groupId}">
+        <td class="mark-column"><button class="mark-button ${marked ? "marked" : ""}" data-action="toggle-group-mark" data-group-key="${escapeHtml(group.key)}" data-group-id="${group.groupId}" aria-label="${marked ? "\u53D6\u6D88\u6807\u8BB0\u6574\u7EC4" : "\u6807\u8BB0\u6574\u7EC4"}">${icon("pin", 15)}</button></td>
+        <td><span class="group-expand">${icon("chevron", 14)}</span><span class="group-badge">${group.groupId}</span></td>
+        <td><span class="group-key">${groupKeyPreview(group.rows[0])}</span></td>
+        <td><span class="group-count">${formatCount(group.rows.length)} \u6761\u8BB0\u5F55</span></td>
+        <td class="source-count">${sourceLabel}</td>
+        <td colspan="2" class="group-hint">${expanded ? "\u70B9\u51FB\u6536\u8D77" : "\u70B9\u51FB\u5C55\u5F00\u8BB0\u5F55"}</td>
+        <td class="view-cell">${icon("eye", 16)}</td>
+      </tr>
+      ${occurrenceRows}${rest}
+    `;
+    }).join("");
     return `
     <div class="table-scroll">
       <table class="results-table">
-        <thead><tr><th class="mark-column"></th><th>\u7EC4\u522B</th><th>\u547D\u4E2D\u5B57\u6BB5</th><th>\u6765\u6E90</th><th>Sheet</th><th>\u884C</th><th>\u51FA\u73B0\u6B21\u6570</th><th>\u67E5\u770B</th></tr></thead>
-        <tbody>
-          ${rows.map((row) => `
-            <tr class="result-row ${state.selectedResult?.id === row.id ? "selected" : ""}" data-action="select-result" data-row-id="${row.id}">
-              <td class="mark-column"><button class="mark-button ${row.marked ? "marked" : ""}" data-action="toggle-mark" data-mark-id="${row.id}" aria-label="${row.marked ? "\u53D6\u6D88\u6807\u8BB0" : "\u6807\u8BB0"}">${icon("pin", 15)}</button></td>
-              <td><span class="group-badge">${row.groupId}</span></td>
-              <td><span class="key-value">${escapeHtml(row.displayKey)}</span></td>
-              <td class="source-cell"><span class="file-dot"></span>${escapeHtml(row.file.name)}</td>
-              <td>${escapeHtml(row.sheet.name)}</td>
-              <td class="row-cell">${row.rowNumber}</td>
-              <td><span class="occurrence">${row.groupSize} \u6B21</span></td>
-              <td class="view-cell">${icon("eye", 16)}</td>
-            </tr>
-          `).join("")}
-        </tbody>
+        <thead><tr><th class="mark-column"></th><th>\u91CD\u590D\u7EC4</th><th>\u67E5\u91CD\u952E</th><th>\u8BB0\u5F55\u6570</th><th>\u6765\u6E90\u8303\u56F4</th><th colspan="2">\u5B9A\u4F4D</th><th>\u67E5\u770B</th></tr></thead>
+        <tbody>${groupRows}</tbody>
       </table>
     </div>
-    <div class="table-foot"><span>\u663E\u793A ${rows.length} \u884C\u91CD\u590D\u8BB0\u5F55</span><span>\u6570\u636E\u987A\u5E8F\u4FDD\u6301\u4E0E\u6E90\u6587\u4EF6\u4E00\u81F4</span></div>
+    <div class="table-foot"><span>\u663E\u793A ${formatCount(displayedGroups.length)} / ${formatCount(groups.length)} \u4E2A\u91CD\u590D\u7EC4 \xB7 \u5C55\u5F00\u7EC4\u540E\u67E5\u770B\u8BB0\u5F55</span><span>${groups.length > state.groupLimit ? `<button class="load-more" data-action="load-more-groups">\u52A0\u8F7D\u66F4\u591A</button>` : "\u5DF2\u6309\u7EC4\u5206\u6279\u5C55\u793A"}</span></div>
   `;
   };
   var renderResults = (analysis) => `
@@ -27157,21 +27223,23 @@
       <div class="result-actions"><span class="analysis-time">\u521A\u521A\u5B8C\u6210</span><button class="icon-button" title="\u67E5\u770B\u5B57\u6BB5\u89C4\u5219" data-action="scroll-rules">${icon("info", 17)}</button></div>
     </div>
     <div class="stats-grid">
-      ${renderStat(analysis.records.length, "\u5DF2\u626B\u63CF\u884C\u6570", `${allSheets().filter(({ sheet }) => sheet.included).length} \u4E2A Sheet`)}
-      ${renderStat(analysis.duplicateGroups.length, "\u91CD\u590D\u7EC4", analysis.duplicateGroups.length ? `\u5171\u6D89\u53CA ${analysis.resultRows.length} \u884C` : "\u5F53\u524D\u8303\u56F4\u65E0\u91CD\u590D")}
+      ${renderStat(analysis.scannedRows, "\u626B\u63CF\u6570\u636E\u884C", `${formatCount(analysis.records.length)} \u884C\u53C2\u4E0E\u6BD4\u5BF9`)}
+      ${renderStat(analysis.duplicateGroups.length, "\u91CD\u590D\u7EC4", analysis.duplicateGroups.length ? `\u5171\u6D89\u53CA ${formatCount(analysis.resultRows.length)} \u884C` : "\u5F53\u524D\u8303\u56F4\u65E0\u91CD\u590D")}
       ${renderStat(analysis.resultRows.length, "\u91CD\u590D\u8BB0\u5F55", analysis.resultRows.length ? "\u540C\u4E00\u952E\u503C\u51FA\u73B0 2 \u6B21\u4EE5\u4E0A" : "\u53EF\u4EE5\u7EE7\u7EED\u4E0B\u4E00\u6B65")}
       ${renderStat(new Set(analysis.resultRows.map((row) => row.file.id)).size, "\u6D89\u53CA\u6587\u4EF6", "\u8DE8\u6587\u4EF6\u81EA\u52A8\u5F52\u7EC4", "accent-stat")}
     </div>
     <div class="result-toolbar">
       <div class="filter-tabs">
-        <button class="filter-tab ${state.resultFilter === "all" ? "active" : ""}" data-action="set-result-filter" data-filter="all">\u5168\u90E8 <span>${analysis.resultRows.length}</span></button>
-        <button class="filter-tab ${state.resultFilter === "marked" ? "active" : ""}" data-action="set-result-filter" data-filter="marked">\u5DF2\u6807\u8BB0 <span>${analysis.resultRows.filter((row) => row.marked).length}</span></button>
+        <button class="filter-tab ${state.resultFilter === "all" ? "active" : ""}" data-action="set-result-filter" data-filter="all">\u91CD\u590D\u7EC4 <span>${formatCount(analysis.duplicateGroups.length)}</span></button>
+        <button class="filter-tab ${state.resultFilter === "marked" ? "active" : ""}" data-action="set-result-filter" data-filter="marked">\u5DF2\u6807\u8BB0\u7EC4 <span>${formatCount(analysis.duplicateGroups.filter((group) => groupIsMarked(group)).length)}</span></button>
       </div>
       <div class="toolbar-controls">
         <label class="search-control">${icon("search", 16)}<input type="search" placeholder="\u641C\u7D22\u59D3\u540D\u3001\u5B57\u6BB5\u503C\u6216\u6765\u6E90" value="${escapeHtml(state.query)}" data-action="search" /></label>
         <label class="select-control">${icon("filter", 15)}<select data-action="source-filter"><option value="all">\u6240\u6709\u6765\u6E90</option>${state.files.map((file) => `<option value="${file.id}" ${state.sourceFilter === file.id ? "selected" : ""}>${escapeHtml(file.name)}</option>`).join("")}</select>${icon("chevron", 14)}</label>
+        <label class="select-control scope-control"><select data-action="compare-scope"><option value="all" ${state.compareScope === "all" ? "selected" : ""}>\u5168\u8303\u56F4\u6BD4\u5BF9</option><option value="file" ${state.compareScope === "file" ? "selected" : ""}>\u6BCF\u4E2A\u6587\u4EF6\u5185</option><option value="sheet" ${state.compareScope === "sheet" ? "selected" : ""}>\u6BCF\u4E2A Sheet \u5185</option></select>${icon("chevron", 14)}</label>
       </div>
     </div>
+    ${analysis.coverageIssues.length ? `<div class="coverage-warning">${icon("info", 16)}<div><strong>${analysis.coverageIssues.length} \u4E2A\u6765\u6E90\u7684\u5B57\u6BB5\u4E0D\u5B8C\u6574\uFF0C\u5DF2\u8DF3\u8FC7\u8FD9\u4E9B\u6765\u6E90</strong><span>${analysis.coverageIssues.slice(0, 2).map((issue) => `${escapeHtml(issue.file.name)} / ${escapeHtml(issue.sheet.name)} \u7F3A\u5C11\uFF1A${escapeHtml(issue.missingColumns.join("\u3001"))}`).join("\uFF1B")}${analysis.coverageIssues.length > 2 ? `\uFF1B\u8FD8\u6709 ${analysis.coverageIssues.length - 2} \u4E2A\u6765\u6E90` : ""}</span></div></div>` : ""}
     <div class="results-panel">${renderResultTable(analysis)}</div>
   </section>
 `;
@@ -27185,15 +27253,22 @@
   `;
     const row = analysis.resultRows.find((item) => item.id === state.selectedResult.id) || analysis.resultRows[0];
     if (!row) return "";
+    const filteredHeaders = row.data.headers.filter((header) => {
+      if (!state.detailQuery) return true;
+      return `${header} ${row.valuesByHeader[header] || ""}`.toLocaleLowerCase("zh-CN").includes(state.detailQuery.toLocaleLowerCase("zh-CN"));
+    });
+    const detailHeaders = state.detailShowAll || state.detailQuery ? filteredHeaders : filteredHeaders.slice(0, 12);
+    const hasMoreFields = !state.detailQuery && filteredHeaders.length > detailHeaders.length;
     return `
     <aside class="detail-panel">
       <div class="detail-topline"><span class="detail-kicker">\u91CD\u590D\u7EC4 ${row.groupId}</span><button class="close-detail" data-action="close-detail" aria-label="\u5173\u95ED\u8BE6\u60C5">${icon("close", 16)}</button></div>
-      <div class="detail-title-row"><h3>${escapeHtml(row.displayKey)}</h3><button class="mark-button ${row.marked ? "marked" : ""}" data-action="toggle-mark" data-mark-id="${row.id}" aria-label="\u6807\u8BB0\u5F53\u524D\u8BB0\u5F55">${icon("pin", 15)}</button></div>
+      <div class="detail-title-row"><h3>${escapeHtml(row.displayKey)}</h3><button class="mark-button ${rowIsMarked(row) ? "marked" : ""}" data-action="toggle-mark" data-mark-id="${row.id}" aria-label="\u6807\u8BB0\u5F53\u524D\u8BB0\u5F55">${icon("pin", 15)}</button></div>
       <p class="detail-summary">\u8FD9\u7EC4\u952E\u503C\u5728\u5F53\u524D\u8303\u56F4\u51FA\u73B0 <strong>${row.groupSize} \u6B21</strong>\u3002\u5F53\u524D\u67E5\u770B\u7B2C ${row.occurrence} \u6761\u3002</p>
       <div class="detail-meta"><div><span>\u6765\u6E90\u6587\u4EF6</span><strong>${escapeHtml(row.file.name)}</strong></div><div><span>\u5DE5\u4F5C\u8868</span><strong>${escapeHtml(row.sheet.name)}</strong></div><div><span>\u6E90\u6587\u4EF6\u884C</span><strong>\u7B2C ${row.rowNumber} \u884C</strong></div></div>
       <div class="detail-divider"></div>
-      <div class="detail-label">\u539F\u59CB\u5B57\u6BB5</div>
-      <div class="detail-fields">${row.data.headers.map((header, index) => `<div class="detail-field"><span>${escapeHtml(header)}</span><strong>${escapeHtml(row.valuesByHeader[header] || "\u2014")}</strong></div>`).join("")}</div>
+      <div class="detail-fields-heading"><div class="detail-label">\u539F\u59CB\u5B57\u6BB5 \xB7 ${row.data.headers.length}</div><label class="detail-search">${icon("search", 13)}<input type="search" placeholder="\u7B5B\u5B57\u6BB5" value="${escapeHtml(state.detailQuery)}" data-action="detail-search" /></label></div>
+      <div class="detail-fields">${detailHeaders.map((header) => `<div class="detail-field"><span>${escapeHtml(header)}</span><strong title="${escapeHtml(row.valuesByHeader[header] || "\u2014")}">${escapeHtml(row.valuesByHeader[header] || "\u2014")}</strong></div>`).join("") || `<div class="detail-empty">\u6CA1\u6709\u5339\u914D\u7684\u5B57\u6BB5</div>`}</div>
+      ${hasMoreFields ? `<button class="show-fields" data-action="toggle-detail-fields">\u5C55\u5F00\u5168\u90E8 ${formatCount(filteredHeaders.length)} \u4E2A\u5B57\u6BB5</button>` : ""}
       <div class="detail-readonly">${icon("eye", 14)} \u4EC5\u67E5\u770B\uFF0C\u4E0D\u4F1A\u4FEE\u6539\u6E90\u6587\u4EF6</div>
     </aside>
   `;
@@ -27258,7 +27333,15 @@
     const lowerName = file.name.toLocaleLowerCase("zh-CN");
     const fileId = `file-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     if (lowerName.endsWith(".csv") || lowerName.endsWith(".tsv")) {
-      const text = new TextDecoder("utf-8").decode(await file.arrayBuffer()).replace(/^\uFEFF/, "");
+      const buffer = await file.arrayBuffer();
+      let text = new TextDecoder("utf-8").decode(buffer);
+      if (text.includes("\uFFFD")) {
+        try {
+          text = new TextDecoder("gb18030").decode(buffer);
+        } catch {
+        }
+      }
+      text = text.replace(/^\uFEFF/, "");
       const delimiter = lowerName.endsWith(".tsv") || text.split("\n")[0].includes("	") && !text.split("\n")[0].includes(",") ? "	" : ",";
       return { id: fileId, name: file.name, size: file.size, sheets: [{ id: `${fileId}-sheet`, name: file.name.replace(/\.[^/.]+$/, ""), included: true, headerRow: 0, rows: parseDelimited(text, delimiter) }] };
     }
@@ -27317,6 +27400,29 @@
       state.resultFilter = target.dataset.filter;
       renderApp();
     }
+    if (action === "toggle-group") {
+      const groupId = target.dataset.groupId;
+      if (state.expandedGroups.has(groupId)) state.expandedGroups.delete(groupId);
+      else state.expandedGroups.add(groupId);
+      renderApp();
+    }
+    if (action === "toggle-group-mark") {
+      event.stopPropagation();
+      const analysis = currentAnalysis();
+      const group = analysis.duplicateGroups.find((item) => item.groupId === target.dataset.groupId);
+      if (group) {
+        const marked = groupIsMarked(group);
+        if (marked) {
+          state.marks.delete(group.key);
+          group.rows.forEach((row) => state.marks.delete(row.id));
+        } else state.marks.add(group.key);
+        renderApp();
+      }
+    }
+    if (action === "load-more-groups") {
+      state.groupLimit += 60;
+      renderApp();
+    }
     if (action === "source-filter") return;
     if (action === "reset-filters") {
       state.query = "";
@@ -27328,11 +27434,17 @@
       const row = currentAnalysis().resultRows.find((item) => item.id === target.dataset.rowId);
       if (row) {
         state.selectedResult = row;
+        state.detailQuery = "";
+        state.detailShowAll = false;
         renderApp();
       }
     }
     if (action === "close-detail") {
       state.selectedResult = null;
+      renderApp();
+    }
+    if (action === "toggle-detail-fields") {
+      state.detailShowAll = !state.detailShowAll;
       renderApp();
     }
     if (action === "toggle-mark") {
@@ -27360,8 +27472,23 @@
       state.sourceFilter = target.value;
       renderApp();
     }
+    if (action === "compare-scope") {
+      state.compareScope = target.value;
+      state.expandedGroups = /* @__PURE__ */ new Set();
+      state.selectedResult = null;
+      renderApp();
+    }
   });
   document.addEventListener("input", (event) => {
+    if (event.target.dataset.action === "detail-search") {
+      state.detailQuery = event.target.value;
+      const caret2 = event.target.selectionStart;
+      renderApp();
+      const input2 = document.querySelector('[data-action="detail-search"]');
+      input2?.focus();
+      input2?.setSelectionRange(caret2, caret2);
+      return;
+    }
     if (event.target.dataset.action !== "search") return;
     state.query = event.target.value;
     const caret = event.target.selectionStart;

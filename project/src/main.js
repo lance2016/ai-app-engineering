@@ -91,14 +91,20 @@ const state = {
   trimWhitespace: true,
   caseSensitive: false,
   ignoreBlank: true,
+  compareScope: "all",
   query: "",
   resultFilter: "all",
   sourceFilter: "all",
-  markedOnly: false,
+  expandedGroups: new Set(["D01"]),
+  groupLimit: 60,
+  occurrenceLimit: 30,
+  detailQuery: "",
+  detailShowAll: false,
   marks: new Set(["demo-roster-1"]),
   selectedResult: null,
   toast: null,
   isDemo: true,
+  analysisCache: null,
 };
 
 const app = document.querySelector("#app");
@@ -117,6 +123,8 @@ const formatSize = (bytes) => {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 };
 
+const formatCount = (number) => new Intl.NumberFormat("zh-CN").format(number);
+
 const allSheets = () => state.files.flatMap((file) => file.sheets.map((sheet) => ({ file, sheet })));
 const activeSource = () => allSheets().find(({ sheet }) => sheet.id === state.activeSheetId) || allSheets()[0];
 
@@ -128,6 +136,8 @@ const normalizeCell = (value) => {
 };
 
 const normalizedSheet = (file, sheet) => {
+  const cacheKey = `${sheet.headerRow}:${sheet.rows.length}`;
+  if (sheet._normalized?.cacheKey === cacheKey) return sheet._normalized.value;
   const rawHeader = sheet.rows[sheet.headerRow] || [];
   const headers = [];
   rawHeader.forEach((cell, index) => {
@@ -145,7 +155,9 @@ const normalizedSheet = (file, sheet) => {
     sheet,
     headers,
   }));
-  return { headers, rows };
+  const value = { headers, rows };
+  sheet._normalized = { cacheKey, value };
+  return value;
 };
 
 const availableColumns = () => {
@@ -167,11 +179,31 @@ const ensureColumnSelection = () => {
 
 const buildResults = () => {
   ensureColumnSelection();
+  const signature = JSON.stringify({
+    files: state.files.map((file) => ({ id: file.id, sheets: file.sheets.map((sheet) => ({ id: sheet.id, included: sheet.included, headerRow: sheet.headerRow, rowCount: sheet.rows.length })) })),
+    keyMode: state.keyMode,
+    selectedKeyColumns: state.selectedKeyColumns,
+    trimWhitespace: state.trimWhitespace,
+    caseSensitive: state.caseSensitive,
+    ignoreBlank: state.ignoreBlank,
+    compareScope: state.compareScope,
+  });
+  if (state.analysisCache?.signature === signature) return state.analysisCache.value;
   const columns = availableColumns();
   const records = [];
+  const coverageIssues = [];
+  let scannedRows = 0;
   allSheets().forEach(({ file, sheet }) => {
     if (!sheet.included) return;
     const data = normalizedSheet(file, sheet);
+    scannedRows += data.rows.length;
+    if (state.keyMode === "columns") {
+      const missingColumns = state.selectedKeyColumns.filter((column) => !data.headers.includes(column));
+      if (missingColumns.length) {
+        coverageIssues.push({ file, sheet, missingColumns, rowCount: data.rows.length });
+        return;
+      }
+    }
     data.rows.forEach((row) => {
       const valuesByHeader = Object.fromEntries(data.headers.map((header, index) => [header, row.values[index] ?? ""]));
       const values = state.keyMode === "row"
@@ -179,7 +211,8 @@ const buildResults = () => {
         : state.selectedKeyColumns.map((header) => normalizeCell(valuesByHeader[header] ?? ""));
       const blank = values.every((value) => value === "");
       if (state.ignoreBlank && blank) return;
-      const key = JSON.stringify(values);
+      const scopeKey = state.compareScope === "file" ? file.id : state.compareScope === "sheet" ? sheet.id : "all";
+      const key = JSON.stringify([scopeKey, ...values]);
       records.push({ ...row, file, sheet, data, valuesByHeader, key, displayKey: values.map((value) => value || "空白").join(" · "), columns });
     });
   });
@@ -191,16 +224,18 @@ const buildResults = () => {
   let groupIndex = 0;
   const duplicateGroups = [...groups.entries()].filter(([, rows]) => rows.length > 1).map(([key, rows]) => {
     groupIndex += 1;
-    return { key, rows, groupId: `D${String(groupIndex).padStart(2, "0")}` };
+    const groupId = `D${String(groupIndex).padStart(2, "0")}`;
+    const resultRows = rows.map((record, index) => ({
+      ...record,
+      groupId,
+      groupSize: rows.length,
+      occurrence: index + 1,
+    }));
+    return { key, rows: resultRows, groupId };
   });
-  const resultRows = duplicateGroups.flatMap((group) => group.rows.map((record, index) => ({
-    ...record,
-    groupId: group.groupId,
-    groupSize: group.rows.length,
-    occurrence: index + 1,
-    marked: state.marks.has(record.id) || state.marks.has(group.key),
-  })));
-  return { records, duplicateGroups, resultRows, columns };
+  const value = { records, duplicateGroups, resultRows: duplicateGroups.flatMap((group) => group.rows), columns, coverageIssues, scannedRows };
+  state.analysisCache = { signature, value };
+  return value;
 };
 
 const currentAnalysis = () => buildResults();
@@ -329,50 +364,86 @@ const renderHeaderPicker = () => {
   `;
 };
 
-const renderStat = (number, label, detail, accent = "") => `<div class="stat-card ${accent}"><div class="stat-number">${number}</div><div class="stat-label">${label}</div><div class="stat-detail">${detail}</div></div>`;
+const renderStat = (number, label, detail, accent = "") => `<div class="stat-card ${accent}"><div class="stat-number">${formatCount(number)}</div><div class="stat-label">${label}</div><div class="stat-detail">${detail}</div></div>`;
 
-const visibleResults = (analysis) => analysis.resultRows.filter((row) => {
-  if (state.resultFilter === "marked" && !row.marked) return false;
+const rowIsMarked = (row) => state.marks.has(row.id) || state.marks.has(row.key);
+
+const rowMatches = (row) => {
+  if (state.resultFilter === "marked" && !rowIsMarked(row)) return false;
   if (state.sourceFilter !== "all" && row.file.id !== state.sourceFilter) return false;
   if (state.query) {
     const haystack = [row.file.name, row.sheet.name, row.groupId, row.displayKey, row.rowNumber, ...Object.values(row.valuesByHeader)].join(" ").toLocaleLowerCase("zh-CN");
     if (!haystack.includes(state.query.toLocaleLowerCase("zh-CN"))) return false;
   }
   return true;
-});
+};
+
+const visibleGroups = (analysis) => analysis.duplicateGroups.map((group) => {
+  const rows = group.rows.filter(rowMatches);
+  return { group, rows };
+}).filter(({ rows }) => rows.length);
+
+const groupIsMarked = (group) => group.rows.some(rowIsMarked);
+
+const groupKeyPreview = (row) => {
+  const keyColumns = state.keyMode === "row" ? row.data.headers : state.selectedKeyColumns;
+  const visibleColumns = keyColumns.slice(0, 3);
+  const pills = visibleColumns.map((column) => `<span class="key-pill"><em>${escapeHtml(column)}</em>${escapeHtml(row.valuesByHeader[column] || "空白")}</span>`).join("");
+  const extra = keyColumns.length > visibleColumns.length ? `<span class="key-more">+${keyColumns.length - visibleColumns.length}</span>` : "";
+  return `<span class="key-pills">${pills}${extra}</span>`;
+};
 
 const renderResultTable = (analysis) => {
-  const rows = visibleResults(analysis);
+  const groups = visibleGroups(analysis);
   if (!analysis.records.length) {
     return `<div class="no-duplicates empty-results"><div class="success-icon neutral">${icon("upload", 25)}</div><h3>先导入一份表格</h3><p>拖入一个或多个 Excel、CSV 文件，开始选择表头并查找重复项。</p><button class="small-button" data-action="open-file-picker">选择文件 ${icon("arrow", 14)}</button></div>`;
   }
-  if (!analysis.resultRows.length) {
+  if (!analysis.duplicateGroups.length) {
     return `<div class="no-duplicates"><div class="success-icon">${icon("check", 28)}</div><h3>没有发现重复项</h3><p>当前范围内的 ${analysis.records.length} 行数据，没有符合规则的重复键值。</p></div>`;
   }
-  if (!rows.length) {
+  if (!groups.length) {
     return `<div class="no-duplicates filtered-empty"><div class="success-icon neutral">${icon("filter", 25)}</div><h3>这个筛选没有结果</h3><p>换一个关键词或清除筛选条件试试。</p><button class="small-button" data-action="reset-filters">清除筛选</button></div>`;
   }
+  const displayedGroups = groups.slice(0, state.groupLimit);
+  const groupRows = displayedGroups.map(({ group, rows }) => {
+    const expanded = state.expandedGroups.has(group.groupId);
+    const marked = groupIsMarked(group);
+    const sourceCount = new Set(group.rows.map((row) => row.file.id)).size;
+    const sourceLabel = sourceCount > 1 ? `跨 ${sourceCount} 个文件` : "同一文件";
+    const occurrenceRows = expanded ? rows.slice(0, state.occurrenceLimit).map((row) => `
+      <tr class="occurrence-row ${state.selectedResult?.id === row.id ? "selected" : ""}" data-action="select-result" data-row-id="${row.id}">
+        <td class="mark-column"><button class="mark-button ${rowIsMarked(row) ? "marked" : ""}" data-action="toggle-mark" data-mark-id="${row.id}" aria-label="${rowIsMarked(row) ? "取消标记" : "标记"}">${icon("pin", 14)}</button></td>
+        <td class="occurrence-index"><span>${row.occurrence}</span></td>
+        <td><span class="occurrence-key">${groupKeyPreview(row)}</span></td>
+        <td class="source-cell"><span class="file-dot"></span>${escapeHtml(row.file.name)}</td>
+        <td>${escapeHtml(row.sheet.name)}</td>
+        <td class="row-cell">第 ${row.rowNumber} 行</td>
+        <td><span class="occurrence">${row.occurrence} / ${row.groupSize}</span></td>
+        <td class="view-cell">${icon("eye", 16)}</td>
+      </tr>
+    `).join("") : "";
+    const rest = rows.length > state.occurrenceLimit ? `<tr class="more-occurrences"><td></td><td colspan="7">还有 ${formatCount(rows.length - state.occurrenceLimit)} 条记录，使用搜索或来源筛选继续定位</td></tr>` : "";
+    return `
+      <tr class="group-summary ${expanded ? "expanded" : ""}" data-action="toggle-group" data-group-id="${group.groupId}">
+        <td class="mark-column"><button class="mark-button ${marked ? "marked" : ""}" data-action="toggle-group-mark" data-group-key="${escapeHtml(group.key)}" data-group-id="${group.groupId}" aria-label="${marked ? "取消标记整组" : "标记整组"}">${icon("pin", 15)}</button></td>
+        <td><span class="group-expand">${icon("chevron", 14)}</span><span class="group-badge">${group.groupId}</span></td>
+        <td><span class="group-key">${groupKeyPreview(group.rows[0])}</span></td>
+        <td><span class="group-count">${formatCount(group.rows.length)} 条记录</span></td>
+        <td class="source-count">${sourceLabel}</td>
+        <td colspan="2" class="group-hint">${expanded ? "点击收起" : "点击展开记录"}</td>
+        <td class="view-cell">${icon("eye", 16)}</td>
+      </tr>
+      ${occurrenceRows}${rest}
+    `;
+  }).join("");
   return `
     <div class="table-scroll">
       <table class="results-table">
-        <thead><tr><th class="mark-column"></th><th>组别</th><th>命中字段</th><th>来源</th><th>Sheet</th><th>行</th><th>出现次数</th><th>查看</th></tr></thead>
-        <tbody>
-          ${rows.map((row) => `
-            <tr class="result-row ${state.selectedResult?.id === row.id ? "selected" : ""}" data-action="select-result" data-row-id="${row.id}">
-              <td class="mark-column"><button class="mark-button ${row.marked ? "marked" : ""}" data-action="toggle-mark" data-mark-id="${row.id}" aria-label="${row.marked ? "取消标记" : "标记"}">${icon("pin", 15)}</button></td>
-              <td><span class="group-badge">${row.groupId}</span></td>
-              <td><span class="key-value">${escapeHtml(row.displayKey)}</span></td>
-              <td class="source-cell"><span class="file-dot"></span>${escapeHtml(row.file.name)}</td>
-              <td>${escapeHtml(row.sheet.name)}</td>
-              <td class="row-cell">${row.rowNumber}</td>
-              <td><span class="occurrence">${row.groupSize} 次</span></td>
-              <td class="view-cell">${icon("eye", 16)}</td>
-            </tr>
-          `).join("")}
-        </tbody>
+        <thead><tr><th class="mark-column"></th><th>重复组</th><th>查重键</th><th>记录数</th><th>来源范围</th><th colspan="2">定位</th><th>查看</th></tr></thead>
+        <tbody>${groupRows}</tbody>
       </table>
     </div>
-    <div class="table-foot"><span>显示 ${rows.length} 行重复记录</span><span>数据顺序保持与源文件一致</span></div>
+    <div class="table-foot"><span>显示 ${formatCount(displayedGroups.length)} / ${formatCount(groups.length)} 个重复组 · 展开组后查看记录</span><span>${groups.length > state.groupLimit ? `<button class="load-more" data-action="load-more-groups">加载更多</button>` : "已按组分批展示"}</span></div>
   `;
 };
 
@@ -386,21 +457,23 @@ const renderResults = (analysis) => `
       <div class="result-actions"><span class="analysis-time">刚刚完成</span><button class="icon-button" title="查看字段规则" data-action="scroll-rules">${icon("info", 17)}</button></div>
     </div>
     <div class="stats-grid">
-      ${renderStat(analysis.records.length, "已扫描行数", `${allSheets().filter(({ sheet }) => sheet.included).length} 个 Sheet`)}
-      ${renderStat(analysis.duplicateGroups.length, "重复组", analysis.duplicateGroups.length ? `共涉及 ${analysis.resultRows.length} 行` : "当前范围无重复")}
+      ${renderStat(analysis.scannedRows, "扫描数据行", `${formatCount(analysis.records.length)} 行参与比对`)}
+      ${renderStat(analysis.duplicateGroups.length, "重复组", analysis.duplicateGroups.length ? `共涉及 ${formatCount(analysis.resultRows.length)} 行` : "当前范围无重复")}
       ${renderStat(analysis.resultRows.length, "重复记录", analysis.resultRows.length ? "同一键值出现 2 次以上" : "可以继续下一步")}
       ${renderStat(new Set(analysis.resultRows.map((row) => row.file.id)).size, "涉及文件", "跨文件自动归组", "accent-stat")}
     </div>
     <div class="result-toolbar">
       <div class="filter-tabs">
-        <button class="filter-tab ${state.resultFilter === "all" ? "active" : ""}" data-action="set-result-filter" data-filter="all">全部 <span>${analysis.resultRows.length}</span></button>
-        <button class="filter-tab ${state.resultFilter === "marked" ? "active" : ""}" data-action="set-result-filter" data-filter="marked">已标记 <span>${analysis.resultRows.filter((row) => row.marked).length}</span></button>
+        <button class="filter-tab ${state.resultFilter === "all" ? "active" : ""}" data-action="set-result-filter" data-filter="all">重复组 <span>${formatCount(analysis.duplicateGroups.length)}</span></button>
+        <button class="filter-tab ${state.resultFilter === "marked" ? "active" : ""}" data-action="set-result-filter" data-filter="marked">已标记组 <span>${formatCount(analysis.duplicateGroups.filter((group) => groupIsMarked(group)).length)}</span></button>
       </div>
       <div class="toolbar-controls">
         <label class="search-control">${icon("search", 16)}<input type="search" placeholder="搜索姓名、字段值或来源" value="${escapeHtml(state.query)}" data-action="search" /></label>
         <label class="select-control">${icon("filter", 15)}<select data-action="source-filter"><option value="all">所有来源</option>${state.files.map((file) => `<option value="${file.id}" ${state.sourceFilter === file.id ? "selected" : ""}>${escapeHtml(file.name)}</option>`).join("")}</select>${icon("chevron", 14)}</label>
+        <label class="select-control scope-control"><select data-action="compare-scope"><option value="all" ${state.compareScope === "all" ? "selected" : ""}>全范围比对</option><option value="file" ${state.compareScope === "file" ? "selected" : ""}>每个文件内</option><option value="sheet" ${state.compareScope === "sheet" ? "selected" : ""}>每个 Sheet 内</option></select>${icon("chevron", 14)}</label>
       </div>
     </div>
+    ${analysis.coverageIssues.length ? `<div class="coverage-warning">${icon("info", 16)}<div><strong>${analysis.coverageIssues.length} 个来源的字段不完整，已跳过这些来源</strong><span>${analysis.coverageIssues.slice(0, 2).map((issue) => `${escapeHtml(issue.file.name)} / ${escapeHtml(issue.sheet.name)} 缺少：${escapeHtml(issue.missingColumns.join("、"))}`).join("；")}${analysis.coverageIssues.length > 2 ? `；还有 ${analysis.coverageIssues.length - 2} 个来源` : ""}</span></div></div>` : ""}
     <div class="results-panel">${renderResultTable(analysis)}</div>
   </section>
 `;
@@ -415,15 +488,22 @@ const renderDetail = (analysis) => {
   `;
   const row = analysis.resultRows.find((item) => item.id === state.selectedResult.id) || analysis.resultRows[0];
   if (!row) return "";
+  const filteredHeaders = row.data.headers.filter((header) => {
+    if (!state.detailQuery) return true;
+    return `${header} ${row.valuesByHeader[header] || ""}`.toLocaleLowerCase("zh-CN").includes(state.detailQuery.toLocaleLowerCase("zh-CN"));
+  });
+  const detailHeaders = state.detailShowAll || state.detailQuery ? filteredHeaders : filteredHeaders.slice(0, 12);
+  const hasMoreFields = !state.detailQuery && filteredHeaders.length > detailHeaders.length;
   return `
     <aside class="detail-panel">
       <div class="detail-topline"><span class="detail-kicker">重复组 ${row.groupId}</span><button class="close-detail" data-action="close-detail" aria-label="关闭详情">${icon("close", 16)}</button></div>
-      <div class="detail-title-row"><h3>${escapeHtml(row.displayKey)}</h3><button class="mark-button ${row.marked ? "marked" : ""}" data-action="toggle-mark" data-mark-id="${row.id}" aria-label="标记当前记录">${icon("pin", 15)}</button></div>
+      <div class="detail-title-row"><h3>${escapeHtml(row.displayKey)}</h3><button class="mark-button ${rowIsMarked(row) ? "marked" : ""}" data-action="toggle-mark" data-mark-id="${row.id}" aria-label="标记当前记录">${icon("pin", 15)}</button></div>
       <p class="detail-summary">这组键值在当前范围出现 <strong>${row.groupSize} 次</strong>。当前查看第 ${row.occurrence} 条。</p>
       <div class="detail-meta"><div><span>来源文件</span><strong>${escapeHtml(row.file.name)}</strong></div><div><span>工作表</span><strong>${escapeHtml(row.sheet.name)}</strong></div><div><span>源文件行</span><strong>第 ${row.rowNumber} 行</strong></div></div>
       <div class="detail-divider"></div>
-      <div class="detail-label">原始字段</div>
-      <div class="detail-fields">${row.data.headers.map((header, index) => `<div class="detail-field"><span>${escapeHtml(header)}</span><strong>${escapeHtml(row.valuesByHeader[header] || "—")}</strong></div>`).join("")}</div>
+      <div class="detail-fields-heading"><div class="detail-label">原始字段 · ${row.data.headers.length}</div><label class="detail-search">${icon("search", 13)}<input type="search" placeholder="筛字段" value="${escapeHtml(state.detailQuery)}" data-action="detail-search" /></label></div>
+      <div class="detail-fields">${detailHeaders.map((header) => `<div class="detail-field"><span>${escapeHtml(header)}</span><strong title="${escapeHtml(row.valuesByHeader[header] || "—")}">${escapeHtml(row.valuesByHeader[header] || "—")}</strong></div>`).join("") || `<div class="detail-empty">没有匹配的字段</div>`}</div>
+      ${hasMoreFields ? `<button class="show-fields" data-action="toggle-detail-fields">展开全部 ${formatCount(filteredHeaders.length)} 个字段</button>` : ""}
       <div class="detail-readonly">${icon("eye", 14)} 仅查看，不会修改源文件</div>
     </aside>
   `;
@@ -485,7 +565,12 @@ const parseFile = async (file) => {
   const lowerName = file.name.toLocaleLowerCase("zh-CN");
   const fileId = `file-${Date.now()}-${Math.random().toString(16).slice(2)}`;
   if (lowerName.endsWith(".csv") || lowerName.endsWith(".tsv")) {
-    const text = new TextDecoder("utf-8").decode(await file.arrayBuffer()).replace(/^\uFEFF/, "");
+    const buffer = await file.arrayBuffer();
+    let text = new TextDecoder("utf-8").decode(buffer);
+    if (text.includes("\uFFFD")) {
+      try { text = new TextDecoder("gb18030").decode(buffer); } catch { /* 浏览器不支持时保留 UTF-8 结果 */ }
+    }
+    text = text.replace(/^\uFEFF/, "");
     const delimiter = lowerName.endsWith(".tsv") || (text.split("\n")[0].includes("\t") && !text.split("\n")[0].includes(",")) ? "\t" : ",";
     return { id: fileId, name: file.name, size: file.size, sheets: [{ id: `${fileId}-sheet`, name: file.name.replace(/\.[^/.]+$/, ""), included: true, headerRow: 0, rows: parseDelimited(text, delimiter) }] };
   }
@@ -532,10 +617,14 @@ document.addEventListener("click", (event) => {
   if (action === "set-key-mode") { state.keyMode = target.dataset.mode; renderApp(); }
   if (action === "set-header-row") { const source = allSheets().find(({ sheet }) => sheet.id === target.dataset.sheetId); if (source) { source.sheet.headerRow = Number(target.dataset.rowIndex); state.selectedResult = null; ensureColumnSelection(); renderApp(); } }
   if (action === "set-result-filter") { state.resultFilter = target.dataset.filter; renderApp(); }
+  if (action === "toggle-group") { const groupId = target.dataset.groupId; if (state.expandedGroups.has(groupId)) state.expandedGroups.delete(groupId); else state.expandedGroups.add(groupId); renderApp(); }
+  if (action === "toggle-group-mark") { event.stopPropagation(); const analysis = currentAnalysis(); const group = analysis.duplicateGroups.find((item) => item.groupId === target.dataset.groupId); if (group) { const marked = groupIsMarked(group); if (marked) { state.marks.delete(group.key); group.rows.forEach((row) => state.marks.delete(row.id)); } else state.marks.add(group.key); renderApp(); } }
+  if (action === "load-more-groups") { state.groupLimit += 60; renderApp(); }
   if (action === "source-filter") return;
   if (action === "reset-filters") { state.query = ""; state.resultFilter = "all"; state.sourceFilter = "all"; renderApp(); }
-  if (action === "select-result") { const row = currentAnalysis().resultRows.find((item) => item.id === target.dataset.rowId); if (row) { state.selectedResult = row; renderApp(); } }
+  if (action === "select-result") { const row = currentAnalysis().resultRows.find((item) => item.id === target.dataset.rowId); if (row) { state.selectedResult = row; state.detailQuery = ""; state.detailShowAll = false; renderApp(); } }
   if (action === "close-detail") { state.selectedResult = null; renderApp(); }
+  if (action === "toggle-detail-fields") { state.detailShowAll = !state.detailShowAll; renderApp(); }
   if (action === "toggle-mark") { event.stopPropagation(); const id = target.dataset.markId; if (state.marks.has(id)) state.marks.delete(id); else state.marks.add(id); renderApp(); }
   if (action === "scroll-rules") document.querySelector(".rule-section")?.scrollIntoView({ behavior: "smooth", block: "center" });
 });
@@ -546,9 +635,19 @@ document.addEventListener("change", (event) => {
   if (action === "toggle-column") { if (target.checked) state.selectedKeyColumns.push(target.dataset.column); else state.selectedKeyColumns = state.selectedKeyColumns.filter((column) => column !== target.dataset.column); renderApp(); }
   if (action === "toggle-option") { state[target.dataset.option] = target.checked; renderApp(); }
   if (action === "source-filter") { state.sourceFilter = target.value; renderApp(); }
+  if (action === "compare-scope") { state.compareScope = target.value; state.expandedGroups = new Set(); state.selectedResult = null; renderApp(); }
 });
 
 document.addEventListener("input", (event) => {
+  if (event.target.dataset.action === "detail-search") {
+    state.detailQuery = event.target.value;
+    const caret = event.target.selectionStart;
+    renderApp();
+    const input = document.querySelector('[data-action="detail-search"]');
+    input?.focus();
+    input?.setSelectionRange(caret, caret);
+    return;
+  }
   if (event.target.dataset.action !== "search") return;
   state.query = event.target.value;
   const caret = event.target.selectionStart;
