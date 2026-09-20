@@ -2,12 +2,14 @@
 status: complete
 structure: narrative
 part: Part 2 Tool 与 Agent
+topic: runtime
+tier: core
 estimated_time: 约 2 小时
 ---
 
 # 08 Agent 的 Context Engineering
 
-> 模型是无状态函数：输入是「到现在为止发生了什么，下一步是什么」，输出是下一步。第 03 课讲怎么写好这段输入里的指令部分，这一课讲运行时每一轮怎么把指令、历史、检索结果、工具结果拼成一个窗口，以及怎么在窗口装不下的时候做决定。
+> 从应用的角度看，模型服务不会替你持有这次任务的状态：运行时要把「到现在为止发生了什么，下一步是什么」重新放进输入。第 03 课讲怎么写好指令，这一课讲每一轮怎么组装窗口，以及窗口装不下时怎么取舍。
 
 <details class="case" markdown="1">
 <summary>例子：用户第 3 轮说过对花生过敏，第 40 轮压缩之后它推荐了宫保鸡丁</summary>

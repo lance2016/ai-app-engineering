@@ -2,6 +2,8 @@
 status: complete
 structure: narrative
 part: Part 2 Tool 与 Agent
+topic: capability-ecosystem
+tier: deep-dive
 estimated_time: 约 2 小时
 ---
 

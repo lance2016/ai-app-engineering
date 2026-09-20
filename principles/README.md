@@ -11,7 +11,7 @@
 | 03 | [Prompt 和 Context Window 必须自己掌控，不交给框架黑盒](./03-own-your-prompts-and-context.md) | complete |
 | 04 | [Tool 就是带契约的结构化输出](./04-tools-are-contracts.md) | complete |
 | 05 | [状态由运行时持有，分清对话、任务、业务、长期记忆四类](./05-runtime-owns-state.md) | complete |
-| 06 | [每个副作用都要幂等、可确认、可审计](./06-side-effects-are-idempotent-and-auditable.md) | complete |
+| 06 | [副作用要能安全重试、可确认、可审计](./06-side-effects-are-idempotent-and-auditable.md) | complete |
 | 07 | [失败要分层定位：数据、检索、上下文、模型、工具、控制流](./07-locate-failures-by-layer.md) | complete |
 | 08 | [没有评测集，就没有「变好了」](./08-no-eval-no-improvement.md) | complete |
 | 09 | [Trace 从第一次调用就该有](./09-trace-is-first-class.md) | complete |

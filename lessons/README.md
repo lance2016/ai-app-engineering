@@ -9,9 +9,7 @@ part: 总览
 
 首页管的是选路线和接着读，这一页管的是**知识体系**：一个 AI 应用由哪些部分构成、这些部分按什么顺序学、每个 Part 学完该具备什么能力。
 
-想边读边跑，先看[参考项目路线](../reference/project-playbook.md)：它把每个 Part 接到一个可本地启动的服务、一个可观察的事件流和一组可以复现的失败演练。
-
-下面有三张地图，回答三个不同的问题：这个系统由什么构成、按什么顺序学、以及这些机制装进一个真实服务之后长什么样。
+这里先给一张系统结构图；专题分组、阅读路线和参考项目的对应关系统一放在[专题地图](../reference/topic-map.md)。
 
 ## 地图一：一个 AI 应用由哪些组件构成
 
@@ -109,76 +107,11 @@ part: 总览
 
 **这十行就是一个 AI 应用的检查清单。** 拿它去对照自己手上的项目，空着的那几行就是风险所在。
 
-## 地图二：按什么顺序学
+## 怎么选阅读入口
 
-这是**读的路径**，按依赖关系排，前面是后面的地基。
+这页只保留课程的系统结构和每个 Part 的自测；专题分组、核心课与深入课的边界，以及三条按目标选择的路线，统一放在[专题地图](../reference/topic-map.md)。这样新增课程只需要挂到一个专题，不必同时修改多张重复地图。
 
-```mermaid
-flowchart TB
-    P0["Part 0 起步<br/>00"] --> P1["Part 1 模型与上下文<br/>01 · 02 · 03 · 04"]
-    P1 --> P2["Part 2 Tool 与 Agent<br/>05 → 14"]
-    P2 --> P3["Part 3 知识与记忆<br/>15 · 16 · 17"]
-    P3 --> P4["Part 4 生产工程<br/>18 → 23"]
-    P4 --> P5["Part 5 产品与技术决策<br/>24 · 25 · 26"]
-```
-
-两张地图对不齐是正常的：**能力域按系统结构分，Part 按学习依赖分。** 比如检索能力横跨 04 和 15，中间隔了十课，因为要先懂工具和运行时才谈得上把检索装进 Agent。
-
-## 一条更短的路线：先做出能问答的知识库
-
-不是每个人都要从头走完 27 课。目标只是「把一批文档变成一个能问答的接口」时，八课就够：
-
-**[00](./setup/README.md) → [01](./how-llms-work/README.md) → [02](./model-api-structured-output-streaming/README.md) → [03](./prompt-engineering/README.md) → [04](./embeddings-and-vector-search/README.md) → [15](./rag-end-to-end/README.md) → [17](./data-engineering/README.md) → [19](./evaluation/README.md)**
-
-| 这一段 | 它给你什么 |
-|---|---|
-| [00](./setup/README.md) · [01](./how-llms-work/README.md) · [02](./model-api-structured-output-streaming/README.md) · [03](./prompt-engineering/README.md) | 调通模型、算清 token 的账、拿到可解析的输出、把提示词管起来 |
-| [04](./embeddings-and-vector-search/README.md) | 文档怎么变成向量，什么时候该建近似索引 |
-| [15](./rag-end-to-end/README.md) | **RAG 端到端**，这条路线的主课：七步流水线、混合检索、引用校验 |
-| [17](./data-engineering/README.md) | **数据工程**。文档会变：增量入库、删除、换模型后重建索引 |
-| [19](./evaluation/README.md) | **评测**，凭什么说检索变好了：Recall@k 和带切片的评测集 |
-
-**跳过的是整个 Part 2**——工具、循环、状态、上下文管理。代价要说清楚：这样做出来的是一个「检索 + 生成」的问答接口，模型不会自己决定调哪个工具、走几步、什么时候停。需要那些能力时，回到 [05 Tool Calling](./tool-calling/README.md) 顺着往下读。
-
-两处接缝要提前知道，都不影响这条路线走通：
-
-- [15](./rag-end-to-end/README.md) 的前置里点了 [05](./tool-calling/README.md)，指的是「模型输出只是建议、引用要由代码校验」这一个判断。15 自己会把它讲清，不必先读完 05。
-- [19](./evaluation/README.md) 的前置里点了 [07](./agent-state-and-runtime/README.md)，那是「轨迹评测」那一节要用的事件线程。走这条路线先读 19 的 golden set、judge 校准和回归门禁三节，轨迹那节等读过 07 再回来。
-
-**两条路线各有各的用处。** 完整主线适合系统学习：一次把「一个 AI 应用由哪些部分构成」建全，以后线上出任何一层的问题都知道该看哪里。这条短路线适合先交付一个东西，缺的部分按需回补。
-
-## 地图三：那个服务是怎么长出来的
-
-前两张地图讲这门课**教什么**，这一张讲这些机制**装进一个真实服务之后长什么样**。
-
-课程只讲机制，正文的代码是示意，不追求能跑。可运行的那一份在 [ai-app-engineering-ref](https://github.com/lance2016/ai-app-engineering-ref)：一个不绑供应商的 AI 应用后端，七个里程碑，每一步只加一簇能力。默认走离线的 fake 模型，不需要任何 API Key。
-
-```mermaid
-flowchart TB
-    M0["M0 并发实验"] --> M1["M1 API 骨架与 fake 模型"]
-    M1 --> M2["M2 数据与状态"]
-    M2 --> M3["M3 工具与运行时"]
-    M3 --> M4["M4 检索与记忆"]
-    M4 --> M5["M5 生产化"]
-    M5 --> M6["M6 平台设计"]
-```
-
-M0 是项目的并发热身，和课程 Part 0 不一一对应；本课提到的 fake adapter 在 M1 才接入 HTTP 服务。
-
-| 学完 | 服务这时候能做什么 | 里程碑 | 离线验收 |
-|---|---|---|---|
-| Part 0 | 五个并发对照实验，先认识超时、取消和阻塞 | [M0](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m0-concurrency/README.md) | `python project/m0-concurrency/code/01_sequential_vs_gather.py` |
-| Part 1 | 能被 HTTP 调用、流式返回、错误有结构、prompt 有版本 | [M1](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md) | `uv run pytest tests/project/m1 -q` |
-| Part 2 | 能调工具、副作用要人批准、能暂停能续跑、重启不丢 | [M2](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m2-state-and-storage/README.md) · [M3](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md) | `uv run pytest tests/project/m2 tests/project/m3 -q` |
-| Part 3 | 会检索、引用能对上原文、记得住用户偏好 | [M4](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m4-rag-and-memory/README.md) | `uv run pytest tests/project/m4 -q` |
-| Part 4 | 有回归门禁、trace、限流、fallback、成本账和安全边界 | [M5](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md) | `uv run pytest tests/project/m5 -q` |
-| Part 5 | 多租户平台 RFC、容量、威胁和迁移决策 | [M6](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m6-platform-design/README.md) | Capstone 4 实现切片 |
-
-主线之外还有一个[Framework Lab](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/framework-lab)：它把同一份审批规格交给普通 Python、LangGraph、OpenAI Agents SDK 和 Claude Agent SDK，各跑一遍 8 个场景，方便对照状态、checkpoint、人工介入和调试成本。四个适配器都用 fake model 离线验证；MCP、真实供应商 trace 和部署差异仍放在评分卡里人工核对。
-
-**里程碑的顺序和课程顺序对不上，这是有意的。** 课按理解顺序排，代码按装配顺序排。第 01 课讲成本模型，可成本账要等服务能记账才写得出来，所以它落在 M5；第 04 课讲 embedding，要等 M4 有了检索管线才用得上。想按代码顺序读，顺着 M0 到 M6 走；想按课程顺序读，每课末尾的「参考实现」直接指到对应的文件。
-
-11 的 handoff 和 23 的微调不放进主服务：前者在 Framework Lab 里作为框架选型问题比较，后者在 M6 ADR-4 里写模型、fallback 和退出条件；25 的语音供应商仍未接入，但项目保留了事件协议和断线验收说明；10 的清单机制落在 Capstone 3 的长任务验收。
+课程正文只讲机制，示意代码不追求直接运行。需要看可运行服务时，转到[参考项目路线](../reference/project-playbook.md)；它按 M0–M6 组织，和课程按理解依赖排序是两套不同的顺序。
 
 四条判断贯穿全课，哪一课都在用：**模型是不可信的部件**（Part 1）、**执行和状态归运行时**（Part 2）、**知识来自外部而不是权重**（Part 3）、**没有评测就没有「变好了」**（Part 4）。
 

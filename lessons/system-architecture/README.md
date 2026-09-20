@@ -2,6 +2,8 @@
 status: complete
 structure: narrative
 part: Part 4 生产工程
+topic: production-governance
+tier: core
 estimated_time: 约 1.5 小时
 ---
 

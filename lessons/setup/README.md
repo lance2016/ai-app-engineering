@@ -2,6 +2,8 @@
 status: complete
 structure: narrative
 part: Part 0 起步
+topic: model-interface
+tier: core
 estimated_time: 约 30 分钟
 ---
 

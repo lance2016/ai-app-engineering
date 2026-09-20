@@ -2,6 +2,8 @@
 status: complete
 structure: narrative
 part: Part 3 知识与记忆
+topic: knowledge-data
+tier: core
 estimated_time: 约 2 小时
 ---
 

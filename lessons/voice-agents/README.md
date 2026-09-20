@@ -2,6 +2,8 @@
 status: complete
 structure: narrative
 part: Part 5 产品与技术决策
+topic: product-and-decisions
+tier: deep-dive
 estimated_time: 约 2 小时
 ---
 

@@ -236,7 +236,7 @@ hide:
 
 </div>
 
-<p class="band__foot" markdown="span">每个 Part 的前置、能力域拆解和出师标准，还有这 27 课在搭的那个系统的全貌图，都在[课程总览](lessons/README.md)。[背景知识](prerequisites/README.md)里的 LLM 原理八篇是可选的，主线课需要时会点名引用。学完想自查，或者要准备面试，用[面试地图](reference/interview-map.md)那十组递进追问对一遍。打开过哪一课会被记下来，下次回到这一页，顶部就有接着读的入口；每课底部另有一个「标记为已掌握」。</p>
+<p class="band__foot" markdown="span">系统结构和每个 Part 的出师标准在[课程总览](lessons/README.md)；专题分组与按目标选课看[专题地图](reference/topic-map.md)。[背景知识](prerequisites/README.md)里的 LLM 原理八篇是可选的，主线课需要时会点名引用。学完想自查，或者要准备面试，用[面试地图](reference/interview-map.md)那十组递进追问对一遍。打开过哪一课会被记下来，下次回到这一页，顶部就有接着读的入口；每课底部另有一个「标记为已掌握」。</p>
 
 </section>
 

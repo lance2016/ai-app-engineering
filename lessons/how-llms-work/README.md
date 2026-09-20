@@ -2,6 +2,8 @@
 status: complete
 structure: narrative
 part: Part 1 模型与上下文
+topic: model-interface
+tier: core
 estimated_time: 约 1.5 小时
 ---
 
