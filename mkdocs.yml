@@ -224,6 +224,7 @@ nav:
       - 12 模型是可替换的适配器: principles/12-models-are-swappable-adapters.md
   - 参考手册:
       - 专题地图: reference/topic-map.md
+      - 模型接口参考: reference/model-interfaces.md
       - 参考项目路线: reference/project-playbook.md
       - 框架一览: reference/frameworks.md
       - 术语表: reference/glossary.md

@@ -4,417 +4,82 @@ structure: narrative
 part: Part 1 模型与上下文
 topic: model-interface
 tier: core
-estimated_time: 约 2 小时
+estimated_time: 约 35 分钟
 ---
-
-<div class="lesson lesson--part1" markdown="1">
 
 # 02 模型调用、结构化输出与流式
 
-> 这一课讲模型 API 的运行时契约：请求里发什么、响应怎么拿回来、格式坏了怎么办、用量怎么记。课程用一套统一的说法来讲，各家 API 的线上格式并不长这样——两者的差别，就是 adapter 要吃掉的东西。
+> 调用层的任务不是把 SDK 包起来，而是把供应商的消息、事件和错误翻译成应用能校验的边界。
 
 <details class="case" markdown="1">
-<summary>例子：HTTP 200，JSON 解析也没报错，三个字段却全是错的</summary>
+<summary>例子：页面已经显示了半句答案，但工具参数还没有收完整</summary>
 
-一个发票抽取接口，模型返回的这段进了下游入库：
-
-```json
-{"number": 4471, "date": "30/08/2026", "total": "1,280.50"}
-```
-
-JSON 本身没问题，`json.loads` 一次通过。三个字段全是错的：`number` 按契约是字符串，`date` 要 ISO 格式，`total` 带了千分位逗号，转 float 直接抛。
-
-而这次调用在监控里是成功的：HTTP 200，`finish_reason` 是 `stop`，用量也照记。协议层没坏，模型也没拒答，坏的是值。
+流式响应同时包含文本增量和工具参数增量。页面可以立即显示文本，但工具参数必须拼完整、解析成功并通过权限检查后才能执行。把每个 chunk 都当成完整结果，会把半个 JSON 交给工具。
 
 !!! note "构造的例子"
-    这段 JSON 和后面几段日志、事件流都是为讲清机制构造的，不是某次线上返回的记录。「TTS 边收边说，命令必须等全」那一节是真事。
+    事件顺序和字段是为说明流式边界构造的；真实事件名称以供应商文档为准。
 
 </details>
 
-模型返回的东西可以格式完全合法、值全是错的，解析不报错，监控也看不出来。**能解析出来和值是对的，是两件事**，这一课有一半篇幅在讲这条缝怎么补：原生结构化输出、schema 校验、修复重试，三层各管什么、各漏什么。
+## 一次调用要保住六件事
 
-另一半讲同一次调用还能怎么坏：流可能中途断、重试可能重复计费、用量可能压根没打开。把消息、schema、增量和用量拆开看，才知道故障出在协议、解析还是供应商。
+应用层只需要稳定地处理：消息、工具定义、输出文本、工具调用、用量、错误。供应商可以改变字段名，但这六类信息不能在适配器里悄悄丢掉。
 
-<div class="lesson-meta" markdown="1">
+| 输入 | 输出 | 运行时责任 |
+|---|---|---|
+| 消息与指令 | 文本增量 | 拼接并标记结束 |
+| 工具 schema | 完整工具调用 | 缓冲、解析、校验 |
+| 模型与参数 | usage / error | 归一化、计费、分类 |
 
-## 调用链要保住什么 { .lesson-meta__heading }
+结构化输出不是“模型保证 JSON”。它最多减少格式错误；schema 校验、缺字段处理和业务规则仍由代码负责。
 
-- 能说清一次调用的请求和响应里各有什么，以及课程的统一模型和某一家的线上格式差在哪
-- 能按「原生结构化输出 → schema 校验 → 修复重试」三层给一个抽取任务选方案，并说出哪些字段不能交给模型改
-- 能消费流式响应：文本增量边到边显示，结构化参数攒完整、校验过才交出去
-- 能把错误分成可重试和不可重试两类，并把每次调用的 usage 落库
+## 结构化输出的三层守卫
 
-## 调用课接在什么之后 { .lesson-meta__heading }
-
-- [00 起步](../setup/README.md)：三套线上格式并排看过一遍，知道字段名不同、做的是同一件事
-- [01 从模型到应用](../how-llms-work/README.md)：token、抽样、上下文窗口是预算
-
-</div>
-
-## 一次调用的六件事 { .section--concept }
-
-```mermaid
-sequenceDiagram
-    participant A as 应用
-    participant D as Adapter
-    participant P as 供应商
-    A->>D: messages + tools + 参数
-    D->>P: JSON 请求体（供应商格式）
-    P-->>D: 完整响应 或 增量 chunk 流
-    D-->>A: 统一的响应类型
-    A->>A: 校验、记账、决定重试
-```
-
-这一课统一按下面这六件事来讲。**这是课程的内部表示，不是任何一家的线上格式：**
-
-| 这一课说的 | 它管什么 |
-|---|---|
-| Messages / Content | 发过去的对话内容，带角色和类型 |
-| Parameters | temperature、max_tokens 这些旋钮 |
-| Structured Output | 怎么让返回可解析 |
-| Streaming | 增量怎么到达、怎么攒 |
-| Error / Retry | 哪些错该重试 |
-| Usage | 这次花了多少 |
-
-第 00 课把 Chat Completions、Responses、Claude Messages 三套线上格式并排摆过：有的 `content` 就是一个字符串，有的是一串带类型的块，有的把一次响应摊成一列 output item，流式那层还各有一套事件名。**那几张表里的差别，就是 adapter 的活：吃掉它们，对上层只暴露一种形状。**下面 `Message`、`TextBlock`、`ThinkingBlock` 是这门课挑的一种内部表示，照着设计不吃亏，但别以为线上就长这样。
-
-### 消息是列表，不是字符串
-
-每条消息有角色。系统消息放指令，用户和助手消息交替。工具结果是单独一种角色，靠一个调用 id 和助手那条里的调用对上，不靠顺序。`content` 建议设计成一串带类型的块——图片和推理模型的思考都以块的形式待在里面，见下面的图片输入一节和适配器部分。
-
-### 图片是 content 的一种块：以 DeepSeek V4.1 Flash 为例
-
-DeepSeek 当前 API 用 `deepseek-flash` 调用 V4.1 Flash，图片和文字放在同一条 `user` 消息里。下面是可复制的最小请求，前提是安装 `openai` 并设置 `DEEPSEEK_API_KEY`；图片路径和提示只是示例。
+1. **语法层**：能否解析 JSON。
+2. **结构层**：是否符合 schema。
+3. **业务层**：金额、权限、状态等规则是否成立。
 
 ```python
-import base64
-import os
-
-from openai import OpenAI
-
-with open("receipt.png", "rb") as image_file:
-    image_data = base64.b64encode(image_file.read()).decode("ascii")
-
-client = OpenAI(
-    api_key=os.environ["DEEPSEEK_API_KEY"],
-    base_url="https://api.deepseek.com",
-)
-reply = client.chat.completions.create(
-    model="deepseek-flash",
-    messages=[{
-        "role": "user",
-        "content": [
-            {"type": "text", "text": "读这张发票，告诉我总额和币种。"},
-            {
-                "type": "image_url",
-                "image_url": {"url": f"data:image/png;base64,{image_data}"},
-            },
-        ],
-    }],
-)
-print(reply.choices[0].message.content)
+raw = await adapter.complete(messages, response_format=OrderSchema)
+data = parse_json(raw)
+order = OrderSchema.model_validate(data)
+assert order.amount <= context.max_amount
 ```
 
-这里的重点不是 base64，而是 `content` 不再是字符串：文本块和图片块并列传给模型。外部图片 URL 和 Files API 也可以，Responses API 则使用 `input_image`；适配器要在这些线上形状和自己的 `TextBlock`、`ImageBlock` 之间做转换。图片会按尺寸换算成 token，并和文字一起计费，重复图片或大文件应考虑 Files API。DeepSeek 的[视觉输入指南](https://api-docs.deepseek.com/guides/vision/)访问日期为 2026-09-10。
+这段代码是机制示意，省略了供应商 SDK 和错误类型，不能直接运行。三层失败要记录不同原因，否则评测只会得到一个模糊的“解析失败”。
 
-!!! warning "图片请求也有协议边界"
-    在 DeepSeek 的 Chat Completions 请求里，图片只能放在 `user` 消息；放进 `system` 或 `assistant`，或者交给不支持视觉的模型，都会得到 `400`。这是能力或请求形状不对，重试不会解决，adapter 应在发请求前拦住。
+## 流式只改变展示时机
 
-参考项目 M1 的 `Message.content` 目前还是 `str`，`adapters/openai_compat.py` 也只会把它原样序列化，因此它现在只能跑文本；要接图片，至少要同时改内部消息类型、序列化、用量记录和回归用例，不能只把模型名换成 `deepseek-flash`。
+流式响应把完整结果拆成事件，不改变最终的校验边界：
 
-### 参数和消息一起走
-
-`temperature`、`top_p`、`max_tokens` 放在请求体里，和 `messages` 平级。temperature 改的是抽样分布的形状（第 01 课）；在支持 `finish_reason` 的接口里，撞到 `max_tokens` 时通常会标成 `length` 而不是 `stop`——回答被截断，但请求仍可能返回 HTTP 200。工具定义也在同一个请求体里，每次都要重发一遍。
-
-### 结构化输出的三层
-
-① 供应商原生的结构化输出，服务端按 schema 约束解码；② 自己把 JSON Schema 写进提示，返回后在客户端校验；③ 校验没过，再决定要不要回喂给模型改。**客户端校验仍要保留**，哪怕第一层已经开了：约束解码管的是语法，管不了值对不对。一份三个字段全填错的 JSON 照样合法，第一层拦不住。
-
-### 流式改体感，不改总量
-
-用户感知的是首 token 时间，你付的是总 token。同一条流上有两个消费者，关心的时刻不同：UI 拿到一个文本增量就能显示；任何要拿去执行的结构化参数，必须攒完整、校验过才能用。
-
-### SDK 不替你做的两件事
-
-重试要按错误类型分，不是按次数分。先问一句：「再试一次，结果可能不一样吗？」用量要每次调用都记下来，因为账单月底才有。这一课只管把 usage 从 API 里拿出来并落库；这些 token 怎么变成钱，第 01 课算过；限流、熔断、降级到备用模型，第 21 课。
-
-## Adapter 要吃掉的五处差别 { .section--practice }
-
-### 一、翻译到线上格式会丢东西
-
-课程用的中立消息类型是这样一组：
-
-```python
-Message(role="system",    content="You are terse.")
-Message(role="user",      content="Weather in Shenzhen?")
-Message(role="assistant", tool_calls=(ToolCall(id="call_1", name="get_weather",
-                                               arguments={"city": "Shenzhen"}),))
-Message(role="tool",      tool_call_id="call_1",
-        content="service unavailable", is_error=True)
+```text
+text_delta       → 可以边到边显示
+tool_delta       → 只能先缓冲
+tool_finished    → 解析、校验后才能执行
+stream_error     → 结束当前输出并返回可恢复错误
 ```
 
-翻译成 OpenAI 兼容格式时，前三条几乎一一对应。第四条有个问题：**线上格式没有「这是个错误」的字段**。所以适配器只能把它编码进内容里：
+文本可以渐进展示；命令、SQL、付款参数和结构化对象必须等完整结果。连接断开时，客户端还要知道输出是完成、取消还是失败。
 
-```python
-def to_wire(m: Message) -> dict:
-    if m.role == "tool":
-        content = f"ERROR: {m.content}" if m.is_error else m.content
-        return {"role": "tool", "tool_call_id": m.tool_call_id, "content": content}
-    ...
-```
+## 重试看错误类型
 
-这类翻译损耗要让人看得见。模型能不能识别出「这是个失败」，取决于你这个前缀写得够不够明确——这是提示工程侵入协议层的一个例子。
+超时、限流和临时网络错误可能重试；参数错误、权限拒绝和业务冲突不应盲目重试。重试次数不是安全策略，预算、幂等键和错误分类才是。
 
-### 二、把 content 设计成块列表
+## 怎么测
 
-上面把 `content` 写成字符串是简化。这门课的内部表示里它是一串块，每块有自己的类型。下面只为说明内部形状，省略了类型定义和序列化，不能直接运行：
+建立一组固定回放样本，覆盖：完整文本、分块文本、分块 JSON、字段缺失、业务规则失败、流中断和重复事件。记录：
 
-```python
-Message(role="user", content=[
-    TextBlock("这张发票的总额是多少？"),
-    ImageBlock(media_type="image/png", data=b64),        # ← 图片是一个块
-])
+- 结构化解析率和业务校验率；
+- 首 token 延迟与完整响应延迟；
+- 工具调用是否只在完整参数通过校验后发生；
+- 每类错误的重试次数。
 
-Message(role="assistant", content=[
-    ThinkingBlock(text="先找总计行……", signature="ab12"),  # ← 推理模型的思考，用户不看
-    TextBlock("总额 1280.50 元"),
-])
-```
+## 参考实现与延伸
 
-两类块各有一条容易踩的规矩。
+参考实现的统一 adapter、SSE 增量和错误归一化在 [M1 API 骨架](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/m1-api-skeleton)（核对日期 2026-09-10）。字段细节查[模型接口参考](../../reference/model-interfaces.md)。
 
-**图片会按图像内容和尺寸折算 token，不按文件大小。** 具体公式由供应商和模型决定，不能拿一家的数字估另一家。进模型之前该缩的缩、该裁的裁；一次塞五张图再聊十轮，窗口是怎么没的会很难解释。
-
-**在要求签名回传的供应商上，思考块不能自己造，也不能随手丢。** 同一轮里的多次工具调用可能要求把它原样带回，改一个字符就报错。适配器要是按老习惯把 content 拍平成字符串，这个块就没了——症状是模型在工具调用中途「忘了自己刚才在想什么」，而且只在推理模型上出现，普通模型一切正常。
-
-有的供应商线上就是这个形状，有的是一个字符串加几个平行字段，形状不统一。但**你自己的内部类型从第一天就该是块列表**，纯文本只是「只有一个 TextBlock」的特例。反过来设计（默认字符串、需要时再改成列表），接第一个多模态模型或推理模型时就要重写整个适配器。思考内容各家怎么传、要不要原样回传，第 01 课列过要查的三条。
-
-### 三、开了原生约束，照样要校验
-
-能开供应商的原生结构化输出就先开（[OpenAI](https://platform.openai.com/docs/guides/structured-outputs)、[Anthropic](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)）：服务端按 schema 约束解码，正常路径下缺半个花括号、前面多一段解释文字这类语法错误会少很多，重试次数跟着降；拒答、截断和不支持该能力的模型仍要单独处理。代价是有的模型不支持，schema 特性也受限——`pattern`、`format`、嵌套深度、`additionalProperties`，各家支持面不一样，写之前先查。
-
-**但开了它，下面这套「一份 schema 用两次」照样要留着。**约束解码保证的是「解析得出来」，保证不了「值是对的」——格式合法、值不对的返回，就是从这条缝里漏下去的：
-
-```python
-class Invoice(BaseModel):
-    number: str
-    vendor: str
-    date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
-    total: float
-    currency: str = Field(min_length=3, max_length=3)
-    items: list[LineItem]
-
-SYSTEM = ("Extract the invoice as JSON matching this JSON Schema exactly. "
-          "Output only the JSON object.\n"
-          + json.dumps(Invoice.model_json_schema(), ensure_ascii=False))   # (1)!
-
-invoice = Invoice.model_validate_json(strip_fences(reply.content))         # (2)!
-```
-
-1.  第一次用：把 schema 写进提示，告诉模型该返回什么形状。
-2.  第二次用：同一个类校验返回值。两边不可能不一致，因为只有一处定义。
-
-数字类型错、日期格式错、金额带千分位逗号，开头那三个坏字段这一层全接住。
-
-校验没过怎么办，才是第三层：
-
-```python
-async def extract(model, text, max_attempts=3) -> Invoice:
-    messages = [Message(role="system", content=SYSTEM),
-                Message(role="user", content=text)]
-    for attempt in range(1, max_attempts + 1):
-        reply = await model.complete(messages)
-        try:
-            return Invoice.model_validate_json(strip_fences(reply.content))
-        except ValidationError as exc:
-            detail = exc.errors()[0]["msg"]          # 报第一条就够，别一次给十条
-            messages.append(Message(role="assistant", content=reply.content))
-            messages.append(Message(role="user",
-                content=f"That was not valid: {detail}. Return only the corrected JSON."))
-    raise RuntimeError("model never produced valid JSON")
-```
-
-Pydantic 报的第一条错误原文直接发回去，第二次常能修正格式。注意这里没有任何一行去改模型的输出，运行时只判对错。
-
-`strip_fences` 是极少数值得在运行时做的归一化：很多模型即使被要求「只输出 JSON」也会包一层 ```` ```json ````。它无歧义、和业务无关，所以可以自动处理。**除此之外的形状修补都该交给模型**。
-
-**不是所有校验失败都该让模型改。** 校验失败在 AI 应用里是一类预期内的结果，可以走修复、重试、降级。前提是这个字段改错了没有代价。下面几类不行：
-
-| 字段 | 为什么不能回喂让模型改 |
-|---|---|
-| 金额、数量 | 模型能给出一个格式完全合法的错数字，对不对只有对账才知道 |
-| 权限、角色 | 「是合法值」和「这个用户能用这个值」是两回事，后者只能查 |
-| ID、外键 | 格式对不代表这条记录存在，得回库里核 |
-| 枚举 | 该由代码从白名单里挑，不是让模型再猜一次 |
-| 触发不可逆操作的参数 | 退款、删除、下单，错一次撤不回来 |
-
-<details class="case" markdown="1">
-<summary>例子：金额 1,280.50 能自动修，1280.05 不能</summary>
-
-`"1,280.50"` 去掉逗号还能自动修。但如果模型返回的是 `1280.05`，格式合法、`float` 转得出来、校验全过，值错一位——只有对账能发现。同一个字段，一种错法能修，另一种不能，区别不在格式，在这个值有没有第二个来源能核。
-
-</details>
-
-这些字段校验没过就该拒绝，把错误抛给上层或转人工。**能自动修的是形状，不能自动修的是事实和授权。**这条边界是原则 01 在解析层的形态。
-
-### 四、流式：一边显示，一边攒
-
-```python hl_lines="13 16"
-async def run(model, messages):
-    started, first_token_at = time.monotonic(), None
-    text, buffers, ready = [], {}, []        # buffers：按块 id 攒还没收全的参数
-
-    async for ev in model.stream(messages, tools=tools):
-        if ev.type == "text_delta":          # 文本增量：UI 立刻显示
-            if first_token_at is None:
-                first_token_at = time.monotonic() - started
-            text.append(ev.delta)
-            ui.append(ev.delta)
-
-        elif ev.type == "args_delta":        # 结构化参数也是一片片来的
-            buffers[ev.id] = buffers.get(ev.id, "") + ev.delta   # 只攒，不解析
-
-        elif ev.type == "block_done":        # 这一块收全了，现在才能解析
-            ready.append(validate(ev.id, buffers.pop(ev.id)))    # 校验过才交出去
-
-    return text, ready, model.final_usage()  # usage 由 adapter 兜底给出
-```
-
-这是完整协议的示意。参考项目 M1 目前只流文本，工具参数和供应商事件的归一化留在 adapter 内部；真实接入时再把这些事件映射到同一套内部类型。
-
-两个地方和直觉不一样。
-
-**结构化参数不是最后一整块塞给你的。** 多数流式接口会把参数的 JSON 一小片一小片推过来，中途拿去 `json.loads` 必然报错。顺序只能是：收增量 → 按 id 攒进缓冲区 → 等到「这一块结束」的事件 → 解析并校验 → 才允许交给执行器。中间任何一步都别想着「先解析看看」。**参数没完整之前绝不执行工具**，这是整节唯一要记的一句。
-
-**usage 不一定挂在最后一个事件上。** 有的 API 放在流的终止事件里，有的开头先给输入部分、结束再补输出部分，有的要在请求里显式打开（支持该选项的 OpenAI 兼容接口可传 `stream_options={"include_usage": True}`，不带就可能拿不到用量）。所以别在业务代码里写「读最后一块的 usage」，让 adapter 把这些差别收敛掉，对上层只承诺一件事：流结束时拿得到一份最终 usage。
-
-首 token 时间和总时间要分开测。用户投诉「慢」，八成指的是首 token，不是总时长。
-
-攒好的这些调用请求接下来怎么办——什么时候执行、能不能并发、结果怎么写回消息、循环什么时候停——是第 05、06 课的事。这一课到「拿到一个完整且合法的调用请求」为止。
-
-### 五、重试看类型，不看次数
-
-```python
-RETRYABLE = (Timeout, ConnectionError, RateLimited, ServiceUnavailable)
-
-async def complete_with_retry(model, messages, *, max_attempts=4,
-                              base_delay=0.05, deadline):
-    for attempt in range(1, max_attempts + 1):
-        if time.monotonic() > deadline:      # ← 总时间预算，比次数更能兜住尾延迟
-            raise Timeout("retry budget exhausted")
-        try:
-            return await model.complete(messages)
-        except RETRYABLE as exc:
-            if attempt == max_attempts:
-                raise
-            delay = exc.retry_after or base_delay * 2 ** (attempt - 1)  # ← 服务端说等多久就等多久
-            await asyncio.sleep(min(delay, MAX_DELAY) * random.uniform(0.5, 1.0))  # ← 抖动
-        except (BadRequest, Unauthorized, SchemaError):
-            raise                            # 重发一百次结果一样，只是多付一百次钱
-```
-
-分两类，先问一句：再试一次，结果可能不一样吗？
-
-| 可以重试 | 不要重试 |
-|---|---|
-| 超时、连接中断这类网络抖动 | 请求体或 schema 写错了（400） |
-| 429 限流 | 鉴权、配额、模型名写错这类配置问题 |
-| 一部分 5xx（服务端临时不可用） | 确定性校验没过的业务错误（第三节那张表） |
-
-四件事要一起做：指数退避（每次等的时间翻倍）、加抖动（乘一个随机系数，否则一批请求同时醒来再把下游打爆一次）、尊重 `Retry-After`（服务端给了就按它的，别自己算）、同时限次数和限总时长（只限次数的话，四次各等三十秒照样把用户晾在那）。再往下是熔断、限流、降级到备用模型，第 21 课。
-
-用量这边，这一课只负责一件事：**把 usage 从响应里拿出来，每次调用都记**。下面是账本扩展字段的示意；参考项目 M1 的 `Usage` 目前只记录输入和输出 token，接真实供应商时再按其 usage 字段扩展。
-
-```python
-def record(self, label, usage, provider) -> None:
-    self.entries.append(Entry(
-        label=label, provider=provider, model=usage.model,
-        input_tokens=usage.input_tokens,
-        cached_input_tokens=usage.cached_input_tokens,   # 缓存命中的那部分单价不同
-        output_tokens=usage.output_tokens,
-        reasoning_tokens=usage.reasoning_tokens,         # 推理模型才有
-    ))
-```
-
-**记原始 token 数，别只记算好的钱。** 单价会调、缓存折扣各家不同、推理 token 单独计价。拍成一个数字之后就再也拆不回来，事后想按新单价重算都没得算。这几类 token 怎么变成账单，第 01 课的成本链讲过；这些记录怎么长成按租户按天的成本视图，第 19、20 课。
-
-## 格式和流式输出会怎样坏 { .section--risk }
-
-**校验失败没有明确的去向。** 它是预期内的一类结果，该有一个明确的分支：这个字段可以让模型改，那个字段直接拒绝。删掉 `except` 让程序死在第一次不行，反过来一律回喂让模型改也不行——第三节那张表里的字段，改出来的合法值可能是假的。
-
-**自己动手修 JSON。** 看到 `"total": "1,280.50"` 就写个正则去逗号，看到日期格式不对就写个转换。每修一处就是一条没人记得的业务规则，而且模型下次换个花样又要修。让模型改，运行时只判对错。
-
-**把 content 拍平成字符串。** 见第二节。适配器里一句 `"".join(...)` 就能让思考块和图片块悄悄消失，而且不报错。
-
-**把图片当成免费的上下文。** 截图看着只有几百 KB，折成 token 比一页文档还多。多模态对话的成本要单独估，不能沿用纯文本的公式（第 01 课）。
-
-**拿半截参数就去执行。** 参数是一片片推过来的，中途拼出来的是半截 JSON。UI 消费者和执行器共用一个回调时最容易出这事：文本该边到边显示，参数必须攒完整、校验过再动。
-
-**假定 usage 一定在最后一个事件上。** 换一家 API 它可能在开头、可能分两次给、可能压根没打开。业务代码不该知道这件事，adapter 负责给出最终 usage。
-
-**只按次数重试，不按错误类型。** 400 重发一百次结果一样，只是多付一百次钱。只限次数不限总时长，用户会在四次退避里干等一分钟。
-
-**用量只记输出，或者只记算好的钱。** 多轮对话里输入随历史增长，是主要开销，只记输出会低估几倍。而只落一个金额、不落 token 数，缓存命中和推理 token 这两笔就永远拆不出来了，单价一调就再也对不上账。
-
-## 开几层校验，重试几次 { .section--decision }
-
-- **原生结构化输出和客户端校验不是二选一。** 服务端约束解码几乎消灭语法错误，但不是所有供应商和模型都支持，schema 特性也受限（有的不支持 `pattern`、`format`）；客户端校验永远要有，它挡的是语义错误。两者叠加是常态，只是叠加之后回喂重试会触发得少很多。
-- **流式还是一次返回。** 流式让首 token 快，代价是客户端逻辑复杂：半截文本、断线重连、结构化参数要自己攒。后台任务、结构化抽取、评测跑批不需要流式，别为不需要的东西付复杂度。
-- **重试次数与延迟。** 面向用户的实时调用，一次重试可能就超出可接受等待；后台任务可以多试。退避上限、最大次数、总时间预算都该是调用方传进来的参数，不是写死的常量——同一个 adapter 会同时服务这两种调用方。第 21 课把它扩展成限流和熔断。
-- **图片直接喂模型，还是先转成文字。** 直接喂省一步、保留版式和图表；先做 OCR 或版面解析则便宜得多、结果可缓存可检索，而且出错时能看见是哪一步错的。文档量大时常见做法是先做 OCR 或版面解析，第 15 课展开。
-- **temperature 设多少。** 抽取、分类和工具选择通常用 0 或接近 0，以减少随机性；创作类任务才调高。0 不保证正确，也不保证跨时间或跨供应商完全一致，是否可复现还取决于模型、服务端和 seed。
-
-## 从统一类型到能上线 { .section--practice }
-
-- **首块超时和整体超时是两个值。** 首块超时短（用户等不了），整体超时长（长回答正常）。可以把首块超时映射为 504、供应商报错映射为 502，但具体状态码要和网关契约保持一致；两者的排查方向完全不同。
-- **流式接口一旦开始推送，就不能再改 HTTP 状态码。** 首块之后出错，只能在流里推一个 `error` 事件。所以鉴权、限流、参数校验这些检查，都必须赶在首块之前做完。
-- **usage 要落库，不是打日志。** 「这个租户这个月花了多少」要能查出来，不能靠 grep。落的是 token 字段和模型 id，不是折算后的金额。
-- **重试和幂等要一起设计。** 一次带副作用的调用超时重试，可能产生两次副作用。第 05 课讲幂等键。
-- **怎么测。** 三层方案各测一层。校验层拿一组故意坏的 JSON（缺字段、类型错、枚举越界、外面包了代码围栏），断言每一类都走到「修复重试」而不是抛异常。流式层拿一段录好的 SSE（Server-Sent Events，服务端在一条 HTTP 连接上持续推事件，第 18 课展开）事件流回放，断言文本增量边到边发出去、结构化参数攒完整校验过才交出去、`usage` 不在最后一个事件上时不崩。录好的事件流不需要供应商，跑得比真调用快两个数量级（第 19 课）。
-
-## 框架把结构化输出放在哪一层 { .section--reference }
-
-| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
-|---|---|---|---|
-| 结构化输出 | `with_structured_output(schema)` | agent 的 `output_type` | 工具 schema 或提示约束 |
-| 流式 | `astream` / `astream_events` | `Runner.run_streamed` 的事件流 | 消息流的 content block |
-| 重试与成本 | 自己写，或用 LangChain 的 retry 包装 | 自己写 | 自己写 |
-
-官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
-
-## TTS 边收边说，命令必须等全 { .section--risk }
-
-语音机器人项目里，同一条流有两个消费者：TTS 要一边收文本一边合成，但设备动作命令必须等参数收全。前者按句号切句立刻发声，后者攒完整、校验过才发下去。这两个需求早期写在一个回调里，于是把半截参数发给了设备。
-
-另一条是格式。早期靠在提示词里反复强调「只输出 JSON」，线上仍有百分之几的返回带解释文字或代码围栏，每次都是客服反馈后手动补规则。改成本课的做法之后——schema 和校验共用一个 Pydantic 模型，失败原文回喂重试一次——格式类错误基本消失，剩下的都是语义错误。这些才值得人看。
-
-## 在参考项目里回放一条 SSE
-
-不用供应商 key，先跑 M1 的线程和错误测试：
-
-```bash
-cd ai-app-engineering-ref
-uv run pytest tests/project/m1/test_threads.py tests/project/m1/test_errors.py -q
-```
-
-再打开 Playground 发送一句话，观察 `assistant_delta` 是一条条到达的，`run_finished` 才带最终 `usage`。错误测试覆盖首块之前的失败和结构化 HTTP 错误；它们对应 [`runtime/turn.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/turn.py) 与 [`api/errors.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/errors.py)。
-
-## 参考实现里的 SSE 回放 { .section--reference }
-
-供应商中立的消息与工具类型在 [`adapters/base.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/base.py)，最小的一次流式调用在 [`runtime/turn.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/turn.py)，错误契约在 [`api/errors.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/api/errors.py)。SSE 逐条到达、四类错误各自的状态码，用例在 [`m1/test_threads.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m1/test_threads.py) 和 [`test_errors.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m1/test_errors.py)，装配见 [M1 API 骨架](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m1-api-skeleton/README.md)。
-
-## 把调用格式接到供应商文档 { .section--reference }
-
-- [Anthropic · Messages API](https://platform.claude.com/docs/en/api/messages)（访问日期 2026-09-04）：一个供应商完整的请求体定义，注意角色、工具结果和参数都在同一层。
-- [Anthropic · Structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)（访问日期 2026-09-04）：服务端约束输出格式的做法和它的限制，读完就知道客户端校验为什么还是要留。
-- [OpenAI · Structured Outputs 指南](https://platform.openai.com/docs/guides/structured-outputs)（访问日期 2026-09-04）：另一家的等价机制，从 Pydantic 模型直接生成 schema 的写法和本课一致。
-- [DeepSeek · JSON Output](https://api-docs.deepseek.com/guides/json_mode)（访问日期 2026-09-04）：它的 JSON 模式要求提示词里含 `json` 字样，是个典型的供应商特性差异。
-- [OpenAI · Images and vision](https://platform.openai.com/docs/guides/images-vision)（访问日期 2026-09-06）：图片怎么进请求体，以及 token 怎么按尺寸折算。
-- [Anthropic · Extended thinking](https://platform.claude.com/docs/en/build-with-claude/extended-thinking)（访问日期 2026-09-06）：思考块的字段、签名和传递规则，第二节那条规矩的出处。
-- [Anthropic · Streaming](https://platform.claude.com/docs/en/build-with-claude/streaming) 与 [OpenAI · Streaming responses](https://platform.openai.com/docs/guides/streaming-responses)（访问日期 2026-09-04）：两家的事件类型对着看，能看出增量、结束事件和 usage 的位置各自定在哪。
+可对照 [OpenAI Chat API](https://platform.openai.com/docs/api-reference/chat) 与 [Anthropic Messages API](https://platform.claude.com/docs/en/api/messages)（访问日期 2026-09-10）。
 
 ---
 
 [← 上一课 01](../how-llms-work/README.md) · [下一课 03 →](../prompt-engineering/README.md)
-
-</div>

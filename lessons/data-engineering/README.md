@@ -4,296 +4,61 @@ structure: narrative
 part: Part 3 知识与记忆
 topic: knowledge-data
 tier: core
-estimated_time: 约 1.5 小时
+estimated_time: 约 30 分钟
 ---
 
 # 17 数据工程与数据质量
 
-> RAG 的效果常常先受数据质量限制。检索不到、检索错、引用了过期版本、把别人不该看的内容放进上下文，这些故障不能靠换模型解决。这一课讲文档从进来到被删掉的整个生命周期，以及怎么证明每一步做对了。
+> RAG 的稳定性通常先受数据生命周期限制：文档能否正确进入、更新、删除，权限能否一路保留，索引能否和原文对齐。
 
 <details class="case" markdown="1">
-<summary>例子：客户要求下线一份合同，源库删干净了，两周后它出现在一次回答里</summary>
+<summary>例子：用户删除文档后，问答仍然引用旧内容</summary>
 
-一份客户合同要按要求下线。执行的是一条 SQL：
-
-```sql
-DELETE FROM documents WHERE source_id = 'contract-2891';
-```
-
-源表干净了，抽查也没问题。两周后，一次问答引用了这份合同里的一段条款。
-
-顺着那条引用往回摸，这份文档当初「长」出来的东西是这些：
-
-| 派生物 | 删了吗 |
-|---|---|
-| `documents` 表里的源文档 | 删了 |
-| 47 个 chunk | 删了，外键级联 |
-| 向量索引里对应的 47 条 | **没有**。向量库是另一个系统，靠一个异步任务同步 |
-| 上个月生成的一份部门摘要 | **没有**。它是一份新文档，和源文档之间没有任何关联字段 |
-| 答案缓存里三条命中过它的问答 | **没有** |
-
-那条 `DELETE` 一个字都没写错。错在没人列过这张表——「删了源文档」和「删干净了」之间隔着四个系统，而这四个里只有第一个会因为写错而报错。
+业务数据库里的文档已经删除，向量索引里却还留着旧 chunk。检索服务没有检查版本和删除标记，于是把已经无权访问的内容送进上下文。
 
 !!! note "构造的例子"
-    这张派生物清单和上面那些数字是为讲清删除演练编的。本课 [旧版本索引曾经没有被替换](#旧版本索引曾经没有被替换) 那一节才是作者自己的经历。
+    删除残留用于说明数据管线的失败边界；具体存储实现不是固定答案。
 
 </details>
 
-## 一次删除为什么删不干净
+## 文档有一条生命周期
 
-RAG 的数据会更新、重复、过期和被删除。只写一个 ingest 脚本，无法证明旧版本不会继续被召回，也无法证明租户权限没有泄露。
-
-## 数据管道的验收标准
-
-- 能把一份文档切成带来源、版本、权限标签和内容哈希的 chunk
-- 能在入库前拦住空块、重复块和编码错误，并说出每一类漏过去之后会怎么坏
-- 能实现增量更新：文档改了一段只重新处理那一段，并能查出索引里有没有落后于源文档的陈旧数据
-- 能设计并执行一次删除演练，证明删掉一个源文档后所有派生数据都不存在了
-
-## 数据管道依赖什么
-
-- [15 RAG 端到端](../rag-end-to-end/README.md)：知道 chunk 是什么、索引是给谁用的
-
-## 文档从进入系统到离开系统
-
-一份文档进了系统之后会「长出」很多东西：
-
-```mermaid
-flowchart LR
-    classDef runtime stroke:#0d806b,stroke-width:2px
-    classDef data stroke:#4e83a3,stroke-width:1.8px
-    classDef risk stroke:#b5472d,stroke-width:2px
-    S[源文档<br/>version, acl] --> P[解析<br/>结构化元素]
-    P --> C[chunk<br/>source_id, version, section, acl, hash]
-    C --> Q{质量检查}
-    Q -- 通过 --> I[(索引 / 向量)]
-    Q -- 拒绝 --> R([质量报告])
-    I --> A[答案缓存 / 摘要 / 记忆]
-    S -. 删除 .-> X[所有派生物一起删]
-    class S,C,I,A data
-    class P,Q runtime
-    class R,X risk
+```text
+接收 → 解析 → 清洗 → 切块 → embedding → 索引
+  ↑                                  ↓
+更新 / 删除 ← 版本、权限、来源、状态 ← 查询
 ```
 
-四个原则贯穿这条链：
+每个 chunk 至少要能回到原文、版本、租户、权限和处理状态。没有这些字段，检索结果无法解释，也无法定向删除。
 
-**元数据跟着 chunk 走。** 来源、版本、章节、权限标签、内容哈希，每个 chunk 自带。检索出来的每一条都能回答「你从哪来、是哪个版本、谁能看」。**权限不是检索完再过滤的，是 chunk 的属性。**
+## 质量要分层看
 
-**哈希决定要不要重做。** 重新处理一份文档时，按内容哈希对比：一样的跳过，不一样的替换，源里没有了的删掉。embedding 是这条链里最贵的一步，增量更新省的就是它。
+| 层 | 要确认什么 | 失败表现 |
+|---|---|---|
+| 解析 | 文本、表格和附件是否读全 | 原文已有，索引没有 |
+| 切块 | 标题、上下文和边界是否保留 | 片段相似但无法回答 |
+| 索引 | 向量和关键词是否更新 | 新文档搜不到 |
+| 权限 | ACL 是否随 chunk 传播 | 越租户读取 |
+| 删除 | 旧版本是否不可检索 | 删除后仍能引用 |
 
-**质量检查在入库前。** 空块、重复块、乱码块进了索引就是噪音，检索时会占掉本该给有效内容的名额。入库前拒掉，通常比事后清理省事。
+更新不是简单地再插入一份。要决定旧版本何时失效、重建失败如何重试、查询期间看到哪个版本。
 
-**删除是一个必须演练的操作。** 派生物散落在索引、缓存、摘要、记忆里。「删了源文档」不等于「删干净了」。
+## 权限过滤必须靠运行时
 
-解析这一步下面用 markdown 示意。真实项目里 PDF、扫描件、PPT 要用专门的解析器：[Docling](https://github.com/docling-project/docling) 和 [Unstructured](https://github.com/Unstructured-IO/unstructured) 都能把多种格式转成带结构的元素（标题、段落、表格），输出形状和这里一样，后面的流程不变。
+用户身份由请求上下文绑定，不能让模型填写 `tenant_id` 或决定哪些文档可见。检索层先过滤，生成层再引用；两层都要保留可审计的文档 ID。
 
-## 解析、切块、索引和删除
+## 怎么测
 
-### 一、chunk 自带全套元数据
+用一组文档执行完整生命周期：新增、更新、部分失败、撤销权限、删除、重建 embedding。检查：
 
-```python
-@dataclass(frozen=True)
-class Chunk:
-    source_id: str          # 从哪来
-    source_version: int     # 哪个版本
-    section: str            # 文档里的哪一节
-    text: str
-    acl: tuple[str, ...]    # 谁能看 —— 进索引，不是检索后过滤
-    content_hash: str       # 变没变
+- 入库后能否按来源找到原文；
+- 更新后旧版本是否按预期失效；
+- 删除后的索引残留是否为零或有明确延迟；
+- 不同租户的 top-k 是否完全隔离。
 
-    def with_hash(self) -> "Chunk":
-        h = hashlib.sha256(
-            f"{self.source_id}|{self.section}|{self.text}".encode()).hexdigest()[:12]
-        return replace(self, content_hash=h)
-```
+## 参考实现与延伸
 
-哈希要包含 `source_id` 和 `section`，不只是文本。两份不同文档里出现同一句话是常事，它们是两个 chunk，不该被当成重复。
-
-### 二、切块不跨章节
-
-```python
-def parse_sections(markdown: str) -> list[tuple[str, str]]:
-    """按标题切分。PDF、DOCX、扫描件要用专用解析器，但输出形状一样。"""
-    sections, title, buf = [], "root", []
-    for line in markdown.splitlines():
-        if re.match(r"^#{1,6}\s", line):
-            if buf:
-                sections.append((title, "\n".join(buf).strip()))
-            title, buf = line.lstrip("# ").strip(), []
-        else:
-            buf.append(line)
-    if buf:
-        sections.append((title, "\n".join(buf).strip()))
-    return sections
-
-def chunk(source_id, version, markdown, acl) -> list[Chunk]:
-    chunks = []
-    for section, text in parse_sections(markdown):
-        for start in range(0, max(len(text), 1), MAX_CHUNK_CHARS):
-            chunks.append(Chunk(source_id, version, section,
-                                text[start:start + MAX_CHUNK_CHARS], acl).with_hash())
-    return chunks
-```
-
-两层循环的顺序是重点：**先分节，再在节内切块**。反过来（整篇拼成一个字符串再按长度切）会让一个 chunk 里同时出现「数字商品」和「实体商品」的退款规则——检索命中之后，模型只拿到这两条规则各自的一半，而它们互相矛盾。
-
-### 三、质量检查是入库的门
-
-```python
-def quality_check(chunks) -> tuple[list[Chunk], list[str]]:
-    seen, kept, problems = set(), [], []
-    for c in chunks:
-        if not c.text.strip():
-            problems.append(f"空块，出现在 {c.section!r}")
-            continue
-        if "�" in c.text:                       # U+FFFD 替换字符
-            problems.append(f"编码错误，出现在 {c.section!r}")
-            continue
-        if c.content_hash in seen:
-            problems.append(f"重复块 {c.content_hash}，出现在 {c.section!r}")
-            continue
-        seen.add(c.content_hash)
-        kept.append(c)
-    return kept, problems
-```
-
-`�` 那一条检查特别值得有。它是解码失败时的占位符，出现它就说明某一步的编码猜错了——通常是 PDF 解析或者非 UTF-8 的旧文档。这类块通常无法命中有效查询，却会一直占着存储和索引。
-
-`problems` 要输出成报告，不是静默丢弃。「这次入库拒了多少、为什么」是数据质量的第一个指标。
-
-### 四、增量更新：三个集合运算
-
-```python
-def upsert_source(self, source_id, version, sections, today) -> dict[str, int]:
-    incoming = {hash_of(source_id, sec, text): IndexedChunk(...)
-                for sec, text in sections.items()}
-    current = {h: c for h, c in self.by_hash.items() if c.source_id == source_id}
-
-    unchanged = set(incoming) & set(current)
-    added     = set(incoming) - set(current)
-    removed   = set(current)  - set(incoming)
-
-    for h in removed:
-        del self.by_hash[h]
-    for h in added:
-        self.by_hash[h] = incoming[h]          # ← 只有这些要重新算 embedding
-    for h in unchanged:
-        # 内容没变，但要把版本号推进到新版本，否则会被 stale 检查误报
-        self.by_hash[h] = replace(self.by_hash[h], source_version=version)
-
-    self.source_versions[source_id] = version
-    return {"unchanged": len(unchanged), "embedded": len(added), "removed": len(removed)}
-```
-
-`unchanged` 那一支容易漏：内容没变的 chunk 也要更新 `source_version`。不更新的话，下面的陈旧检查会一直报它落后。
-
-陈旧检查本身很简单，但必须有：
-
-```python
-def stale_chunks(self) -> list[IndexedChunk]:
-    """版本号落后于源文档当前版本的 chunk。"""
-    return [c for c in self.by_hash.values()
-            if c.source_version < self.source_versions.get(c.source_id, c.source_version)]
-```
-
-每天跑一次，非空就告警。它抓的是「更新流程中途失败」这类不会抛异常的故障。
-
-### 五、删除演练：删完之后去搜残留
-
-```python
-@dataclass
-class DerivedStores:
-    """一份源文档会散落到的所有地方。生产里这些是不同的系统。"""
-    chunks:       dict[str, str] = field(default_factory=dict)   # chunk_id -> source_id
-    embeddings:   dict[str, str] = field(default_factory=dict)
-    answer_cache: dict[str, str] = field(default_factory=dict)   # 最容易被漏掉的那个
-    audit:        list[str]      = field(default_factory=list)
-
-    def delete_source(self, source_id: str) -> None:
-        for store_name in ("chunks", "embeddings", "answer_cache"):
-            store = getattr(self, store_name)
-            for key in [k for k, v in store.items() if v == source_id]:
-                del store[key]
-        self.audit.append(f"deleted source {source_id}")
-
-    def residue(self, source_id: str) -> dict[str, int]:
-        """删完之后逐个存储搜残留。这才是演练的价值所在。"""
-        return {name: sum(1 for v in getattr(self, name).values() if v == source_id)
-                for name in ("chunks", "embeddings", "answer_cache")}
-```
-
-演练的形态就是：入库 → 删除 → `residue()` → 全零才算过。
-
-```python
-if any(stores.residue(source_id).values()):
-    sys.exit(1)      # 这一步应该在 CI 里，删不干净就红
-```
-
-每个派生存储都要有一个字段能反查到源文档。答案缓存加一个「本条回答基于哪些文档」的字段，成本几乎为零，但没有它，删除时只能全量扫描或者干脆漏掉。
-
-## 数据故障通常没有红灯
-
-**chunk 跨章节。** 见第二节。
-
-**没有内容哈希，每次全量重做。** 文档改了一个标点，全部 chunk 重新 embedding。一千份文档的知识库，每天改几份，费用和延迟都不可接受。
-
-**权限在检索后过滤。** 先检索 top-10 再按权限过滤，用户可能拿到 3 条甚至 0 条——名额被他看不到的内容占了。更糟的是有些实现忘了过滤。
-
-**删除漏掉派生物。** 最常见的漏法是答案缓存：文档删了，缓存里那条基于它生成的回答还在，用户下次问同样的问题还能拿到已删除内容。**如果业务受 GDPR 约束，第 17 条的删除权涉及个人数据及其处理链路，并有法定例外。** 工程上不能只删除主表，还要按适用法规和保留义务检查缓存、索引与审计记录。[GDPR 第 17 条（EUR-Lex）](https://eur-lex.europa.eu/eli/reg/2016/679/oj)（访问日期 2026-09-10）
-
-## 质量、速度和删除成本
-
-- **chunk 大小。** 小 chunk 检索精确但上下文碎，大 chunk 上下文完整但容易混入无关内容。按文档类型调：FAQ 类小，长篇说明类大。先按章节边界切、再在节内按大小切，是稳妥的起点。
-- **增量更新的粒度。** 按 chunk 哈希 diff 最省，但一段话改一个词整段重做。可以接受——一段就是最小的语义单位，再细分不值得。
-- **删除的彻底程度 vs 成本。** 派生物越多，删除越贵。**设计派生物的时候就要想好怎么删**，事后补反查字段的代价高得多。
-
-## 把数据生命周期变成契约
-
-- **入库要有报告**：这批文档产出多少 chunk、拒了多少、原因分布、embedding 花了多少钱。没有报告，数据质量退化时你不会知道。
-- **陈旧检查每天跑**，见第四节。
-- **删除演练进 CI**，见第五节。它是验证删除链路的一种直接方式。
-- **源文档要留原始副本**。解析器升级后需要重新解析全量文档，没有原始副本就只能让内容团队重新上传。
-- **ACL 变更也要触发重新索引**。一份文档从「内部」改成「公开」，索引里的 acl 字段要跟着变，否则权限判断用的还是旧值。
-- **怎么测。** 删除演练本身就是一条测试，见第五节。另外两条：拿一份只改了一段的文档跑增量更新，断言只有那一段的 chunk 变了、其余 chunk 的哈希一个都没动；再造一份故意落后于源文档的索引，断言 `stale_chunks()` 把它报出来。两条都不调模型（embedding 用假实现），能进 CI（第 19 课）。
-
-## 框架没有替你设计数据生命周期
-
-| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
-|---|---|---|---|
-| 文档加载与切分 | LangChain 的 loader + text splitter | OpenAI 的 file search 托管处理 | 外部数据源 |
-| 版本与删除 | 框架不管，自己做 | 按 file / vector store id 管理 | 自己做 |
-
-**跨源数据的一致性、版本替换和删除验收仍需要自己设计。** 托管服务可以提供文件和向量的删除接口，但不会知道你的答案缓存、摘要和记忆怎样关联。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)（核对日期 2026-09-10）。
-
-## 旧版本索引曾经没有被替换
-
-语音机器人的知识库是玩法和故事内容。一个真实教训：内容团队更新了某个故事文本，索引里的旧版本没被替换，机器人念的还是旧的。
-
-根因是没有版本和哈希，更新流程是「追加」而不是「替换」。上面那个 `stale_chunks()` 是后来加的巡检，每天跑一次，有陈旧数据就告警。
-
-这类故障的特点是**不报错**：入库脚本成功退出，日志一片绿，只有用户会发现内容不对。这也是为什么数据层的检查必须是主动巡检，而不是等异常。
-
-## 把一份文档更新，再删干净
-
-参考项目的 M4 测试不依赖真实 embedding 服务，先跑增量更新和删除演练：
-
-```bash
-cd ai-app-engineering-ref
-uv run pytest tests/project/m4/test_ingest.py tests/project/m4/test_knowledge_store_contract.py -q
-```
-
-重点看 `test_new_version_replaces_old_chunks_and_reuses_unchanged_vectors` 和 `test_delete_leaves_no_residue_anywhere`。前者证明只重算变过的 chunk，后者检查向量、chunk 和检索结果都不再留下旧文档。实现入口是 [`knowledge/ingest.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/ingest.py)。
-
-## 参考实现里的 ingest 与删除
-
-文档版本与增量重建在 [`knowledge/ingest.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/knowledge/ingest.py)：内容哈希没变就不重新算 embedding。删除演练要的那两张表在 [`migrations/0002`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/storage/migrations/versions/0002_knowledge_and_memory.py)，切分不跨节、编码问题和重复文档能被标出来，用例在 [`m4/test_ingest.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m4/test_ingest.py)。
-
-## 把数据管道接到检索系统
-
-- [Docling](https://github.com/docling-project/docling)（访问日期 2026-09-04）：多格式文档转结构化输出的开源解析器，看 README 的 Features 和 Python usage 两节。
-- [Unstructured](https://github.com/Unstructured-IO/unstructured)（访问日期 2026-09-04）：另一个常用解析库，`partition` 系列函数把文档拆成带类型的元素。
-- [GDPR 第 17 条 · 被遗忘权](https://eur-lex.europa.eu/eli/reg/2016/679/oj)（访问日期 2026-09-10）：删除演练存在的法律背景；同时注意条文中的适用条件和例外。
-- [generative-ai-for-beginners · 15 RAG and Vector Databases](https://github.com/microsoft/generative-ai-for-beginners/blob/main/15-rag-and-vector-databases/README.md)（访问日期 2026-09-04）：「Creating a knowledge base」一节讲了从文本到 embedding 的准备过程。
+参考实现的数据导入、删除和混合检索在 [M4 RAG 与 Memory](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/m4-rag-and-memory)（核对日期 2026-09-10）。可对照 [OpenAI Retrieval guide](https://platform.openai.com/docs/guides/retrieval)（访问日期 2026-09-10）理解托管检索的边界。
 
 ---
 

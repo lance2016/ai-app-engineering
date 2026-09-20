@@ -4,295 +4,74 @@ structure: narrative
 part: Part 2 Tool 与 Agent
 topic: runtime
 tier: core
-estimated_time: 约 2 小时
+estimated_time: 约 35 分钟
 ---
 
 # 08 Agent 的 Context Engineering
 
-> 从应用的角度看，模型服务不会替你持有这次任务的状态：运行时要把「到现在为止发生了什么，下一步是什么」重新放进输入。第 03 课讲怎么写好指令，这一课讲每一轮怎么组装窗口，以及窗口装不下时怎么取舍。
+> 从应用的角度看，模型服务不会替你持有这次任务的状态。运行时每一轮都要决定：把什么放进窗口，什么删掉，什么只能作为不可信数据出现。
 
 <details class="case" markdown="1">
-<summary>例子：用户第 3 轮说过对花生过敏，第 40 轮压缩之后它推荐了宫保鸡丁</summary>
+<summary>例子：用户说过对花生过敏，长对话压缩后 Agent 又推荐了含花生的菜</summary>
 
-一个订餐 Agent。用户在第 3 轮说过一句「提醒一下，我对花生过敏」。
-
-第 40 轮，历史撑到了预算上限，运行时把前 36 轮交给一个小模型摘要，用摘要换掉那 36 轮：
-
-```text
-用户在挑今晚的餐厅，偏好中餐、人均 150 以内、步行可达。
-已经排除了三家：太远、需要预约、评价一般。
-```
-
-准确、通顺、压缩比很高，唯独没有花生那一句。摘要模型不知道那句话和别的偏好有什么不同——在它眼里都是「用户说过的话」。
-
-第 41 轮，模型推荐了一家的招牌宫保鸡丁套餐。
-
-这条链上没有任何一步报错：摘要跑成功了，窗口没超，模型基于它看到的全部信息作答，推理也没毛病。换一个更强的摘要模型能把漏掉的概率压低，但压不到零，而且你无法知道这一次它漏没漏。
+摘要保留了“用户喜欢中餐”，却丢了“对花生过敏”。问题不一定在模型，而在上下文构建没有区分高风险约束和普通闲聊。
 
 !!! note "构造的例子"
-    这段对话和这份摘要是为讲清机制编的。本课 [前缀缓存曾经一直失效](#前缀缓存曾经一直失效) 那一节才是作者自己的经历。
+    对话和摘要用于说明裁剪风险；保留策略需要在产品的真实对话上评测。
 
 </details>
 
-## 长对话从哪里开始变贵
+## Context 是一次请求的全部输入
 
-上下文不是一个无限大的字符串。历史、工具结果和检索内容会互相挤占预算，最终让模型丢掉真正重要的约束。每一轮的组装过程都应该是可解释的。
-
-## 上下文策略要回答什么
-
-- 能写一个 ContextBuilder，把系统指令、参考资料、摘要、历史、工具结果按固定顺序组装进 token 预算内
-- 能实现压缩（compaction）：老对话摘要化、完整日志保留、关键事实不交给摘要
-- 能把一个巨大的工具结果整形成「概览 + 引用 + 按需取更多」，并说明为什么稳定前缀能省钱
-
-## 上下文输入从哪里来
-
-- [07 Agent State 与 Runtime](../agent-state-and-runtime/README.md)：事件线程是本课的输入。`to_messages()` 是最简单的上下文组装，本课把它做成可配置的
-- [03 Prompt Engineering](../prompt-engineering/README.md)：单次调用里指令怎么写
-
-## 一轮请求到底装了什么
-
-```mermaid
-flowchart LR
-    classDef model stroke:#7c6ee6,stroke-width:2.2px
-    classDef runtime stroke:#0d806b,stroke-width:2px
-    classDef data stroke:#4e83a3,stroke-width:1.8px
-    T[事件线程<br/>全部历史] --> B[ContextBuilder]
-    D[检索结果] --> B
-    S[压缩摘要] --> B
-    R[工具结果<br/>整形后] --> B
-    B --> W["窗口<br/>系统指令 → 资料 → 摘要 → 近期历史 → 本轮输入"]
-    W --> M[模型]
-    class T,D,S,R,W data
-    class B runtime
-    class M model
+```text
+固定指令 + 当前任务 + 可靠事实 + 历史摘要 + 最近事件 + 工具观察 + 检索结果
 ```
 
-Anthropic 用 [attention budget](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) 来描述这个取舍：窗口里每多一段内容，模型处理其他内容的注意力就会被分走。上下文过长时，中段内容有时更容易被忽略，不同模型的程度不同。所以上下文工程的目标不是「塞得越多越好」，而是**在预算内放进信号最强的一组 token**。
+Prompt 是其中的指令部分，Context 是实际发送的完整窗口。模型看不到没有被放进请求的状态，也不能替运行时保存状态。
 
-### 组装有顺序
+## 组装顺序比“塞满窗口”重要
 
-稳定的东西在前：系统指令、工具定义、参考资料。易变的东西在后：近期历史、本轮输入、当前时间。顺序不只影响模型理解，还决定供应商的前缀缓存能不能命中。
+先放不可丢的约束和当前任务，再放与当前任务相关的事实，最后放可裁剪历史。外部文档和工具结果要标明来源和不可信边界。
 
-### 装不下就压缩，但日志不丢
-
-事件线程是完整的，模型看到的是摘要加近期几轮。摘要是模型生成的，会漏东西；运行时确定知道重要的事实（过敏、预算、截止日期）要单独列出来原文传递，不依赖摘要。推理模型的思考块是压缩的例外：它带签名、不能改写，只能整轮留下或整轮丢掉。
-
-### 工具结果要整形
-
-五百行查询结果原样进窗口，既费钱又把重点淹没。给模型一个概览（多少行、什么列、头几行、统计），存一个引用 id，再提供一个「取更多」的工具。这是 Anthropic 说的 just-in-time：上下文里放标识符，数据按需加载。
-
-### 自己掌控最终的消息列表
-
-[factor 03](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-03-own-your-context-window.md) 的核心主张。框架帮你拼上下文时，你要能打印出最终发给模型的每一条消息。看不到就调不了。
-
-```mermaid
-flowchart LR
-    classDef runtime stroke:#0d806b,stroke-width:2px
-    classDef data stroke:#4e83a3,stroke-width:1.8px
-    I[稳定指令] --> W[Context Builder]
-    H[历史] --> W
-    T[工具结果] --> W
-    K[检索 / 记忆] --> W
-    W --> B{预算够吗?}
-    B -- 否 --> C[裁剪 / 压缩 / 摘要]
-    C --> M[最终消息]
-    B -- 是 --> M
-    class I,H,T,K,M data
-    class W,B,C runtime
-```
-
-## 预算、裁剪和受保护内容
-
-### 一、ContextBuilder：先放固定区段，再用剩余预算填历史
-
-```python title="runtime/context.py" hl_lines="24 35"
-@dataclass
-class ContextBuilder:
-    system: str
-    budget_tokens: int
-    documents: list[str] = field(default_factory=list)
-    summary: str = ""
-    history: list[Message] = field(default_factory=list)
-    dropped: list[Message] = field(default_factory=list)
-
-    def build(self) -> list[Message]:
-        # ① 固定区段，顺序写死
-        fixed = [Message(role="system", content=self.system)]
-        if self.documents:
-            docs = "\n\n".join(f"<doc id={i}>\n{d}\n</doc>"
-                               for i, d in enumerate(self.documents))
-            fixed.append(Message(role="user", content=f"Reference material:\n{docs}"))
-        if self.summary:
-            fixed.append(Message(role="user",
-                                 content=f"Summary of earlier conversation:\n{self.summary}"))
-
-        spent = sum(estimate_tokens(m.content) for m in fixed)
-        if spent > self.budget_tokens:
-            # 固定部分就超了：这是配置错误，不该靠裁历史来掩盖
-            raise ValueError(f"fixed sections alone use {spent} tokens")
-
-        # ② 从最近往前填历史，装不下就停
-        kept = []
-        for m in reversed(self.history):
-            cost = estimate_tokens(m.content) + 8 * len(m.tool_calls)
-            if spent + cost > self.budget_tokens:
-                break
-            kept.insert(0, m)
-            spent += cost
-
-        self.dropped = self.history[:len(self.history) - len(kept)]
-        return fixed + kept
-```
-
-两个细节：
-
-- **固定部分超预算时抛异常，不裁剪。** 系统提示词加参考资料就把窗口占满了，这是设计问题，静默裁历史只会让它更难发现。
-- **`self.dropped` 要留下来。** 「这一轮丢了几条、第一条丢的是什么」应该进日志。丢东西不可怕，不知道丢了什么才可怕。
-
-### 二、压缩：摘要不可信，关键事实单独走
-
-```python hl_lines="15"
-def extract_protected(thread) -> list[str]:
-    """确定性抽取那些不能交给摘要的事实。"""
-    return [e.data["content"] for e in thread.events
-            if e.type == "user_message" and "allergic" in e.data["content"].lower()]
-
-async def compact(thread, summarizer):
-    messages = thread.to_messages()
-    old, recent = messages[:-2], messages[-2:]      # 最近两条不压
-    transcript = "\n".join(f"{m.role}: {m.content}" for m in old)
-    reply = await summarizer.complete([Message(role="user",
-        content=f"Summarize for continuity:\n{transcript}")])
-    thread.append("compaction",
-                  summary=reply.content,
-                  covers=len(old),
-                  protected=extract_protected(thread))
-
-def window_for_model(thread) -> list[Message]:
-    last = latest_compaction(thread)
-    if last is None:
-        return thread.to_messages()
-    head = [Message(role="user", content=f"Summary so far: {last.data['summary']}")]
-    if last.data["protected"]:
-        head.append(Message(role="user",
-            content="Facts to keep verbatim: " + " | ".join(last.data["protected"])))
-    return head + thread.to_messages()[last.data["covers"]:]
-```
-
-`compaction` 是一条事件，不是对历史的覆写。原始消息全都还在线程里，只是不进窗口了。审计、回放、换个摘要策略重跑，都靠这一点。
-
-`protected` 那个字段是整段的重点。摘要漏掉一条硬约束的时候没有任何报错，后面每一次建议都可能是错的。修法不是换更好的摘要模型，而是**让运行时对确定重要的事实单独负责**。
-
-长任务里还有一类东西必须走这个字段：任务本身的目标和那份没做完的清单。第 10 课讲它为什么比过敏信息更容易被摘要吃掉。
-
-哪些算「确定重要」，是业务判断，不是技术判断。医疗、金融、合同场景各有各的清单。
-
-### 三、工具结果整形：上下文里放引用，数据按需取
+| 内容 | 默认策略 |
+|---|---|
+| 权限、合规和用户明确约束 | 不压缩，超预算就换策略或请求澄清 |
+| 当前任务与结构化状态 | 保留原形 |
+| 检索结果与工具观察 | 限长、去重、保留来源 |
+| 普通历史 | 摘要或按相关性裁剪 |
 
 ```python
-RESULT_STORE: dict[str, list[dict]] = {}
-
-def shape(rows: list[dict], head: int = 3, tail: int = 2) -> str:
-    """紧凑视图：这是什么、有多大、样本长什么样、怎么取更多。"""
-    ref = f"res_{uuid.uuid4().hex[:6]}"
-    RESULT_STORE[ref] = rows                     # 全量存在窗口外
-    by_status = Counter(r["status"] for r in rows)
-    return json.dumps({
-        "result_id":     ref,
-        "row_count":     len(rows),
-        "columns":       list(rows[0].keys()) if rows else [],
-        "status_counts": dict(by_status),        # 聚合比原始行有用得多
-        "head":          rows[:head],
-        "tail":          rows[-tail:],
-        "hint": f"call fetch_rows(result_id='{ref}', offset, limit) for more",
-    })
+def build_context(state, budget):
+    fixed = [state.system_rules, state.current_task, state.authority]
+    facts = select_relevant(state.observations, budget.remaining(fixed))
+    history = compress_history(state.messages, budget.remaining(fixed + facts))
+    return fixed + facts + history
 ```
 
-500 行 JSON 原样进窗口是几万 token；整形后是几百。信息量反而更大，因为 `status_counts` 这种聚合是模型自己数不准的。
+这段代码只说明决策顺序，省略 token 计算和具体消息类型，不能直接运行。`build_context` 的输出应该能被记录和回放。
 
-`hint` 字段告诉模型怎么要更多数据。配一个 `fetch_rows` 工具，模型需要细节时自己取。
+## 三种操作不要混为一谈
 
-### 四、稳定前缀省钱
+- **裁剪**：删除低价值内容，成本最低但可能丢信息。
+- **压缩**：用摘要保留信息，摘要本身可能产生错误。
+- **检索**：按当前问题重新找证据，能补回历史但依赖索引质量。
 
-供应商缓存的是它见过的最长前缀。系统提示词开头放一个时间戳，每次请求前缀都不同，无法按这个前缀命中缓存：
+缓存只适合稳定前缀或确定结果，不能把带权限和用户状态的内容跨请求复用。
 
-```python
-def build_window(turn, history) -> list[Message]:
-    if VOLATILE:                                  # 反面教材
-        system = f"Current time: {now}\nRequest #{turn}\n{RULES}\n{TOOLS_BLOCK}"
-        return [Message(role="system", content=system), *history]
+## 怎么测
 
-    # 正确做法：易变的东西放最后一条消息里
-    system = f"{RULES}\n{TOOLS_BLOCK}"
-    return [Message(role="system", content=system), *history,
-            Message(role="user", content=f"(current time: {now})")]
-```
+保存每次请求的 context snapshot，测：
 
-在供应商的缓存规则允许、且前缀达到最小长度时，稳定布局从后续请求起更容易命中；易变布局会缩短可复用前缀。模型行为可以保持不变，成本差异要用 usage 实测。
+- 关键约束在不同轮数和压缩后是否仍然存在；
+- 上下文 token、首 token 延迟和成本；
+- 工具结果过长时是否被截断并保留错误标记；
+- 同一问题在原始历史和压缩历史下的答案差异。
 
-## 上下文最容易在哪里坏
+上下文评测要包含“应该保留什么”和“必须丢掉什么”两类样本。
 
-**摘要当事实。** 见上面的 `protected`。这类问题 ai-agents-for-beginners 叫 context poisoning 和 context distraction。
+## 参考实现与延伸
 
-**先裁剪再组装。** 有人先把历史砍到固定条数，再加系统提示词和资料，结果资料一多就超预算，或者历史剩太多浪费预算。顺序必须是：固定区段 → 算剩余预算 → 从最近往前填历史。
-
-**工具结果原样进窗口。** 除了费钱，更糟的是模型会在那堆数据里「看到」不存在的规律。
-
-**把思考块拿去摘要或改写。** 推理模型的思考块（第 02 课第二节）在同一轮的多次工具调用之间要原样带回，摘要一遍等于把它作废，症状是模型在循环中途突然失去前面的推理线索。压缩策略遇到它只有一个选择：连整轮一起丢。这也意味着**一轮 agent 循环内部的窗口增长比纯文本快**，步数预算要按这个估（第 06 课）。
-
-**时间戳放在系统提示词开头。** 很多人为了让模型知道现在几点，把时间写进系统提示词第一行。时间放在最后一条消息里效果一样，钱省一大半。
-
-## 保留什么、丢掉什么
-
-- **压缩的激进程度。** 压得狠，窗口小、便宜、模型专注，但丢细节的风险大——而且丢的往往是「当时看起来不重要、后来才发现关键」的信息。先做保守压缩，用评测确认没有回归，再逐步加大。
-- **预检索 vs 运行时探索。** 把资料提前检索好塞进窗口，快但可能过期或不相关；让 Agent 用工具按需查，准但慢。变化快的内容适合按需，稳定的内容（法条、合同）适合预检索。多数系统是混合的。
-- **自定义格式 vs 标准消息格式。** factor 03 提到可以不用 system/user/assistant 的标准格式，把整段历史打包成一条消息以节省 token 和注意力。收益是真的，代价是失去供应商对标准格式的优化（比如对工具调用的特殊处理）。先用标准格式，测出瓶颈再改。
-
-## 把上下文策略落到运行时
-
-- **每次组装都留一份报告**：每个区段占了多少 token、丢了几条历史、工具结果压缩比多少。这份报告跟着 trace 走，是排查「模型为什么忘了刚才说的话」的唯一线索。
-- **裁剪按整轮，不按条。** 只裁掉半轮（留下 assistant 的工具调用、丢掉对应的 tool result）会让模型看到不完整的对话，行为很怪。
-- **`result_id` 的存储要有 TTL**，否则一天下来内存里全是没人再取的查询结果。
-- **提示缓存要主动用**。供应商支持显式缓存断点时（比如 Anthropic 的 `cache_control`），把断点打在系统提示词和工具定义之后。注意有的供应商规定改动思考相关参数会让缓存前缀整体失效，开关思考不是免费的，用之前查它的文档。
-- **怎么测。** 留一组固定的长对话样本，每次改组装策略都跑一遍，比对最终发给模型的消息列表和各区段的 token 占比。上下文的回归特别隐蔽：某个区段被裁没了，模型不报错，只是变笨。
-
-## 框架替你管了哪一段
-
-| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
-|---|---|---|---|
-| 上下文组装 | 节点里自己从 state 拼 messages | `instructions` + input items | system prompt + 历史 |
-| 历史裁剪 | `trim_messages` / `RemoveMessage` | Session 自己管 | SDK 自动压缩 |
-| 压缩 | 自己写节点 | 自己写 | 内置自动 compaction |
-
-Claude Agent SDK 的自动压缩最省事，代价是压缩策略不在你手里——正好是 factor 03 警告的那件事。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
-
-## 前缀缓存曾经一直失效
-
-语音机器人的设备端每轮都会上报一段环境状态（时间、位置、正在播放什么）。早期把它放在系统提示词的开头，结果前缀缓存几乎从不命中。挪到最后一条用户消息里之后，同样的对话成本降了一大截，模型行为没有任何变化。
-
-另一个教训：长对话的历史裁剪一度只按条数。用户说过的一条关键约束被裁掉后，模型反复违反它。后来的做法就是上面的 `protected`——确定重要的约束由运行时单独维护，不依赖它恰好还在窗口里。
-
-## 看一次裁剪和工具结果整形
-
-参考项目的测试会故意把上下文预算压到很小：
-
-```bash
-cd ai-app-engineering-ref
-uv run pytest tests/project/m3/test_loop.py::test_context_drops_oldest_turns_and_shapes_big_tool_results -q
-```
-
-这个用例不比较模型最后说了什么，而是检查发给模型的消息和 `assistant_message.context`：旧轮次被裁掉，大工具结果只保留头尾，线程事件里仍然留完整内容。实现见 [`runtime/context.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/context.py)。
-
-## 参考实现里的 ContextBuilder
-
-[`runtime/context.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/context.py) 的 `ContextBuilder` 就是这一课：可缓存的稳定前缀放最前，历史按整轮从最早开始裁到预算内，超长的工具结果只给模型看头尾、线程里留全文，每次组装完记一份各段 token 的报告。装配见 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)。
-
-## 从上下文预算继续读
-
-- [12-factor-agents · factor 03 Own your context window](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-03-own-your-context-window.md)（访问日期 2026-09-04）：「在任何时刻，你给模型的输入都是『到现在发生了什么，下一步是什么』」。自定义上下文格式的例子在这里。
-- [Anthropic · Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)（访问日期 2026-09-04）：attention budget、just-in-time 加载、compaction 三个概念的出处，本课的骨架。
-- [ai-agents-for-beginners · 12 Context Engineering](https://github.com/microsoft/ai-agents-for-beginners/blob/main/12-context-engineering/README.md)（访问日期 2026-09-04）：四种常见失败（poisoning、distraction、confusion、clash）的分类和例子。
-- [Anthropic · Prompt caching](https://platform.claude.com/docs/en/build-with-claude/prompt-caching)（访问日期 2026-09-05）：显式缓存断点的用法，读完再看一遍稳定前缀那一节。
+参考实现的上下文预算、工具结果整形和事件线程在 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/m3-tool-workflow)（核对日期 2026-09-10）。可对照 [Anthropic context engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)（访问日期 2026-09-10）。
 
 ---
 

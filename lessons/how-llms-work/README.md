@@ -4,307 +4,87 @@ structure: narrative
 part: Part 1 模型与上下文
 topic: model-interface
 tier: core
-estimated_time: 约 1.5 小时
+estimated_time: 约 30 分钟
 ---
 
-<div class="lesson lesson--part1" markdown="1">
+# 01 从模型到应用：能力、成本与选型
 
-# 01 从模型到应用：能力边界、成本模型与选型
-
-> 模型卡告诉你窗口、单价和接口能力，却不告诉你在自己的任务上会错在哪里，也不替你算完整对话的账。本课用硬约束、成本模型和小探针把这几件事落下来。
+> 这课只回答一个问题：面对多个模型，凭什么选出“够用且可控”的那个，而不是凭排行榜或感觉。
 
 <details class="case" markdown="1">
-<summary>例子：客服机器人聊到第 48 轮，接口开始报 400；对话短的用户一次都没碰上</summary>
+<summary>例子：换了更强的模型，意图识别反而把退款请求分错</summary>
 
-窗口 128k，每轮用户输入约 2000 token、回答约 700。上线三周，日志里冒出这条：
-
-```text
-POST /v1/chat/completions → 400
-{"error": {"code": "context_length_exceeded",
-           "message": "input exceeds the maximum context length of 128000 tokens"}}
-```
-
-报错的会话很少，而且全是聊得最久的那批用户。开发机上手动试十轮八轮，一次都复现不出来。
-
-窗口 128k，一轮输入才 2000，怎么会超？因为模型不记得上一轮，历史每一轮都要重发一次。第 n 轮实际发出去的输入是这样：
-
-```text
-第 n 轮输入 = 固定部分 + (n-1) × (每轮用户输入 + 每轮输出) + 本轮用户输入
-```
-
-固定部分算 0，代进去：加上这一轮自己的回答，第 n 轮的峰值占用是 `n × 2700`。第 47 轮占 126900，还装得下；第 48 轮 129600，超了。按「一轮 2000」估窗口的人，会以为这个模型能聊六十多轮。
-
-这条 400 的根在选型那一步：当时只看了窗口的标称值，没算峰值。
+升级模型后，开放式回答变好了，但退款意图的准确率下降。原因可能是输出格式变了、标签边界变了、延迟预算不够，不能只看总榜分数。
 
 !!! note "构造的例子"
-    这段报文和这组 token 数是为讲清峰值算法编的，不是某次线上事故的记录。这一课后面的候选模型规格和探针通过率同样是构造的，只有「升级两天后，意图识别挂了」那一节是真事。
+    场景用于说明选型不能只看能力排名；具体模型、分数和价格需要用自己的评测集重新测量。
 
 </details>
 
-选型第一周要答的三个问题，每个都有一段代码顶着：
+## 选型先看四个约束
 
-1. **它能不能做这件事。** 硬约束过滤：输入模态、窗口、工具调用、结构化输出、数据驻留、延迟等级、许可证，违反一条就出局，不看价格。
-2. **完成一次真实任务要花多少钱。** 成本模型：按一段对话算，不按一次调用算，因为历史每轮都要重发。
-3. **在你的任务上做得怎么样。** 能力探针：一个提示配一个确定性检查，几分钟跑完，用来排雷。
+模型不是“越大越好”的插件。先写清：
 
-三段加起来不到一百行。省掉它们的代价在三个月后一起来：某类输入模型一直做错，没人知道边界在哪；账单比预想高一个量级；想换模型时才发现提示词、解析逻辑和厂商特性全绑在一起。
+| 约束 | 要问什么 | 怎么拿证据 |
+|---|---|---|
+| 能力 | 它能否稳定完成这类任务 | 小型 golden set，按场景切片 |
+| 输出 | 能否返回可解析、可校验的结果 | schema 解析率、拒答率 |
+| 成本 | 一次请求最多花多少钱 | 输入/输出 token × 价格 |
+| 延迟 | 用户和下游各能等多久 | p50/p95，加上工具等待 |
 
-<div class="lesson-meta" markdown="1">
+硬约束先于价格。一个便宜但无法返回结构化结果的模型，实际成本可能更高，因为失败会触发重试和人工处理。
 
-## 选型前要拿到哪些证据 { .lesson-meta__heading }
+## 模型能力要用探针测
 
-- 能为一个具体需求写出模型的硬约束清单，用它筛掉候选，再按「每段对话的成本」而不是「每百万 token 单价」排序
-- 能为自己依赖的每一项模型能力写一个确定性探针，并说清探针为什么只能排雷、不能当成评测集
-- 能说清推理模型多出来的那笔 token 怎么计费、为什么事前估不准，以及哪类任务不该交给它
-- 能用「统计模式而非事实存储」解释幻觉，并为三类场景分别选出应用层的对策
+模型卡和排行榜适合筛选候选，不足以证明它适合你的业务。探针是一组最小输入，每条都配一个确定性检查：
 
-## 模型知识缺口怎么补 { .lesson-meta__heading }
+```python
+cases = [
+    {"input": "把退款原因归为 shipping、quality 或 other", "must_include": ["shipping", "quality", "other"]},
+    {"input": "从这段文本抽取 order_id", "schema": OrderId},
+]
 
-- [00 起步](../setup/README.md)：一次业务调用可能对应多次 HTTP 请求，请求体里有哪几类东西
-- 这一课不解释 token、上下文窗口、采样、模型分类是什么。要补的话，[F00 LLM 是什么](../../prerequisites/llm-foundations/00-what-an-llm-is/README.md)、[F01 Tokenization](../../prerequisites/llm-foundations/01-tokenization/README.md)、[F04 Context Window 与 Sampling](../../prerequisites/llm-foundations/04-context-window-and-sampling/README.md)、[F07 模型地图](../../prerequisites/llm-foundations/07-model-landscape/README.md) 分别讲这四件事。不用先读完再回来，正文点到哪篇翻哪篇就行
+for case in cases:
+    result = model.complete(case["input"])
+    assert validate(result, case)
+```
 
-</div>
+这只是说明评测形状，省略了模型接口和错误记录，不能直接运行。重点不是断言写法，而是每次换模型都跑同一批输入。
 
-## 规格书之外的四件事 { .section--concept }
+## 成本不是一次调用的价格
 
-模型卡上写着窗口、单价、支持哪些能力。下面四条规格书不写，但决定了这门课后面的很多设计。
-
-### 能力边界只能测出来
-
-模型卡告诉你它「支持」什么，不告诉你它在你的任务上会怎么错。数字母、做算术、回答训练截止之后的事实、按精确长度输出，这些任务经常暴露模型之间的差异。这一课给的探针是 smoke test：一个提示配一个确定性检查，几分钟跑完，用来排雷。它不能当评测集用，为什么不能见探针那一节。
-
-### 钱花在每轮重发的历史上
-
-窗口装不下只是重发历史的一种后果，另一种是钱：一段对话的账单大头不是回答，是每一轮都要重发的系统提示、工具定义、检索结果和历史。完整重发历史时，原始上下文量随轮数近似平方增长（[F04](../../prerequisites/llm-foundations/04-context-window-and-sampling/README.md) 讲过为什么）。但原始上下文量不等于账单，账得顺着这条链一层层算下来：
+一次对话的成本大致是：
 
 ```text
-原始上下文量
-  → 输入（命中缓存的和没命中的，两种单价）
-  → 输出
-  → 推理 token（推理模型才有）
-  → 实际费用
+总成本 = Σ(输入 token × 输入单价 + 输出 token × 输出单价)
 ```
 
-如果供应商提供提示缓存，稳定不变的前缀可以按更低价格计算。所以两个单价差五倍的模型，在一段对话上的差价可能只有两倍，也可能是十倍，取决于固定部分多大、缓存命不命中。缓存规则和计费字段要按供应商文档核对。有的推理模型还会在回答前生成用户看不到的思考 token，是否单独计费、是否占窗口，也要按接口确认。
+输入历史、工具结果和检索片段会在每轮重复计费。比较模型时至少记录每个请求的 token、耗时、重试次数和最终结果，不能只看供应商的单价。
 
-### 幻觉是机制，不是故障
+## 最容易犯的三个错误
 
-[F00](../../prerequisites/llm-foundations/00-what-an-llm-is/README.md) 那个 bigram 模型没有随机性也会拼出没见过的句子。应用层通常把事实放进上下文，或把关键步骤交给检索、工具和确定性校验（第 02、05、15 课）。让模型「更努力」、把 temperature 设成 0，都不能替代这些边界。
+- **把排行榜当业务评测**：通用分数无法替代自己的任务切片。
+- **只测成功回答**：还要测格式错误、拒答、超时和工具调用。
+- **换模型不跑回归**：模型升级可能改变语气、字段、工具选择和安全边界。
 
-### 可替换要设计出来
+“模型是不可信的部件”不是说它没有能力，而是说它的能力必须通过输入、输出和评测来确认。
 
-第 00 课把三套线上格式并排摆过：字段名不同，做的是同一件事。走 OpenAI 兼容协议能省掉重写 HTTP 客户端和消息格式的活，这是原则 12 的收益。但**统一协议只统一了接入，没统一行为**：同一段提示词换个模型可能就跑偏，工具 schema 的严格程度、结构化输出支不支持、推理内容怎么传、图片怎么编码，各家都可能不一样。锁定来自三处：为某个模型调好的提示词、依赖厂商私有特性的代码、没有评测集——换了也不知道好坏。前两处靠边界隔离，第三处靠第 19 课。
+## 怎么测
 
-这四条合起来是一条边界：模型负责生成，事实、权限和副作用归系统。
+保留一份带标签的探针集，至少按任务类型、语言、长短和风险等级切片。每次模型变更比较：
 
-```mermaid
-flowchart LR
-    classDef model stroke:#7c6ee6,stroke-width:2.2px
-    classDef runtime stroke:#0d806b,stroke-width:2px
-    classDef risk stroke:#b5472d,stroke-width:2px
-    I[请求 + 上下文] --> M[模型<br/>概率输出]
-    M -->|低风险生成<br/>改写 · 归纳 · 起草| A([直接作为回答])
-    M -->|涉及事实 · 权限 · 副作用| G{确定性代码<br/>检索 · 鉴权 · 确认}
-    G -- 放行 --> A
-    G -- 拦下 --> R([拒绝并说明原因])
-    class M model
-    class G runtime
-    class R risk
-```
+- 任务成功率和结构化解析率；
+- p95 延迟、重试率和单请求成本；
+- 高风险切片是否出现新的越权或幻觉。
 
-模型说得多有把握，都不构成系统授权。这条边界是原则 01，后面每一课都在它上面加东西。
+把失败样本加入 golden set，而不是只记录平均分。
 
-## 硬约束、账单、探针 { .section--practice }
+## 参考实现与延伸
 
-下面几段代码只为说明机制，省略了 import 和输出格式化。
+参考实现的模型适配器和 fake model 在 [M1 API 骨架](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/m1-api-skeleton)，模型成本和容量决策在 [M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/m5-production)（核对日期 2026-09-10）。
 
-### 一、硬约束在前，价格在后
-
-顺序不能换。一个候选只要违反一条硬约束就出局，不管它多便宜。
-
-```python
-LATENCY_ORDER = {"fast": 0, "medium": 1, "slow": 2}
-
-def peak_input_tokens(req) -> int:
-    """最后一轮的输入：固定部分，加上之前每一轮都要重发的历史。"""
-    return (req.fixed_input_per_turn
-            + (req.turns - 1) * (req.user_tokens_per_turn + req.output_tokens_per_turn)
-            + req.user_tokens_per_turn)
-
-def hard_filter(c, req) -> list[str]:
-    """返回出局理由；空列表表示通过。"""
-    reasons = []
-    needed = peak_input_tokens(req) + req.output_tokens_per_turn
-    if c.context_window < max(req.min_context, needed):
-        reasons.append(f"窗口 {c.context_window} 装不下最后一轮的 {needed}")
-    if req.needs_tool_calling and not c.tool_calling:
-        reasons.append("不支持工具调用")
-    if req.needs_vision and not c.vision:
-        reasons.append("不接受图片输入")
-    if c.residency not in req.allowed_residency:
-        reasons.append(f"数据驻留 {c.residency} 不合规")
-    if LATENCY_ORDER[c.latency_class] > LATENCY_ORDER[req.max_latency_class]:
-        reasons.append(f"太慢（{c.latency_class}）")
-    return reasons
-```
-
-图片也应当放进这张硬约束表。DeepSeek 当前 API 把 `deepseek-flash` 作为 V4.1 Flash 的模型名，并支持在文本之外传 JPEG、PNG、GIF 或 WebP；旧的 `deepseek-v4-flash` 和 `deepseek-v4-flash-vision-exp` 名称暂时兼容，但请求实际由新模型处理。需要看截图、票据或图表时，候选记录里要明确写 `vision=True`，不能只看“支持工具调用”这一列。[官方更新日志](https://api-docs.deepseek.com/updates/)和[视觉输入指南](https://api-docs.deepseek.com/guides/vision/)访问日期均为 2026-09-10。
-
-`peak_input_tokens` 是这段里唯一要想一下的函数。很多人估窗口时只算「一轮的输入」，于是长对话用户在第几十轮突然收到 400，开发机上还复现不出来。把峰值放进筛选流程，这类错在选型阶段就挡掉了。
-
-候选的规格该长这样——注意每个数字都要带查价日期，价格和窗口会变：
-
-```python
-Candidate(name="hosted-cn-large", context_window=128_000,
-          price_in_per_m=0.55, price_out_per_m=2.20,   # 编的数字，真实项目里这里跟一个查价日期
-          tool_calling=True, structured_output=True, vision=False,
-          residency="cn", latency_class="medium")
-```
-
-### 二、成本按对话算，不按调用算
-
-```python
-def cost_per_conversation(c, req) -> float:
-    total_in, history = 0, 0
-    for _ in range(req.turns):
-        # 每一轮都要重发：固定部分 + 到目前为止的全部历史 + 本轮用户输入
-        total_in += req.fixed_input_per_turn + history + req.user_tokens_per_turn
-        history += req.user_tokens_per_turn + req.output_tokens_per_turn
-    total_out = req.turns * req.output_tokens_per_turn
-    return total_in / 1e6 * c.price_in_per_m + total_out / 1e6 * c.price_out_per_m
-```
-
-`history` 那个累加是全部重点。它让输入的原始上下文量随轮数近似平方增长，输出只是线性的。填一组你自己的数字进去跑一遍，通常会发现：**固定部分（系统提示 + 工具定义 + 检索结果）比模型单价更能决定账单**。
-
-注意这个函数算的是原始上下文量的上限，不是账单。开了提示缓存之后，稳定不变的前缀按缓存价计，命中率高的时候实际输入费用能低一个档次。什么样的前缀能被缓存、什么改动会让它失效，是第 08 课的事。真实费用只能按每次调用返回的 usage 对账，那份 usage 怎么拿见第 02 课。
-
-这也解释了为什么第 08 课要花整整一课讲上下文裁剪。
-
-**推理模型可能要多算一笔。** 有的供应商会单独统计思考 token，有的把它算进输出上限或下一轮上下文；计费字段和传递规则必须按接口确认。下面只是其中一种计费模型：
-
-```python
-    thinking = req.turns * req.reasoning_tokens_per_turn   # ← 按输出价算
-    total_out = req.turns * req.output_tokens_per_turn + thinking
-```
-
-这两行假设思考内容不进下一轮历史，所以它只让每一轮变贵，不像历史那样平方增长。**但这条假设是按某一家的规则写的，不是通用规则。**下面三件事各家的答案都可能不同，先查清楚再决定公式怎么写（原则 12）：
-
-- 下一轮请求里，上一轮的思考内容会不会重新进上下文、按什么价计
-- 要不要把它原样回传。有的供应商给思考块带了签名，改一个字符就报错
-- 同一轮里发生多次工具调用时，中间那几段思考怎么携带
-
-推理预算通常会增加费用和延迟，具体幅度取决于任务、模型和服务端。`reasoning_tokens_per_turn` 是几百还是几万，也取决于任务难度和你设的思考预算，**事前估不准，只能实测**。
-
-### 三、探针 = 一个提示 + 一个确定性检查
-
-```python
-@dataclass(frozen=True)
-class Probe:
-    capability: str
-    prompt: str
-    check: Callable[[str], bool]      # 关键：确定性代码，不是模型判断
-    why_it_matters: str
-
-PROBES = [
-    Probe("json_format",
-          '只返回 JSON，包含 city 和 country 两个键，内容是法国首都。',
-          is_json_with_keys("city", "country"),
-          "结构化输出解析（第 02 课）"),
-    Probe("arithmetic",
-          "37 * 43 等于多少？只回答数字。",
-          contains_number(1591),
-          "任何算术都该走工具（第 05 课）"),
-    Probe("counting",
-          "strawberry 里有几个字母 r？只回答数字。",
-          contains_number(3),
-          "token 不是字母（F01）"),
-    Probe("admits_unknown",
-          "描述 Zorblax-9 公开 API 的三个端点。",
-          admits_uncertainty,
-          "对不存在的东西流畅作答就是幻觉（F00）"),
-]
-```
-
-每个探针必须配一句 `why_it_matters`：这项能力挂了，我的应用哪里会坏。写不出这句话的探针，说明你并不真的依赖这项能力，删掉。
-
-跑法很简单：对每个候选跑一遍全套探针，记下通过率。模型升级、提示词改动、供应商换版本，任一发生都重跑一遍。
-
-**探针的作用到此为止。** 四五条自己挑的确定性用例覆盖不了真实请求的分布，通过率从 4/5 变成 5/5 也说明不了模型变好了。探针挡的是「这个模型连 JSON 都写不对」这种硬伤，几分钟出结果，所以可以天天跑。要回答「A 和 B 哪个在我的工单分类上更准」，得按真实请求采样、标注、算指标，那是第 19 课的评测集：跑一次贵得多，但结论才算数。别用探针替它，也别因为有了评测集就把探针删掉，两者挡的不是同一类问题。第 03 课给 prompt 配的那组固定样例，和探针是同一类东西，同一条界限也适用。
-
-## 模型选型最容易错在哪里 { .section--risk }
-
-**按榜单选模型。** [榜单](https://artificialanalysis.ai/)测的是别人的任务。真实模型在探针上的表现往往参差不齐：算术过了，数字母挂了。没在自己任务上跑过探针就选定模型，等于把评测外包给了不认识的人。
-
-**跳过硬约束直接比价。** 一个 4k 窗口的模型靠单价胜出，然后第 3 轮的输入就超出了它的窗口。约束在前，价格在后。
-
-**相信模型的自我评估。** 把 `check` 从确定性函数换成「模型说自己 confident 了吗」，通过率会好看不少——全是假的。模型对自己的判断和它对事实的判断来自同一个机制，同样不可靠。检查必须是确定性代码，这是原则 01 在选型阶段的形态。
-
-**默认用推理模型做所有任务。** 抽取、分类、改写、格式转换这类有确定答案的任务，推理模型通常更贵、延迟更高，准确率却不一定更高，有时还会偏离格式要求。它的收益在多步推导和需要自我纠错的任务上。选型时把这两类任务分开测。
-
-**只算输出 token，或用字数估 token。** 输入随历史增长，很快成为主要开销。至于字数换 token，不同 tokenizer 对中文、英文、代码的密度差别很大，同一段文本在两个模型上的 token 数可能差出几成，没有一个通用换算比例可抄。要数字就调供应商的计数接口，或者用对应模型的 tokenizer 本地算一遍——而且换模型之后要重新量。
-
-## 用一个模型还是几个 { .section--decision }
-
-- **一个应用里用几个模型。** 分类、抽取、路由用便宜的小模型，开放对话用大模型，是常态而不是例外。代价是探针和评测集要分别维护，适配器层要支持按任务路由（第 21 课）。
-- **提示词用哪种语言写。** 中文相对英文贵多少，得用具体模型量一遍（见上一节最后那条）。量下来确实贵的话，常见做法是固定部分（规则、格式说明）用英文写、用户内容保持中文；代价是维护两套语言的提示，而且换模型后要重新量，也要重跑探针。
-- **长窗口还是检索。** 供应商给了 128k 不代表应该填满。越长越贵越慢，中间部分更容易被忽略。多数场景下「检索出相关的 4k」比「塞进全部 100k」更准也更便宜（第 08、14 课）。
-- **推理模型还是小模型加工具。** 一道要算术又要查表的题，可以交给推理模型自己想，也可以让小模型调计算器和检索工具。前者代码少、延迟高、过程不可见；后者每一步都能断言、能复现，代价是要维护工具（第 05 课）。任务的步骤越固定，第二条路越划算。
-- **厂商托管特性和可替换性。** 服务端工具、托管会话、提示缓存这些特性能省不少代码，但每用一个就多一处锁定。用之前问一句：换供应商时这段代码怎么办。
-
-## 从三个函数到能上线 { .section--practice }
-
-选型在生产里不是一次性决定，是一组会随时间变的配置加一条持续跑的检查：
-
-- **模型注册表放配置里，不放代码里**：模型 id、版本钉死、价格和查价日期、窗口、能力标志、供应商。上面的 `Candidate` 就是它的雏形。换模型只改配置。
-- **usage 落库，按天按租户汇总**，和供应商账单对账。没有这张表，「这个月为什么贵了三倍」只能靠猜。usage 怎么从 API 里拿出来、为什么落原始 token 而不落折算好的金额，都在第 02 课；怎么做成能查的成本视图见第 19、20 课。
-- **fallback 和按任务路由到不同模型，是选型的下游产物。** 主模型超时、限流、熔断时切哪一个，切过去之后质量怎么保证，第 21 课展开。这里只留一句：fallback 模型要过同一组探针，否则切过去的那一刻质量未知。
-- **怎么测。** 五个探针加一条通过率基线，就是这门课的第一道回归门禁。换模型、换版本、供应商悄悄升级，都重跑一遍，跌破基线不上线。这批样本会一路攒进第 19 课的 golden set。
-
-## 框架把模型放在哪一层 { .section--reference }
-
-三个框架对「模型」这一层的抽象方式不同，决定了换供应商的代价。
-
-| 本课概念 | LangGraph（LangChain） | OpenAI Agents SDK | Claude Agent SDK |
-|---|---|---|---|
-| 模型抽象 | `BaseChatModel`，`init_chat_model("provider:model")` 按字符串选供应商 | `Model` / `ModelProvider` 接口，默认 OpenAI | 绑定 Anthropic 模型，用 options 里的 `model` 选型号 |
-| 换供应商的代价 | 接入层改一个字符串，前提是有对应集成；提示词和厂商私有行为不跟着换 | 改 provider 或 base URL；厂商私有特性随之失效 | 不支持换供应商，这是选它时要接受的锁定 |
-| 用量与成本读取 | 消息上的 `usage_metadata` | `RunResult` 的 usage 汇总 | 每条消息带 usage |
-
-三列里没有哪一列「更好」，只有「你能接受哪种锁定」。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
-
-## 升级两天后，意图识别挂了 { .section--risk }
-
-语音机器人项目里，供应商发了新版本，团队直接切过去，两天后发现意图识别的一类边界用例全挂了。之后每次升级先跑探针集——上面那套探针就是这么来的。
-
-另一件事是提示词的语言。早期系统提示用中文写了两千多字的人设和规则，每轮对话固定开销超过三千 token。后来把规则部分改成英文并精简，token 减少约四成，延迟和成本同时下降，用户感知不到区别。这个四成是那一份提示词在那个模型上的实测值，换个 tokenizer 结果可能完全不同，别当换算比例用。
-
-## 看一次成本记账和模型替换
-
-参考项目把模型价格和用量记在运行时外面，先用内存账本跑一遍：
-
-```bash
-cd ai-app-engineering-ref
-uv run pytest tests/project/m5/test_ratelimit_and_cost.py -q
-```
-
-测试会按模型汇总输入 token、输出 token、调用次数和金额；`adapters/openai_compat.py` 的 preset 决定接哪个端点，`ops/cost.py` 的价格表决定如何计费。换模型时，先确认适配器和价格表都更新，再把本课的探针集重跑一遍。
-
-## 参考实现里的模型适配器 { .section--reference }
-
-选型的落点是 [`adapters/openai_compat.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/adapters/openai_compat.py) 里的 `PRESETS`，成本模型是 [`ops/cost.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/ops/cost.py)——一张带日期的价格表，按租户计价，边跑边和日预算比。[M5 生产化](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m5-production/README.md) 看成本账与 fallback 那两节就够，它前面的内容要等学到第 21 课才用得上。
-
-## 把模型选型接到调用链 { .section--reference }
-
-- [generative-ai-for-beginners · 02 Exploring and comparing LLMs](https://github.com/microsoft/generative-ai-for-beginners/tree/main/02-exploring-and-comparing-different-llms)（访问日期 2026-09-04）：模型分类和「在自己的数据上测」的讲法。
-- [OpenAI · Models](https://developers.openai.com/api/docs/models)（访问日期 2026-09-10）：当前模型的能力、上下文和选型入口；模型名和规格会更新，接入前重新核对。
-- [OpenAI · Model selection](https://platform.openai.com/docs/guides/model-selection)（访问日期 2026-09-04）：「先用最强的模型建评测，再往下换」的顺序值得借。
-- [Artificial Analysis](https://artificialanalysis.ai/)（访问日期 2026-09-04）：独立的价格、延迟、吞吐对比。用它做初筛，不要用它替代探针。
-- [OpenAI · Reasoning models](https://platform.openai.com/docs/guides/reasoning)（访问日期 2026-09-06）：reasoning token 怎么计费、effort 怎么选。
-- [Anthropic · Extended thinking](https://docs.claude.com/en/docs/build-with-claude/extended-thinking)（访问日期 2026-09-06）：另一家的形态。和上一条对着看，能分清哪些是通用机制、哪些是厂商自己的规定。
-- [12-factor-agents · factor 01 Natural language to tool calls](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-01-natural-language-to-tool-calls.md)（访问日期 2026-09-04）：把输出限制成结构化调用，是应对幻觉的第二条路的出处。
+价格和能力会变化，使用前查供应商的[模型与价格文档](https://api-docs.deepseek.com/quick_start/pricing)（访问日期 2026-09-10）。下一课进入调用接口和输出形状。
 
 ---
 
 [← 上一课 00](../setup/README.md) · [下一课 02 →](../model-api-structured-output-streaming/README.md)
-
-</div>

@@ -4,286 +4,81 @@ structure: narrative
 part: Part 2 Tool 与 Agent
 topic: runtime
 tier: core
-estimated_time: 约 2 小时
+estimated_time: 约 35 分钟
 ---
 
-# 05 Tool Calling：从 Schema 到副作用
+# 05 Tool Calling：从建议到副作用
 
-> 前四课主要处理模型的文本、结构化输出和向量。这一课让模型提出对外部动作的请求：转一笔账、删一个文件、发一封邮件。执行动作的仍是中间那段确定性代码。
-
-## 模型只能请求，执行归你的代码
-
-工具调用的机制只有三步。你把一组函数的名字、说明和参数 schema 一起发给模型；模型想用的时候，输出一段结构化 JSON，说「我想调 `refund`，参数是这些」——一轮里它可以一次提出好几个这样的请求；然后**你的代码**去查名字、校验参数、决定要不要真的执行。
-
-要紧的是第二步和第三步之间那条缝。模型输出的那段 JSON 只是一个请求：那一刻账上的钱没动，文件没删，邮件没发。第 00 课[那段工具调用的示意代码](../setup/README.md)演示过这个往返，这一课要讲的全部内容，就是那条缝里应该有什么。
-
-先看它缺东西的时候会怎样。
+> Tool Calling 的核心不是让模型“会调用函数”，而是把模型的建议放进一条可校验、可授权、可恢复的执行链。
 
 <details class="case" markdown="1">
-<summary>例子：退款已经做了幂等，用户催一句「退了没」，账上还是出了两笔</summary>
+<summary>例子：模型请求退款，重试后用户收到两次退款</summary>
 
-一个客服 Agent，工具是 `refund(order, amount)`。运行时已经做了幂等：每次工具调用派生一个键，超时重试时带同一个键。下面是一次真实形态的出账记录。
+第一次请求可能已经成功，但响应在网络中丢失。运行时只看到超时，于是再次执行。没有幂等键时，外部系统把两次请求当成两笔退款。
 
-| 时刻 | 谁 | 发生了什么 |
-|---|---|---|
-| `T+0.00` | 用户 | 「把这笔 300 退给我」 |
-| `T+0.31` | 模型 | `tool_call id=call_a1  refund(order="A-8871", amount=300)` |
-| `T+0.34` | 运行时 | `POST /refunds`，`Idempotency-Key: toolcall:call_a1` |
-| `T+0.44` | 网关 | 无响应。运行时 100ms 超时 |
-| `T+0.44` | 运行时 | 重试，**同一个** key |
-| `T+0.51` | 网关 | `200 {"refund_id": "rf_77", "replayed": true}` |
-| `T+0.52` | 运行时 | 工具结果回喂模型 |
-| `T+1.02` | 用户 | 「退了没？我没收到通知」 |
-| `T+1.08` | 模型 | `tool_call id=call_b2  refund(order="A-8871", amount=300)` |
-| `T+1.10` | 运行时 | `POST /refunds`，`Idempotency-Key: toolcall:call_b2` |
-| `T+1.19` | 网关 | `200 {"refund_id": "rf_78"}` |
-
-看 `T+0.51` 那一行：`replayed: true`，幂等键生效了，超时重试没有变成两笔。这一层是对的。
-
-问题在 `T+1.08`。模型重新发起了一次退款，`call.id` 是新生成的 `call_b2`，从它派生的键也是新的，网关看到一个没见过的 key，于是老老实实又退了一笔。账上现在是 `rf_77` 和 `rf_78`，600 块。
-
-!!! note "这段时间线是构造的教学案例"
-
-    order 号、call id 和耗时都是编的，用来把两种「重复」摆在同一条线上看。本课的 [项目里实际踩过的两类错误](#项目里实际踩过的两类错误) 那一节才是作者自己的经历，两者不要混。
+!!! note "构造的例子"
+    事故链用于说明“执行成功”和“拿到结果”不是一回事；金额和接口形状不代表真实项目记录。
 
 </details>
 
-**同一次调用的重试，和同一个业务意图被发起两次，是两件事，要用两个不同的键挡。** 只挡住前者，模型隔一轮重发同一个意图，副作用就发生第二遍。这是幂等守卫要解决的问题，也是三个主流框架都不替你做的那一项。
-
-## 工具运行时要守住什么
-
-- 能说出一次工具调用里，哪几步是模型的责任，哪几步只能是确定性代码
-- 能写出六个守卫，并说清每个挡的是哪一种失败
-- 能拿一段出错的调用记录，判断问题出在选工具、填参数还是执行
-
-## 工具调用接在模型输出之后
-
-- [02 模型调用、结构化输出与流式](../model-api-structured-output-streaming/README.md)：JSON Schema 怎么约束模型输出
-
-## 六个守卫，各防一种失败
-
-那条缝里，运行时要做六件事：
-
-```mermaid
-sequenceDiagram
-    participant M as 模型
-    participant R as 运行时
-    participant X as 外部系统
-    M->>R: ToolCall(name, arguments)
-    R->>R: ① 查注册表
-    R->>R: ② 检查请求级白名单
-    R->>R: ③ 用 schema 校验 arguments
-    R->>R: ④ 有副作用？走确认门
-    R->>R: ⑤ 领取幂等键
-    R->>X: ⑥ 执行，带超时、重试
-    X-->>R: 结果 / 超时 / 错误
-    R->>M: 工具结果消息（成功或 is_error）
-    M->>R: 继续调用，或回答用户
-```
-
-六个守卫各防一种失败。开头那两笔退款挂在第五个上：
-
-| 守卫 | 防什么 | 失败时怎么办 |
-|---|---|---|
-| ① 注册表 | 模型编造了不存在的工具名 | 回一个 `is_error` 结果，不抛异常 |
-| ② 请求级白名单 | 模型调用了这个场景不该碰的工具 | 回一个 `is_error` 结果，不抛异常 |
-| ③ Schema 校验 | 参数缺字段、类型错、枚举值不在范围内 | 把校验错误原文回给模型，让它修 |
-| ④ 确认门 | 用户没明确要求的副作用被执行 | 暂停，问用户；拒绝也是一个正常结果 |
-| ⑤ 幂等键 | 副作用发生两次：一次调用的重试，或模型重发同一意图 | 两层键，一层从 `call.id` 派生，一层从业务确认派生 |
-| ⑥ 执行与重试 | 外部系统超时、暂时不可用或返回业务错误 | 按错误类型重试、记录结果，再回给模型 |
-
-① 和 ② 的错误都是回给模型，不是抛给用户。模型拿到 `unknown tool: delete_user_data` 之后，通常会换一个存在的工具；拿到 `unit must be celsius or fahrenheit` 之后，通常会改参数。运行时不替它猜。
-
-还有一条不在图里：动作只从工具调用通道取。模型在正文里写的任何 JSON，哪怕格式完美，都只是文本。用正则从回答里捞「函数调用」出来执行，是最常见的事故来源之一。
-
-## 六个守卫怎么写
-
-前两段代码说明注册表和参数校验，后面的执行代码再补确认、幂等和重试。它们的返回值永远是一条工具结果消息，成功和失败只差一个 `is_error`，所以调用方不需要写 try/except。
-
-### ① 注册表：白名单在「告诉模型」时就生效
-
-```python hl_lines="4"
-class ToolRegistry:
-    def specs(self, allowlist: frozenset[str]) -> list[ToolSpec]:
-        """只把这次请求允许用的工具告诉模型。看不见的它选不了。"""
-        return [t.spec for name, t in self._tools.items() if name in allowlist]
-
-    def dispatch(self, call: ToolCall, allowlist: frozenset[str]) -> Message:
-        tool = self._tools.get(call.name)
-        if tool is None:
-            return error(call, f"unknown tool: {call.name}")        # 编造的名字
-        if call.name not in allowlist:
-            return error(call, f"tool not allowed here: {call.name}")  # 存在但这里不许用
-        return Message(role="tool", tool_call_id=call.id,
-                       content=tool.handler(call.arguments))
-```
-
-`specs(allowlist)` 那一步是关键：白名单要在「告诉模型有什么」这一步就生效，不是等它选完再拒绝。把全部工具都发给模型，等于让它在只读场景里也能看见 `delete_doc`。
-
-`dispatch` 里还要再查一遍，因为模型可能凭训练记忆调出一个你从没发过的工具名。两层都要有。
-
-### ② Schema：一份用两次，错误回喂
-
-```python
-class GetWeatherArgs(BaseModel):
-    city: str
-    unit: Literal["celsius", "fahrenheit"] = "celsius"
-
-WEATHER_SPEC = ToolSpec(
-    name="get_weather",
-    description="Current weather for a city.",
-    parameters=GetWeatherArgs.model_json_schema(),   # ← 一份 schema，给模型看
-)
-
-def run_tool(call: ToolCall) -> Message:
-    try:
-        args = GetWeatherArgs.model_validate(call.arguments)   # ← 同一份，做校验
-    except ValidationError as exc:
-        return Message(role="tool", tool_call_id=call.id, is_error=True,
-                       content=f"invalid arguments: {exc.errors()[0]['msg']}")
-    return Message(role="tool", tool_call_id=call.id, content=get_weather(args))
-```
-
-模型返回 `{"unit": "kelvin"}` 时，它收到的是 `invalid arguments: Input should be 'celsius' or 'fahrenheit'`，下一轮通常就改对了。和第 02 课结构化输出是同一个套路：一份 schema 用两次。
-
-### ③ 确认门：拒绝是正常结果
-
-```python
-SIDE_EFFECTING = frozenset({"delete_doc"})
-
-async def run_tool(store, call: ToolCall) -> Message:
-    if call.name in SIDE_EFFECTING and not await ask_user(call):
-        return Message(role="tool", tool_call_id=call.id, is_error=True,
-                       content="user declined; nothing was changed")
-    return Message(role="tool", tool_call_id=call.id,
-                   content=store.delete(call.arguments["doc_id"]))
-```
-
-拒绝要回给模型，让它体面回应（「好的，我把 doc_1 留着了」），而不是抛异常或者假装做了。
-
-这里的 `ask_user` 是个同进程的假占位。真实场景里用户可能十分钟后才点确认，那时 HTTP 请求早就断了。把它变成能跨请求暂停恢复的状态，是第 07 课的内容。
-
-### ④ 幂等键：两笔退款，缺的是第二层
-
-第一层挡重试。同一次工具调用超时后重试，不能变成两笔——[Stripe 的幂等键](https://docs.stripe.com/api/idempotent_requests)就是这个语义。
-
-```python
-def retry_key(call: ToolCall) -> str:
-    """一次工具调用一个键。call.id 是模型这次生成的，重试时不变。"""
-    return f"toolcall:{call.id}"
-
-async def run_refund(gateway, call, attempts=2, timeout=0.1) -> Message:
-    key = retry_key(call)
-    for attempt in range(1, attempts + 1):
-        try:
-            result = await asyncio.wait_for(
-                gateway.refund(idempotency_key=key, **call.arguments), timeout)
-            return ok(call, result)
-        except TimeoutError:
-            pass          # (1)!
-    return error(call, "refund status unknown after retries")
-```
-
-1.  重试用的是同一个 `key`。网关认出这是重放，返回第一次的结果，账本里不会多一笔。
-
-超时的语义是「不知道做没做」，不是「没做」。带同一个键重试，网关返回 `replayed: True`，账本里仍然只有一笔。开头那次超时重试走的就是这一段，它是对的。
-
-第二层挡重复意图。用户催问之后模型重发的那次调用，`call.id` 是新生成的，所以上面这个键完全挡不住。用户点两次发送、Agent 恢复后重放一段历史，都会走到这里。
-
-```python
-def business_key(confirmation_id: str, call: ToolCall) -> str:
-    """同一个业务意图只能发生一次，跨轮、跨会话重发都撞同一个键。"""
-    canonical = json.dumps(call.arguments, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(f"{confirmation_id}:{call.name}:{canonical}".encode()).hexdigest()[:16]
-```
-
-这一层的键不能从 `call.id` 派生，只能从业务侧真正稳定的东西派生：这一次用户确认的 id、这个订单号、这个审批单号。`sort_keys=True` 在这里才有意义——两次生成的参数字典顺序可能不同，但只要值一样就该被认成同一个意图。
-
-把这个键接上，那次重发就变成：
+## 一次 Tool Calling 的边界
 
 ```text
-T+1.10  运行时 → 网关   Idempotency-Key: 3f9a1c...（confirmation_id 派生，与第一次相同）
-T+1.17  网关  200 {"refund_id": "rf_77", "replayed": true}
-T+1.18  运行时 → 模型  工具结果：这笔退款已经完成，refund_id rf_77
+模型提出工具名和参数
+        ↓
+运行时查注册表、校验 schema、绑定身份
+        ↓
+权限 / 风险 / 确认 / 幂等检查
+        ↓
+工具执行，记录结果，再回传给模型
 ```
 
-模型拿到的是「已经退了」，于是它去回答用户「已经退款成功，编号 rf_77」，而不是再退一笔。
+模型负责提出意图，运行时负责决定能不能做。工具结果是观察，不是模型可以自行改写的事实。
 
-两层各防各的。副作用重的工具两层都要有：只做第一层，模型重发就多一笔；只做第二层，同一次调用的网络重试可能因为参数序列化的细微差别漏过去。
+## Tool 契约至少有四部分
 
-## 项目里实际踩过的两类错误
+| 部分 | 解决什么问题 |
+|---|---|
+| 名字和描述 | 模型什么时候应该提出调用 |
+| 参数 schema | 模型如何填，代码如何校验 |
+| 成功 / 失败结果 | 下一轮如何继续或换路 |
+| 副作用声明 | 是否确认、幂等、串行和审计 |
 
-一个语音机器人项目的模式（去掉了业务细节）：一个小模型专门做意图分类并输出工具调用，另一个大模型负责聊天。
+白名单和权限不能只写在 Prompt 里。Prompt 可以减少误用，代码才是最后一道边界。
 
-小模型偶尔会输出训练时见过、但当前没注册的工具名，也会漏掉必填参数。早期的修法是改提示词，效果不稳定。后来的修法就是守卫 ① 和 ②：注册表查不到就当作「没有命令」回喂，参数校验失败就把错误回给它重试一次。**提示词一个字没改，问题消失了。**
+## 最小守卫顺序
 
-另一个教训：大模型在聊天正文里偶尔会写出格式完美的函数调用 JSON，一度被运行时解析执行。修法是只认工具调用通道，正文一律当文本。
+```python
+call = model_reply.tool_call
+tool = registry.get(call.name)
+args = schema.validate(call.arguments)
+identity = runtime_context.identity
 
-这两件事都不涉及幂等，因为那个项目的设备控制指令绝大多数是可重复的（调音量、切歌）。开头那两笔退款是构造的，正是因为项目里没有资金类工具的事故可讲。
-
-## 工具调用最容易在哪一步越界
-
-**只用 `tool_call.id` 做幂等键。** 就是开头那两笔退款。键里必须混入工具名和规范化后的参数，并且从业务侧稳定的 id 派生：同样的意图得到同样的键。
-
-**把校验错误抛成异常。** 删掉守卫 ③ 里那个 `except`，程序直接崩。模型本来有能力在下一轮修正参数，现在它连知道自己错了的机会都没有。
-
-**给模型看全部工具。** 模型选不了它看不见的东西。白名单在展示阶段就该生效。
-
-**用正则从回答里提取「函数调用」。** 一旦开了这个口子，模型在文本里的任何表演都会变成动作。上面几段代码没有任何一处解析 `reply.content`，这是刻意的。
-
-## 松一点还是紧一点
-
-守卫的强度是可调的，往哪边调没有通用答案。
-
-- **校验严格到什么程度。** 严格校验让模型多跑一轮修参数，多花一次调用的延迟和 token。宽容解析（自动把 `"kelvin"` 改成 `"celsius"`）省了这一轮，但运行时替模型做了决定，出错时没人知道为什么。默认严格，只对确定无歧义的归一化（去空格、大小写）放宽。
-- **幂等键放在哪一层。** 由运行时派生并传给外部系统最省事，但要求外部系统支持幂等键。不支持时只能在运行时自己维护「已执行」记录，这就引入了状态持久化的问题，见第 07 课。
-- **确认门问多少次。** 这一条的判断依据（按可逆性分级）和第 13、21、23 课是同一套，那里讲得更全。这一课只留结论：涉及资金和删除的必须问。
-
-## 把守卫接进服务
-
-- **请求级幂等和工具级幂等是两层**，各管一件事。请求级挡的是「用户点了两次发送」，工具级挡的是本课那两层。三层都要有。
-- **确认状态必须持久化。** 用户可能关掉页面、十分钟后从手机上回来确认。存在内存里的 pending 状态一次重启就没了。
-- **每次工具执行落一条审计记录**：谁、什么时候、调了什么、参数是什么、结果是什么、两个幂等键分别是什么。事后能把一次重复出账逐秒复原出来，靠的就是这张审计表。
-- **白名单来自请求上下文**，不是全局配置。同一个 Agent 在不同租户、不同场景下能用的工具集合不同。
-- **怎么测。** 断言不看模型说了什么，看它调了什么：工具名是否注册、请求级白名单是否生效、参数是否通过 schema、有副作用的调用有没有走确认门、模型在下一轮重发同一意图时业务键有没有撞上、执行错误是否按类型处理。最后一条就是开头那两笔退款的回归测试。六条写成测试，就是第 19 课轨迹评测的最小形态。
-
-## 框架只管 schema，剩下谁管
-
-| 本课概念 | LangGraph | OpenAI Agents SDK | Claude Agent SDK |
-|---|---|---|---|
-| 工具定义 | `@tool` 装饰器 + Pydantic schema | `function_tool` 自动推 schema | MCP 工具或内置工具 |
-| 参数校验 | LangChain 自动校验 | SDK 自动校验 | MCP server 侧校验 |
-| 审批门 | 节点里 `interrupt()` | `needs_approval=True` | `can_use_tool` 权限回调 |
-| 幂等 | 自己写 | 自己写 | 自己写 |
-
-三个框架都做了 schema 和校验，都不管幂等。开头那两笔退款在任何一个框架里都会照样发生。官方文档：[LangGraph](https://langchain-ai.github.io/langgraph/) · [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) · [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview)（核对日期 2026-09-05）。
-
-## 在参考项目里跑一次
-
-启动一个不需要 API Key 的确定性场景：
-
-```bash
-AIAPP_DEMO_SCENARIO=tool-approval \
-  uv run uvicorn aiapp.api.app:create_app --factory --port 8000
+if tool is None or not policy.allows(identity, tool, args):
+    return error_result(call, "tool is not allowed")
+if tool.has_side_effects and not confirmation.exists(call):
+    return pause_for_human(call)
+return execute_once(tool, args, idempotency_key(call, identity))
 ```
 
-打开 Playground，新建线程后发送“请删除 returns 草稿”。先观察 `search_docs` 的结果，再观察 `delete_doc` 没有立刻执行，而是产生 `human_input_requested`。点击批准后，运行时从 checkpoint 继续，最后出现 `tool_result` 和 `run_finished`。这里跑的是参考项目的真实 `ToolRunner`，场景模型只负责把回应固定下来，方便每次复现。
+这段代码只说明顺序，省略了异常类型、存储和异步细节，不能直接运行。拒绝、参数错误、临时失败和未知结果要分开记录。
 
-要验证重启后仍能恢复，使用 Docker 的 PostgreSQL + Redis 配置；前面的单进程内存模式不会保留 checkpoint。服务停在批准之前再启动，或者重复提交同一个请求，再对照 `runtime/runner.py` 里的幂等键和 [M3 测试](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m3/test_api_m3.py)，可以看到副作用不能只靠 prompt 防住。
+## 幂等不是“多跑几次就没事”
 
-![工具确认门等待人工批准](../../reference/images/project-tool-approval.jpg)
+优先让外部接口接受业务幂等键。只有 `tool_call.id` 只能防同一次调用的重试，防不了模型下一轮重新表达同一业务意图。外部接口不支持幂等时，要查询状态、进入对账队列或交给人工，不要盲目重跑。
 
-## 参考实现里的 ToolRunner
+## 怎么测
 
-工具契约在 [`runtime/registry.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/registry.py)，六道守卫按固定顺序排在 [`runner.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/src/aiapp/runtime/runner.py) 的 `ToolRunner.run()` 里：名字、白名单、参数、确认、幂等、执行，每一道失败都变成回喂给模型的错误结果，不抛异常。每道守卫的用例在 [`m3/test_runner.py`](https://github.com/lance2016/ai-app-engineering-ref/blob/main/tests/project/m3/test_runner.py)，装配见 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/blob/main/project/m3-tool-workflow/README.md)。
+用一组固定工具调用回放：未知工具、坏参数、越租户、需要确认、超时后重试、执行成功但响应丢失。检查：
 
-## 从 ToolRunner 继续读 Agent 循环
+- 未授权调用是否零执行；
+- 相同业务意图是否只产生一次外部效果；
+- 错误是否能回喂而不让循环直接 500；
+- 每个副作用是否留下参数、身份、确认和结果。
 
-- [12-factor-agents · factor 01: Natural Language to Tool Calls](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-01-natural-language-to-tool-calls.md)（访问日期 2026-09-04）：一页讲清「工具调用只是把自然语言变成结构化对象」。
-- [12-factor-agents · factor 04: Tools are just structured outputs](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-04-tools-are-structured-outputs.md)（访问日期 2026-09-04）：模型决定做什么，代码决定怎么做。
-- [Stripe · Idempotent requests](https://docs.stripe.com/api/idempotent_requests)（访问日期 2026-09-07）：幂等键在一个真实支付 API 上的语义，包括键的保留期和「同一个键换了参数」时的行为。开头那张表里网关的反应就是按这一套写的。
-- [Anthropic · Tool use overview](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview)（访问日期 2026-09-04）：`tool_use` → 执行 → `tool_result` 的完整往返，以及 `is_error` 字段的语义。
-- [ai-agents-for-beginners · 04 Tool Use](https://github.com/microsoft/ai-agents-for-beginners/blob/main/04-tool-use/README.md)（访问日期 2026-09-04）：把工具调用系统拆成六个组件，适合对照检查自己漏了哪一块。后半部分绑微软框架，可跳过。
+## 参考实现与延伸
+
+参考实现的注册表、守卫和执行器在 [M3 Tool Workflow](https://github.com/lance2016/ai-app-engineering-ref/tree/main/project/m3-tool-workflow)（核对日期 2026-09-10）。工具协议的 `tool_result` 形状可对照 [Anthropic Tool use](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview)（访问日期 2026-09-10）。
 
 ---
 
